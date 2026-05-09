@@ -377,6 +377,9 @@
         <select class="filter-select" id="filter-empresa" onchange="filterTable()">
           <option value="">Todas las empresas</option>
         </select>
+        <select class="filter-select" id="filter-mes" onchange="filterTable()">
+          <option value="">Todos los meses</option>
+        </select>
       </div>
       <div class="table-wrap">
         <div class="table-scroll">
@@ -396,6 +399,13 @@
             </thead>
             <tbody id="table-body"><tr class="empty-row"><td colspan="9"><div class="loading"><div class="spinner"></div>Cargando pacientes...</div></td></tr></tbody>
           </table>
+        </div>
+        <div id="pagination-bar" style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;border-top:1px solid var(--border);font-size:13px;color:var(--text2);">
+          <span id="pagination-info"></span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-outline btn-sm" id="btn-prev" onclick="changePage(-1)">← Anterior</button>
+            <button class="btn btn-outline btn-sm" id="btn-next" onclick="changePage(1)">Siguiente →</button>
+          </div>
         </div>
       </div>
     </div>
@@ -656,41 +666,74 @@ async function loadAreas() {
 async function loadPacientes() {
   const { data } = await sb.from('pacientes').select('*, areas(nombre)').order('fecha_ingreso', { ascending: false });
   allPacientes = data || [];
-  renderTable(allPacientes);
+  currentPage = 1;
   const activos = allPacientes.filter(p=>!p.fecha_egreso).length;
   document.getElementById('badge-activos').textContent = activos;
 
   const empresas = [...new Set(allPacientes.map(p=>p.empresa))].sort();
-  const sel = document.getElementById('filter-empresa');
-  sel.innerHTML = '<option value="">Todas las empresas</option>';
-  empresas.forEach(e => { const o = document.createElement('option'); o.value=e; o.textContent=e; sel.appendChild(o); });
+  const selE = document.getElementById('filter-empresa');
+  selE.innerHTML = '<option value="">Todas las empresas</option>';
+  empresas.forEach(e => { const o = document.createElement('option'); o.value=e; o.textContent=e; selE.appendChild(o); });
+
+  // Poblar meses disponibles
+  const meses = [...new Set(allPacientes.map(p=>p.fecha_ingreso?.slice(0,7)))].filter(Boolean).sort().reverse();
+  const selM = document.getElementById('filter-mes');
+  const nomMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  selM.innerHTML = '<option value="">Todos los meses</option>';
+  meses.forEach(m => { const [y,mo] = m.split('-'); const o = document.createElement('option'); o.value=m; o.textContent=`${nomMes[+mo-1]} ${y}`; selM.appendChild(o); });
+
+  filterTable();
 }
 
 // ─── TABLE RENDER ─────────────────────────────────────────
+const PAGE_SIZE = 25;
+let currentPage = 1;
+let filteredRows = [];
+
 function renderTable(rows) {
+  filteredRows = rows;
+  const total = rows.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page = rows.slice(start, start + PAGE_SIZE);
+
   const tbody = document.getElementById('table-body');
-  if (!rows.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No se encontraron pacientes</td></tr>'; return; }
-  tbody.innerHTML = rows.map(p => {
-    const activo = !p.fecha_egreso;
-    const areaNombre = p.areas?.nombre || '—';
-    return `<tr>
-      <td class="code">${p.codigo}</td>
-      <td style="font-weight:500">${p.nombre}</td>
-      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p.diagnostico}">${p.diagnostico}</td>
-      <td>${p.empresa}</td>
-      <td><span class="badge badge-area">${areaNombre}</span></td>
-      <td>${fmt(p.fecha_ingreso)}</td>
-      <td>${p.fecha_egreso ? fmt(p.fecha_egreso) : '—'}</td>
-      <td><span class="badge ${activo?'badge-active':'badge-egress'}">${activo?'Internado':'Egresado'}</span></td>
-      <td>
-        <div class="row-actions">
-          <button class="btn btn-outline btn-sm" onclick="openDetalle('${p.id}')">Ver</button>
-          <button class="btn btn-outline btn-sm" onclick="openModalEditar('${p.id}')">Editar</button>
-          ${activo ? `<button class="btn btn-outline btn-sm" onclick="openModalTraslado('${p.id}')">Trasladar</button>` : ''}
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
+  if (!page.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No se encontraron pacientes</td></tr>'; }
+  else {
+    tbody.innerHTML = page.map(p => {
+      const activo = !p.fecha_egreso;
+      const areaNombre = p.areas?.nombre || '—';
+      return `<tr>
+        <td class="code">${p.codigo}</td>
+        <td style="font-weight:500">${p.nombre}</td>
+        <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p.diagnostico}">${p.diagnostico}</td>
+        <td>${p.empresa}</td>
+        <td><span class="badge badge-area">${areaNombre}</span></td>
+        <td>${fmt(p.fecha_ingreso)}</td>
+        <td>${p.fecha_egreso ? fmt(p.fecha_egreso) : '—'}</td>
+        <td><span class="badge ${activo?'badge-active':'badge-egress'}">${activo?'Internado':'Egresado'}</span></td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-outline btn-sm" onclick="openDetalle('${p.id}')">Ver</button>
+            <button class="btn btn-outline btn-sm" onclick="openModalEditar('${p.id}')">Editar</button>
+            ${activo ? `<button class="btn btn-outline btn-sm" onclick="openModalTraslado('${p.id}')">Trasladar</button>` : ''}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('pagination-info').textContent = total ? `${start+1}–${Math.min(start+PAGE_SIZE,total)} de ${total} pacientes` : '0 pacientes';
+  document.getElementById('btn-prev').disabled = currentPage <= 1;
+  document.getElementById('btn-next').disabled = currentPage >= totalPages;
+  document.getElementById('pagination-bar').style.display = total > PAGE_SIZE ? 'flex' : 'none';
+}
+
+function changePage(dir) {
+  currentPage += dir;
+  renderTable(filteredRows);
+  window.scrollTo(0,0);
 }
 
 function fmt(dateStr) {
@@ -700,16 +743,19 @@ function fmt(dateStr) {
 }
 
 function filterTable() {
+  currentPage = 1;
   const q = document.getElementById('search-input').value.toLowerCase();
   const status = document.getElementById('filter-status').value;
   const area = document.getElementById('filter-area').value;
   const empresa = document.getElementById('filter-empresa').value;
+  const mes = document.getElementById('filter-mes').value;
   const filtered = allPacientes.filter(p => {
     const matchQ = !q || p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q) || p.diagnostico.toLowerCase().includes(q);
     const matchStatus = !status || (status==='activo' && !p.fecha_egreso) || (status==='egresado' && p.fecha_egreso);
     const matchArea = !area || p.area_id === area;
     const matchEmpresa = !empresa || p.empresa === empresa;
-    return matchQ && matchStatus && matchArea && matchEmpresa;
+    const matchMes = !mes || p.fecha_ingreso?.startsWith(mes);
+    return matchQ && matchStatus && matchArea && matchEmpresa && matchMes;
   });
   renderTable(filtered);
 }
