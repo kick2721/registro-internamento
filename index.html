@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Internamento</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f4f2ee;
+    --surface: #ffffff;
+    --surface2: #f9f8f5;
+    --border: #e2dfd8;
+    --border2: #ccc9c0;
+    --text: #1a1916;
+    --text2: #6b6860;
+    --text3: #9b9890;
+    --accent: #1a5c3a;
+    --accent-light: #e8f4ed;
+    --accent-mid: #2d7a50;
+    --danger: #c0392b;
+    --danger-light: #fdf0ef;
+    --warn: #b7770d;
+    --warn-light: #fef9ec;
+    --info: #1a4d7a;
+    --info-light: #eef4fb;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* AUTH */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow);
+  }
+  .auth-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2rem;
+  }
+  .auth-logo-icon {
+    height: 36px;
+    flex-shrink: 0;
+  }
+  .auth-logo-icon img { height: 100%; width: auto; display: block; }
+  .auth-logo h1 { font-size: 18px; font-weight: 600; }
+  .auth-logo span { font-size: 12px; color: var(--text2); display: block; }
+  .auth-tabs { display: flex; gap: 4px; background: var(--surface2); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 1.5rem; }
+  .auth-tab { flex: 1; text-align: center; padding: 7px; border-radius: 5px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); border: none; background: none; }
+  .auth-tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 14px;
+    color: var(--text); background: var(--surface);
+    outline: none; transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; width: 100%; justify-content: center; }
+  .btn-primary:hover { background: var(--accent-mid); }
+  .btn-outline { background: none; border: 1px solid var(--border2); color: var(--text); }
+  .btn-outline:hover { background: var(--surface2); }
+  .btn-danger { background: var(--danger-light); color: var(--danger); border: 1px solid #f0c0bb; }
+  .btn-danger:hover { background: #f9dfdc; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .msg { padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-top: 1rem; }
+  .msg-error { background: var(--danger-light); color: var(--danger); border: 1px solid #f0c0bb; }
+  .msg-success { background: var(--accent-light); color: var(--accent); border: 1px solid #b5d8c4; }
+
+  /* APP */
+  #app-screen { display: none; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 230px; background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .sidebar-logo-icon {
+    width: 100%; padding: 0 0.5rem;
+  }
+  .sidebar-logo-icon img { width: 100%; height: auto; display: block; }
+  .sidebar-logo-text { font-size: 13px; font-weight: 600; line-height: 1.2; text-align: center; }
+  .sidebar-logo-text span { font-weight: 400; font-size: 11px; color: var(--text2); display: block; }
+  .sidebar-nav { padding: 0.75rem 0.75rem; flex: 1; overflow-y: auto; }
+  .nav-section { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; padding: 0.5rem 0.5rem 0.25rem; }
+  .nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 10px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500; color: var(--text2);
+    cursor: pointer; transition: all 0.12s; margin-bottom: 2px;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--accent-light); color: var(--accent); }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .nav-badge { margin-left: auto; background: var(--accent); color: white; font-size: 10px; padding: 1px 6px; border-radius: 20px; font-weight: 600; }
+  .sidebar-footer { padding: 1rem; border-top: 1px solid var(--border); }
+  .user-pill { display: flex; align-items: center; gap: 9px; padding: 6px 8px; border-radius: var(--radius-sm); }
+  .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-light); color: var(--accent); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .user-name { font-size: 12px; font-weight: 500; }
+  .user-role { font-size: 10px; color: var(--text2); }
+  .btn-logout { background: none; border: none; cursor: pointer; color: var(--text3); padding: 4px; border-radius: 4px; margin-left: auto; }
+  .btn-logout:hover { color: var(--danger); }
+
+  /* MAIN */
+  .main { margin-left: 230px; padding: 2rem; min-height: 100vh; }
+
+  /* PAGE HEADER */
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap; }
+  .page-title { font-size: 22px; font-weight: 600; }
+  .page-subtitle { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .page-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
+  .stat-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 300; color: var(--text); font-family: 'DM Mono', monospace; }
+  .stat-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  /* FILTERS */
+  .filters-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); }
+  .search-input { width: 100%; padding: 8px 12px 8px 34px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; background: var(--surface); color: var(--text); outline: none; }
+  .search-input:focus { border-color: var(--accent); }
+  .filter-select { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; color: var(--text); background: var(--surface); outline: none; cursor: pointer; }
+  .filter-select:focus { border-color: var(--accent); }
+
+  /* TABLE */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { background: var(--surface2); padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  td { padding: 11px 14px; color: var(--text); vertical-align: middle; }
+  td.code { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text2); }
+  .empty-row td { text-align: center; padding: 3rem; color: var(--text3); }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .badge-active { background: var(--accent-light); color: var(--accent); }
+  .badge-egress { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .badge-transfer { background: var(--info-light); color: var(--info); }
+  .badge-area { background: var(--warn-light); color: var(--warn); }
+
+  /* ACTIONS ROW */
+  .row-actions { display: flex; gap: 6px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000; padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 14px;
+    width: 100%; max-width: 560px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 16px; font-weight: 600; }
+  .modal-close { background: none; border: none; cursor: pointer; color: var(--text3); padding: 4px; border-radius: 4px; font-size: 20px; line-height: 1; }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 1.5rem; }
+  .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  /* TRASLADO HISTORY */
+  .traslado-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .traslado-item:last-child { border-bottom: none; }
+  .traslado-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--info); margin-top: 5px; flex-shrink: 0; }
+  .traslado-info { flex: 1; }
+  .traslado-info strong { font-size: 13px; }
+  .traslado-info span { font-size: 11px; color: var(--text2); display: block; }
+
+  /* SECTION TABS */
+  .section-tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px; width: fit-content; }
+  .section-tab { padding: 6px 14px; border-radius: 5px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--text2); border: none; background: none; }
+  .section-tab.active { background: var(--accent); color: white; }
+
+  /* PAGE SECTIONS */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* LOADING */
+  .loading { display: flex; align-items: center; justify-content: center; padding: 3rem; color: var(--text3); }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .main { margin-left: 0; padding: 1rem; }
+  }
+  @media print {
+    .sidebar, .page-actions, .row-actions, .filters-bar { display: none !important; }
+    .main { margin-left: 0; }
+    table { font-size: 11px; }
+  }
+
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 20px; }
+  .timeline::before { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 1px; background: var(--border); }
+  .timeline-item { position: relative; margin-bottom: 1rem; }
+  .timeline-item::before { content: ''; position: absolute; left: -17px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .timeline-date { font-size: 11px; color: var(--text3); margin-bottom: 2px; }
+  .timeline-text { font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon"><img src="logo.png" alt="Logo"></div>
+      <div>
+        <h1>Registro de Internamento</h1>
+        <span>Sistema clínico de gestión</span>
+      </div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Iniciar sesión</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Registrar cuenta</button>
+    </div>
+    <div id="auth-login">
+      <div class="form-group"><label>Correo electrónico</label><input type="email" id="login-email" placeholder="usuario@clinica.com"></div>
+      <div class="form-group"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••••"></div>
+      <button class="btn btn-primary" onclick="doLogin()">Entrar</button>
+    </div>
+    <div id="auth-register" style="display:none">
+      <div class="form-group"><label>Nombre completo</label><input type="text" id="reg-name" placeholder="Dr. Nombre Apellido"></div>
+      <div class="form-group"><label>Correo electrónico</label><input type="email" id="reg-email" placeholder="usuario@clinica.com"></div>
+      <div class="form-group"><label>Contraseña</label><input type="password" id="reg-pass" placeholder="Mínimo 8 caracteres"></div>
+      <div class="form-group"><label>Rol</label>
+        <select id="reg-role">
+          <option value="recepcionista">Recepcionista</option>
+          <option value="enfermero">Enfermero/a</option>
+          <option value="medico">Médico</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="doRegister()">Crear cuenta</button>
+    </div>
+    <div id="auth-msg"></div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="app-screen">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><img src="logo.png" alt="Logo"></div>
+      <div class="sidebar-logo-text">Internamento<span>Gestión clínica</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Principal</div>
+      <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" onclick="showPage('pacientes')" id="nav-pacientes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Pacientes
+        <span class="nav-badge" id="badge-activos">0</span>
+      </button>
+      <button class="nav-item" onclick="showPage('traslados')" id="nav-traslados">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>
+        Traslados
+      </button>
+      <div class="nav-section" style="margin-top:1rem">Administración</div>
+      <button class="nav-item" onclick="showPage('areas')" id="nav-areas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+        Áreas
+      </button>
+      <button class="nav-item" onclick="showPage('staff')" id="nav-staff">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Personal
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">--</div>
+        <div>
+          <div class="user-name" id="user-name">Cargando...</div>
+          <div class="user-role" id="user-role">-</div>
+        </div>
+        <button class="btn-logout" onclick="doLogout()" title="Cerrar sesión">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div><div class="page-title">Dashboard</div><div class="page-subtitle" id="dash-date">Hoy</div></div>
+      </div>
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-label">Internados activos</div><div class="stat-value" id="st-activos">–</div></div>
+        <div class="stat-card"><div class="stat-label">Ingresos hoy</div><div class="stat-value" id="st-hoy">–</div></div>
+        <div class="stat-card"><div class="stat-label">Egresos totales</div><div class="stat-value" id="st-egresos">–</div></div>
+        <div class="stat-card"><div class="stat-label">Total registrados</div><div class="stat-value" id="st-total">–</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="table-wrap">
+          <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);font-weight:600;font-size:14px;">Recién ingresados</div>
+          <table id="dash-recent"><tbody><tr class="empty-row"><td>Cargando...</td></tr></tbody></table>
+        </div>
+        <div class="table-wrap">
+          <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);font-weight:600;font-size:14px;">Pacientes por área</div>
+          <table id="dash-areas-table"><tbody><tr class="empty-row"><td>Cargando...</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PACIENTES -->
+    <div class="page" id="page-pacientes">
+      <div class="page-header">
+        <div><div class="page-title">Pacientes internados</div><div class="page-subtitle">Registro completo de internamiento</div></div>
+        <div class="page-actions">
+          <button class="btn btn-outline" onclick="exportExcel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar Excel
+          </button>
+          <button class="btn btn-primary" onclick="openModalNuevo()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo paciente
+          </button>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" type="text" id="search-input" placeholder="Buscar por nombre, código, diagnóstico..." oninput="filterTable()">
+        </div>
+        <select class="filter-select" id="filter-status" onchange="filterTable()">
+          <option value="">Todos los estados</option>
+          <option value="activo">Internados</option>
+          <option value="egresado">Egresados</option>
+        </select>
+        <select class="filter-select" id="filter-area" onchange="filterTable()">
+          <option value="">Todas las áreas</option>
+        </select>
+        <select class="filter-select" id="filter-empresa" onchange="filterTable()">
+          <option value="">Todas las empresas</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table id="main-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Paciente</th>
+                <th>Diagnóstico</th>
+                <th>Empresa</th>
+                <th>Área</th>
+                <th>F. Ingreso</th>
+                <th>F. Egreso</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="table-body"><tr class="empty-row"><td colspan="9"><div class="loading"><div class="spinner"></div>Cargando pacientes...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRASLADOS -->
+    <div class="page" id="page-traslados">
+      <div class="page-header">
+        <div><div class="page-title">Historial de traslados</div><div class="page-subtitle">Movimientos entre áreas de internamiento</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table id="traslados-table">
+            <thead><tr><th>Fecha</th><th>Paciente</th><th>Área origen</th><th>Área destino</th><th>Motivo</th><th>Registrado por</th></tr></thead>
+            <tbody id="traslados-body"><tr class="empty-row"><td colspan="6"><div class="loading"><div class="spinner"></div>Cargando...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÁREAS -->
+    <div class="page" id="page-areas">
+      <div class="page-header">
+        <div><div class="page-title">Áreas de internamiento</div></div>
+      </div>
+      <div id="areas-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;"></div>
+    </div>
+
+    <!-- PERSONAL -->
+    <div class="page" id="page-staff">
+      <div class="page-header">
+        <div><div class="page-title">Personal registrado</div></div>
+      </div>
+      <div class="table-wrap">
+        <table id="staff-table">
+          <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Miembro desde</th></tr></thead>
+          <tbody id="staff-body"><tr class="empty-row"><td colspan="4"><div class="loading"><div class="spinner"></div>Cargando...</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL: NUEVO/EDITAR PACIENTE -->
+<div class="modal-overlay" id="modal-paciente">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Nuevo paciente</div>
+      <button class="modal-close" onclick="closeModal('modal-paciente')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-row">
+        <div class="form-group"><label>Nombre completo</label><input type="text" id="p-nombre" placeholder="Nombre y apellidos"></div>
+        <div class="form-group"><label>Código</label><input type="text" id="p-codigo" placeholder="Ej: 157190"></div>
+      </div>
+      <div class="form-group"><label>Diagnóstico</label><input type="text" id="p-diagnostico" placeholder="Diagnóstico clínico"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Empresa / Seguro</label><input type="text" id="p-empresa" placeholder="Ej: Saude Mais, Particular"></div>
+        <div class="form-group"><label>Área</label>
+          <select id="p-area"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Fecha de ingreso</label><input type="date" id="p-ingreso"></div>
+        <div class="form-group"><label>Fecha de egreso</label><input type="date" id="p-egreso"></div>
+      </div>
+      <div class="form-group"><label>Notas</label><textarea id="p-notas" rows="2" placeholder="Observaciones adicionales..."></textarea></div>
+      <div id="modal-msg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-paciente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePaciente()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: TRASLADO -->
+<div class="modal-overlay" id="modal-traslado">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Registrar traslado</div>
+      <button class="modal-close" onclick="closeModal('modal-traslado')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="traslado-paciente-id">
+      <div class="form-group"><label>Paciente</label><input type="text" id="traslado-paciente-nombre" disabled style="background:var(--surface2);color:var(--text2)"></div>
+      <div class="form-group"><label>Área actual</label><input type="text" id="traslado-area-origen-nombre" disabled style="background:var(--surface2);color:var(--text2)"></div>
+      <input type="hidden" id="traslado-area-origen-id">
+      <div class="form-group"><label>Trasladar a</label><select id="traslado-area-destino"></select></div>
+      <div class="form-group"><label>Motivo del traslado</label><textarea id="traslado-motivo" rows="2" placeholder="Motivo clínico del traslado..."></textarea></div>
+      <div id="traslado-msg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-traslado')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTraslado()">Confirmar traslado</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALLE PACIENTE -->
+<div class="modal-overlay" id="modal-detalle">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title">Ficha del paciente</div>
+      <button class="modal-close" onclick="closeModal('modal-detalle')">×</button>
+    </div>
+    <div class="modal-body" id="detalle-body">Cargando...</div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://jnkcheqzmlkyksnpyncz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impua2NoZXF6bWxreWtzbnB5bmN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMDQzMzYsImV4cCI6MjA4OTU4MDMzNn0.fsJRCk7x4rJ3tPCbobpXI0PAvRi2qNodW51R9AowH68';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let currentProfile = null;
+let allPacientes = [];
+let allAreas = [];
+
+// ─── AUTH ────────────────────────────────────────────────
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (tab==='login'&&i===0)||(tab==='register'&&i===1)));
+  document.getElementById('auth-login').style.display = tab==='login'?'block':'none';
+  document.getElementById('auth-register').style.display = tab==='register'?'block':'none';
+  document.getElementById('auth-msg').innerHTML = '';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const msgEl = document.getElementById('auth-msg');
+  msgEl.innerHTML = '<div class="msg">Verificando...</div>';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
+  msgEl.innerHTML = '';
+  initApp(data.user);
+}
+
+async function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const role = document.getElementById('reg-role').value;
+  const msgEl = document.getElementById('auth-msg');
+  if (!name||!email||!pass) { msgEl.innerHTML = '<div class="msg msg-error">Completa todos los campos.</div>'; return; }
+  msgEl.innerHTML = '<div class="msg">Creando cuenta...</div>';
+  const { data, error } = await sb.auth.signUp({ email, password: pass });
+  if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
+  if (data.user) {
+    await sb.from('staff_profiles').insert({ id: data.user.id, nombre: name, rol: role });
+  }
+  msgEl.innerHTML = '<div class="msg msg-success">Cuenta creada. Ya puedes iniciar sesión.</div>';
+  switchAuthTab('login');
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+// ─── INIT ────────────────────────────────────────────────
+async function initApp(user) {
+  currentUser = user;
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+
+  const { data: profile } = await sb.from('staff_profiles').select('*').eq('id', user.id).single();
+  currentProfile = profile;
+  if (profile) {
+    const initials = profile.nombre.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
+    document.getElementById('user-avatar').textContent = initials;
+    document.getElementById('user-name').textContent = profile.nombre;
+    document.getElementById('user-role').textContent = profile.rol;
+  } else {
+    document.getElementById('user-name').textContent = user.email;
+    document.getElementById('user-role').textContent = 'Usuario';
+  }
+
+  const today = new Date().toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('dash-date').textContent = today.charAt(0).toUpperCase()+today.slice(1);
+
+  await loadAreas();
+  await loadPacientes();
+  loadDashboard();
+  showPage('dashboard');
+}
+
+// ─── DATA LOADING ─────────────────────────────────────────
+async function loadAreas() {
+  const { data } = await sb.from('areas').select('*').order('nombre');
+  allAreas = data || [];
+  populateAreaSelects();
+  renderAreasPage();
+}
+
+async function loadPacientes() {
+  const { data } = await sb.from('pacientes').select('*, areas(nombre)').order('fecha_ingreso', { ascending: false });
+  allPacientes = data || [];
+  renderTable(allPacientes);
+  const activos = allPacientes.filter(p=>!p.fecha_egreso).length;
+  document.getElementById('badge-activos').textContent = activos;
+
+  const empresas = [...new Set(allPacientes.map(p=>p.empresa))].sort();
+  const sel = document.getElementById('filter-empresa');
+  sel.innerHTML = '<option value="">Todas las empresas</option>';
+  empresas.forEach(e => { const o = document.createElement('option'); o.value=e; o.textContent=e; sel.appendChild(o); });
+}
+
+// ─── TABLE RENDER ─────────────────────────────────────────
+function renderTable(rows) {
+  const tbody = document.getElementById('table-body');
+  if (!rows.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No se encontraron pacientes</td></tr>'; return; }
+  tbody.innerHTML = rows.map(p => {
+    const activo = !p.fecha_egreso;
+    const areaNombre = p.areas?.nombre || '—';
+    return `<tr>
+      <td class="code">${p.codigo}</td>
+      <td style="font-weight:500">${p.nombre}</td>
+      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p.diagnostico}">${p.diagnostico}</td>
+      <td>${p.empresa}</td>
+      <td><span class="badge badge-area">${areaNombre}</span></td>
+      <td>${fmt(p.fecha_ingreso)}</td>
+      <td>${p.fecha_egreso ? fmt(p.fecha_egreso) : '—'}</td>
+      <td><span class="badge ${activo?'badge-active':'badge-egress'}">${activo?'Internado':'Egresado'}</span></td>
+      <td>
+        <div class="row-actions">
+          <button class="btn btn-outline btn-sm" onclick="openDetalle('${p.id}')">Ver</button>
+          <button class="btn btn-outline btn-sm" onclick="openModalEditar('${p.id}')">Editar</button>
+          ${activo ? `<button class="btn btn-outline btn-sm" onclick="openModalTraslado('${p.id}')">Trasladar</button>` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function fmt(dateStr) {
+  if (!dateStr) return '—';
+  const [y,m,d] = dateStr.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function filterTable() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const status = document.getElementById('filter-status').value;
+  const area = document.getElementById('filter-area').value;
+  const empresa = document.getElementById('filter-empresa').value;
+  const filtered = allPacientes.filter(p => {
+    const matchQ = !q || p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q) || p.diagnostico.toLowerCase().includes(q);
+    const matchStatus = !status || (status==='activo' && !p.fecha_egreso) || (status==='egresado' && p.fecha_egreso);
+    const matchArea = !area || p.area_id === area;
+    const matchEmpresa = !empresa || p.empresa === empresa;
+    return matchQ && matchStatus && matchArea && matchEmpresa;
+  });
+  renderTable(filtered);
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────
+function loadDashboard() {
+  const today = new Date().toISOString().split('T')[0];
+  const activos = allPacientes.filter(p => !p.fecha_egreso);
+  const hoy = allPacientes.filter(p => p.fecha_ingreso === today);
+  const egresos = allPacientes.filter(p => p.fecha_egreso);
+
+  document.getElementById('st-activos').textContent = activos.length;
+  document.getElementById('st-hoy').textContent = hoy.length;
+  document.getElementById('st-egresos').textContent = egresos.length;
+  document.getElementById('st-total').textContent = allPacientes.length;
+
+  const recent = [...allPacientes].slice(0, 6);
+  const tbody = document.getElementById('dash-recent').querySelector('tbody') || document.createElement('tbody');
+  document.getElementById('dash-recent').innerHTML = `<thead><tr><th>Paciente</th><th>Ingreso</th><th>Estado</th></tr></thead><tbody>${
+    recent.map(p=>`<tr><td style="font-weight:500">${p.nombre}</td><td>${fmt(p.fecha_ingreso)}</td><td><span class="badge ${p.fecha_egreso?'badge-egress':'badge-active'}">${p.fecha_egreso?'Egresado':'Internado'}</span></td></tr>`).join('')
+  }</tbody>`;
+
+  const areaCount = {};
+  activos.forEach(p => { const n = p.areas?.nombre||'Sin área'; areaCount[n] = (areaCount[n]||0)+1; });
+  document.getElementById('dash-areas-table').innerHTML = `<thead><tr><th>Área</th><th>Pacientes</th></tr></thead><tbody>${
+    Object.entries(areaCount).sort((a,b)=>b[1]-a[1]).map(([n,c])=>`<tr><td><span class="badge badge-area">${n}</span></td><td style="font-weight:600;font-family:'DM Mono',monospace">${c}</td></tr>`).join('')
+  }</tbody>`;
+}
+
+// ─── AREAS ───────────────────────────────────────────────
+function renderAreasPage() {
+  const grid = document.getElementById('areas-grid');
+  grid.innerHTML = allAreas.map(a => {
+    const count = allPacientes.filter(p => p.area_id === a.id && !p.fecha_egreso).length;
+    return `<div class="table-wrap" style="padding:1.25rem">
+      <div style="font-size:16px;margin-bottom:2px">🏥</div>
+      <div style="font-weight:600;font-size:15px;margin-bottom:4px">${a.nombre}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${a.descripcion||''}</div>
+      <div style="font-size:28px;font-weight:300;font-family:'DM Mono',monospace">${count}</div>
+      <div style="font-size:11px;color:var(--text3)">pacientes activos</div>
+    </div>`;
+  }).join('');
+}
+
+function populateAreaSelects() {
+  const selects = ['p-area', 'filter-area', 'traslado-area-destino'];
+  selects.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const isFilter = id === 'filter-area';
+    sel.innerHTML = isFilter ? '<option value="">Todas las áreas</option>' : '<option value="">Seleccionar área...</option>';
+    allAreas.forEach(a => { const o = document.createElement('option'); o.value=a.id; o.textContent=a.nombre; sel.appendChild(o); });
+  });
+}
+
+// ─── PERSONAL ─────────────────────────────────────────────
+async function loadStaff() {
+  const { data } = await sb.from('staff_profiles').select('*, auth_users:id(email)').order('created_at');
+  const { data: users } = await sb.auth.admin?.listUsers?.() || { data: null };
+  const tbody = document.getElementById('staff-body');
+
+  if (!data?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Sin personal registrado</td></tr>'; return; }
+  const { data: authData } = await sb.rpc ? { data: null } : { data: null };
+
+  tbody.innerHTML = data.map(s => `<tr>
+    <td style="font-weight:500">${s.nombre}</td>
+    <td style="color:var(--text2)">—</td>
+    <td><span class="badge badge-area">${s.rol}</span></td>
+    <td style="color:var(--text2)">${new Date(s.created_at).toLocaleDateString('es-ES')}</td>
+  </tr>`).join('');
+}
+
+// ─── TRASLADOS ───────────────────────────────────────────
+async function loadTraslados() {
+  const { data } = await sb.from('traslados')
+    .select('*, paciente:paciente_id(nombre), origen:area_origen_id(nombre), destino:area_destino_id(nombre), registrado:registrado_por(nombre:id)')
+    .order('created_at', { ascending: false });
+  
+  const { data: staff } = await sb.from('staff_profiles').select('id,nombre');
+  const staffMap = Object.fromEntries((staff||[]).map(s=>[s.id,s.nombre]));
+
+  const tbody = document.getElementById('traslados-body');
+  if (!data?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Sin traslados registrados</td></tr>'; return; }
+  tbody.innerHTML = data.map(t => `<tr>
+    <td style="color:var(--text2);font-size:12px">${new Date(t.fecha_traslado).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+    <td style="font-weight:500">${t.paciente?.nombre||'—'}</td>
+    <td><span class="badge badge-egress">${t.origen?.nombre||'—'}</span></td>
+    <td><span class="badge badge-area">${t.destino?.nombre||'—'}</span></td>
+    <td style="color:var(--text2)">${t.motivo||'—'}</td>
+    <td style="color:var(--text2)">${t.registrado_por ? staffMap[t.registrado_por]||'—' : '—'}</td>
+  </tr>`).join('');
+}
+
+// ─── MODALS ──────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target===m) m.classList.remove('open'); }));
+
+function openModalNuevo() {
+  document.getElementById('modal-title').textContent = 'Nuevo paciente';
+  document.getElementById('edit-id').value = '';
+  ['p-nombre','p-codigo','p-diagnostico','p-empresa','p-notas'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('p-area').value = '';
+  document.getElementById('p-ingreso').value = new Date().toISOString().split('T')[0];
+  document.getElementById('p-egreso').value = '';
+  document.getElementById('modal-msg').innerHTML = '';
+  openModal('modal-paciente');
+}
+
+function openModalEditar(id) {
+  const p = allPacientes.find(x=>x.id===id);
+  if (!p) return;
+  document.getElementById('modal-title').textContent = 'Editar paciente';
+  document.getElementById('edit-id').value = p.id;
+  document.getElementById('p-nombre').value = p.nombre;
+  document.getElementById('p-codigo').value = p.codigo;
+  document.getElementById('p-diagnostico').value = p.diagnostico;
+  document.getElementById('p-empresa').value = p.empresa;
+  document.getElementById('p-area').value = p.area_id || '';
+  document.getElementById('p-ingreso').value = p.fecha_ingreso;
+  document.getElementById('p-egreso').value = p.fecha_egreso || '';
+  document.getElementById('p-notas').value = p.notas || '';
+  document.getElementById('modal-msg').innerHTML = '';
+  openModal('modal-paciente');
+}
+
+async function savePaciente() {
+  const msgEl = document.getElementById('modal-msg');
+  const id = document.getElementById('edit-id').value;
+  const payload = {
+    nombre: document.getElementById('p-nombre').value.trim(),
+    codigo: document.getElementById('p-codigo').value.trim(),
+    diagnostico: document.getElementById('p-diagnostico').value.trim(),
+    empresa: document.getElementById('p-empresa').value.trim(),
+    area_id: document.getElementById('p-area').value || null,
+    fecha_ingreso: document.getElementById('p-ingreso').value,
+    fecha_egreso: document.getElementById('p-egreso').value || null,
+    notas: document.getElementById('p-notas').value.trim() || null,
+  };
+  if (!payload.nombre||!payload.codigo||!payload.diagnostico||!payload.empresa||!payload.fecha_ingreso) {
+    msgEl.innerHTML = '<div class="msg msg-error">Completa los campos obligatorios.</div>'; return;
+  }
+  msgEl.innerHTML = '<div class="msg">Guardando...</div>';
+  let error;
+  if (id) {
+    ({ error } = await sb.from('pacientes').update(payload).eq('id', id));
+  } else {
+    ({ error } = await sb.from('pacientes').insert(payload));
+  }
+  if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
+  closeModal('modal-paciente');
+  await loadPacientes();
+  loadDashboard();
+  renderAreasPage();
+}
+
+function openModalTraslado(id) {
+  const p = allPacientes.find(x=>x.id===id);
+  if (!p) return;
+  document.getElementById('traslado-paciente-id').value = p.id;
+  document.getElementById('traslado-paciente-nombre').value = p.nombre;
+  document.getElementById('traslado-area-origen-nombre').value = p.areas?.nombre || 'Sin área';
+  document.getElementById('traslado-area-origen-id').value = p.area_id || '';
+  document.getElementById('traslado-motivo').value = '';
+  document.getElementById('traslado-msg').innerHTML = '';
+  const destSel = document.getElementById('traslado-area-destino');
+  destSel.innerHTML = '<option value="">Seleccionar área destino...</option>';
+  allAreas.filter(a=>a.id!==p.area_id).forEach(a => { const o=document.createElement('option'); o.value=a.id; o.textContent=a.nombre; destSel.appendChild(o); });
+  openModal('modal-traslado');
+}
+
+async function saveTraslado() {
+  const msgEl = document.getElementById('traslado-msg');
+  const pacienteId = document.getElementById('traslado-paciente-id').value;
+  const origenId = document.getElementById('traslado-area-origen-id').value || null;
+  const destinoId = document.getElementById('traslado-area-destino').value;
+  const motivo = document.getElementById('traslado-motivo').value.trim();
+  if (!destinoId) { msgEl.innerHTML = '<div class="msg msg-error">Selecciona el área de destino.</div>'; return; }
+  msgEl.innerHTML = '<div class="msg">Registrando traslado...</div>';
+  const { error: te } = await sb.from('traslados').insert({
+    paciente_id: pacienteId, area_origen_id: origenId, area_destino_id: destinoId,
+    motivo: motivo||null, registrado_por: currentUser.id, fecha_traslado: new Date().toISOString()
+  });
+  if (te) { msgEl.innerHTML = `<div class="msg msg-error">${te.message}</div>`; return; }
+  const { error: pe } = await sb.from('pacientes').update({ area_id: destinoId }).eq('id', pacienteId);
+  if (pe) { msgEl.innerHTML = `<div class="msg msg-error">${pe.message}</div>`; return; }
+  closeModal('modal-traslado');
+  await loadPacientes();
+  loadDashboard();
+  renderAreasPage();
+}
+
+async function openDetalle(id) {
+  const p = allPacientes.find(x=>x.id===id);
+  if (!p) return;
+  openModal('modal-detalle');
+  const body = document.getElementById('detalle-body');
+  const { data: traslados } = await sb.from('traslados')
+    .select('*, origen:area_origen_id(nombre), destino:area_destino_id(nombre)')
+    .eq('paciente_id', id).order('created_at');
+  const { data: staff } = await sb.from('staff_profiles').select('id,nombre');
+  const staffMap = Object.fromEntries((staff||[]).map(s=>[s.id,s.nombre]));
+
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+      <div class="stat-card"><div class="stat-label">Código</div><div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500">${p.codigo}</div></div>
+      <div class="stat-card"><div class="stat-label">Estado</div><div><span class="badge ${p.fecha_egreso?'badge-egress':'badge-active'}" style="font-size:14px;padding:5px 12px">${p.fecha_egreso?'Egresado':'Internado'}</span></div></div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem">
+      ${[['Paciente',p.nombre],['Diagnóstico',p.diagnostico],['Empresa',p.empresa],['Área actual',p.areas?.nombre||'—'],['Fecha ingreso',fmt(p.fecha_ingreso)],['Fecha egreso',p.fecha_egreso?fmt(p.fecha_egreso):'Aún internado'],['Notas',p.notas||'—']].map(([k,v])=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0;font-size:12px;color:var(--text2);font-weight:500;width:130px">${k}</td><td style="padding:8px 0;font-size:13px">${v}</td></tr>`).join('')}
+    </table>
+    <div style="font-weight:600;margin-bottom:0.75rem">Historial de traslados</div>
+    ${traslados?.length ? `<div class="timeline">${traslados.map(t=>`<div class="timeline-item"><div class="timeline-date">${new Date(t.fecha_traslado).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})} · ${t.registrado_por?staffMap[t.registrado_por]||'—':'—'}</div><div class="timeline-text">${t.origen?.nombre||'Sin área'} → <strong>${t.destino?.nombre||'—'}</strong>${t.motivo?` · <span style="color:var(--text2)">${t.motivo}</span>`:''}</div></div>`).join('')}</div>` : '<p style="color:var(--text3);font-size:13px">Sin traslados registrados.</p>'}
+  `;
+}
+
+// ─── EXPORT ──────────────────────────────────────────────
+function exportExcel() {
+  const rows = allPacientes.map(p => ({
+    'Código': p.codigo,
+    'Nombre Paciente': p.nombre,
+    'Diagnóstico': p.diagnostico,
+    'Empresa / Seguro': p.empresa,
+    'Área': p.areas?.nombre || '',
+    'F. Ingreso': fmt(p.fecha_ingreso),
+    'F. Egreso': p.fecha_egreso ? fmt(p.fecha_egreso) : '',
+    'Estado': p.fecha_egreso ? 'Egresado' : 'Internado',
+    'Notas': p.notas || ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [8,30,35,20,15,12,12,12,30].map(w=>({wch:w}));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Internados');
+  XLSX.writeFile(wb, `Registro_Internados_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  document.getElementById(`nav-${name}`)?.classList.add('active');
+  if (name==='traslados') loadTraslados();
+  if (name==='staff') loadStaff();
+}
+
+// ─── BOOTSTRAP ───────────────────────────────────────────
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session?.user) initApp(session.user);
+});
+</script>
+</body>
+</html>
