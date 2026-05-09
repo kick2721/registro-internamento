@@ -608,6 +608,40 @@
 </div>
 
 <!-- MODAL: EGRESO -->
+<div class="modal-overlay" id="modal-export">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div class="modal-title">Exportar Excel</div>
+      <button class="modal-close" onclick="closeModal('modal-export')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Período</label>
+        <select class="filter-select" id="export-periodo" onchange="onExportPeriodoChange()" style="width:100%">
+          <option value="todo">Todo el registro</option>
+          <option value="anio">Un año específico</option>
+          <option value="mes">Un mes específico</option>
+        </select>
+      </div>
+      <div class="form-group" id="export-anio-wrap" style="display:none">
+        <label>Año</label>
+        <select class="filter-select" id="export-anio" style="width:100%"></select>
+      </div>
+      <div class="form-group" id="export-mes-wrap" style="display:none">
+        <label>Mes</label>
+        <select class="filter-select" id="export-mes-sel" style="width:100%"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-export')">Cancelar</button>
+      <button class="btn btn-primary" style="width:auto" onclick="doExport()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-egreso">
   <div class="modal">
     <div class="modal-header">
@@ -983,12 +1017,18 @@ function filterTable() {
 }
 
 // ─── DASHBOARD ───────────────────────────────────────────
-async function exportExcelFull() {
-  const { data: traslados } = await sb.from('traslados')
+async function exportExcelFull(pacientes, suffix) {
+  pacientes = pacientes || allPacientes;
+  suffix = suffix || 'completo';
+  const ids = pacientes.map(p => p.id);
+
+  let q = sb.from('traslados')
     .select('fecha_traslado, motivo, paciente:paciente_id(nombre,codigo), origen:area_origen_id(nombre), destino:area_destino_id(nombre)')
     .order('fecha_traslado');
+  if (ids.length < allPacientes.length) q = q.in('paciente_id', ids);
+  const { data: traslados } = await q;
 
-  const rowsPacientes = allPacientes.map(p => ({
+  const rowsPacientes = pacientes.map(p => ({
     'Código': p.codigo,
     'Nombre Paciente': p.nombre,
     'Diagnóstico': p.diagnostico,
@@ -1017,7 +1057,7 @@ async function exportExcelFull() {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws1, 'Internados');
   XLSX.utils.book_append_sheet(wb, ws2, 'Traslados');
-  XLSX.writeFile(wb, `Registro_Internados_${new Date().toISOString().split('T')[0]}.xlsx`);
+  XLSX.writeFile(wb, `Registro_Internados_${suffix}.xlsx`);
 }
 
 async function loadDashboard() {
@@ -1311,7 +1351,50 @@ async function openDetalle(id) {
 }
 
 // ─── EXPORT ──────────────────────────────────────────────
-function exportExcel() { exportExcelFull(); }
+function exportExcel() {
+  // Poblar años y meses disponibles desde los datos
+  const nomMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const meses = [...new Set(allPacientes.map(p=>p.fecha_ingreso?.slice(0,7)))].filter(Boolean).sort().reverse();
+  const anios = [...new Set(meses.map(m=>m.slice(0,4)))];
+
+  const selAnio = document.getElementById('export-anio');
+  selAnio.innerHTML = anios.map(a=>`<option value="${a}">${a}</option>`).join('');
+
+  const selMes = document.getElementById('export-mes-sel');
+  selMes.innerHTML = meses.map(m=>{ const [y,mo]=m.split('-'); return `<option value="${m}">${nomMes[+mo-1]} ${y}</option>`; }).join('');
+
+  document.getElementById('export-periodo').value = 'todo';
+  document.getElementById('export-anio-wrap').style.display = 'none';
+  document.getElementById('export-mes-wrap').style.display = 'none';
+  openModal('modal-export');
+}
+
+function onExportPeriodoChange() {
+  const v = document.getElementById('export-periodo').value;
+  document.getElementById('export-anio-wrap').style.display = v === 'anio' ? 'block' : 'none';
+  document.getElementById('export-mes-wrap').style.display = v === 'mes' ? 'block' : 'none';
+}
+
+async function doExport() {
+  const periodo = document.getElementById('export-periodo').value;
+  const anio = document.getElementById('export-anio').value;
+  const mes = document.getElementById('export-mes-sel').value;
+
+  let pacientes = allPacientes;
+  let suffix = 'completo';
+  if (periodo === 'anio') {
+    pacientes = allPacientes.filter(p => p.fecha_ingreso?.startsWith(anio));
+    suffix = anio;
+  } else if (periodo === 'mes') {
+    pacientes = allPacientes.filter(p => p.fecha_ingreso?.startsWith(mes));
+    const [y,mo] = mes.split('-');
+    const nomMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    suffix = `${nomMes[+mo-1]}_${y}`;
+  }
+
+  closeModal('modal-export');
+  await exportExcelFull(pacientes, suffix);
+}
 
 // ─── RESUMEN DEL DÍA ─────────────────────────────────────
 function initResumenDatePicker() {
