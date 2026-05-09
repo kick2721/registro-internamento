@@ -238,19 +238,40 @@
     .main { margin-left: 0; padding: 1rem; }
   }
   @media print {
-    .sidebar, .no-print, .row-actions, .filters-bar, #pagination-bar { display: none !important; }
-    .main { margin-left: 0; padding: 0; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .sidebar, .no-print, .row-actions, .filters-bar, #pagination-bar, .nav-badge { display: none !important; }
+    .main { margin-left: 0; padding: 1.5cm 1.5cm; background: white; }
     .page { display: none !important; }
     #page-resumen { display: block !important; }
-    table { font-size: 11px; }
-    .resumen-section { page-break-inside: avoid; margin-bottom: 1.5rem; }
-    body { background: white; }
+    body { background: white; font-family: 'DM Sans', sans-serif; }
+
+    /* Resumen print layout */
+    .resumen-print-header { display: flex !important; align-items: center; justify-content: space-between; border-bottom: 2px solid #1a5c3a; padding-bottom: 12px; margin-bottom: 24px; }
+    .resumen-print-header img { height: 48px; }
+    .resumen-print-header-right { text-align: right; }
+    .resumen-print-header-right h2 { font-size: 16px; font-weight: 700; color: #1a1916; margin: 0; }
+    .resumen-print-header-right p { font-size: 12px; color: #6b6860; margin: 2px 0 0; }
+
+    .resumen-section { margin-bottom: 24px; page-break-inside: avoid; }
+    .resumen-section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #1a5c3a; border-bottom: 1px solid #e2dfd8; padding-bottom: 6px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .resumen-section-title .count { background: #e8f4ed; color: #1a5c3a; border-radius: 20px; padding: 1px 8px; font-size: 12px; }
+    .resumen-section-title.egresos { color: #6b6860; }
+    .resumen-section-title.egresos .count { background: #f4f2ee; color: #6b6860; }
+    .resumen-section-title.traslados { color: #1a4d7a; }
+    .resumen-section-title.traslados .count { background: #eef4fb; color: #1a4d7a; }
+
+    .resumen-section table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .resumen-section thead th { background: #f9f8f5 !important; padding: 7px 10px; text-align: left; font-size: 10px; font-weight: 700; color: #6b6860; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2dfd8; }
+    .resumen-section tbody td { padding: 7px 10px; border-bottom: 1px solid #f0ede8; color: #1a1916; }
+    .resumen-section tbody tr:last-child td { border-bottom: none; }
+    .resumen-section .empty-msg { font-size: 12px; color: #9b9890; font-style: italic; padding: 8px 0; }
+
+    .resumen-print-footer { margin-top: 32px; border-top: 1px solid #e2dfd8; padding-top: 10px; font-size: 10px; color: #9b9890; display: flex !important; justify-content: space-between; }
+
+    /* Hide web-style elements */
+    .badge, .table-wrap { background: none !important; border: none !important; box-shadow: none !important; padding: 0 !important; border-radius: 0 !important; }
   }
-  .resumen-header-print { display: none; }
-  @media print { .resumen-header-print { display: block; text-align: center; margin-bottom: 1.5rem; }
-    .resumen-header-print h2 { font-size: 18px; font-weight: 700; }
-    .resumen-header-print p { font-size: 13px; color: #666; }
-  }
+  .resumen-print-header, .resumen-print-footer { display: none; }
 
   /* TIMELINE */
   .timeline { position: relative; padding-left: 20px; }
@@ -1201,31 +1222,43 @@ async function loadResumen() {
   const egresosRows = { data: (egresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:500">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:var(--text2)">${p.codigo}</td><td style="padding:8px 10px">${p.diagnostico}</td><td style="padding:8px 10px">${p.empresa}</td><td style="padding:8px 10px">${p.motivo_egreso||'—'}</td></tr>` })) };
   const trasladosRows = { data: (traslados.data||[]).map(t => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:500">${t.paciente?.nombre||'—'}</td><td style="padding:8px 10px;font-family:monospace;color:var(--text2)">${t.paciente?.codigo||'—'}</td><td style="padding:8px 10px"><span class="badge badge-egress">${t.origen?.nombre||'—'}</span></td><td style="padding:8px 10px"><span class="badge badge-area">${t.destino?.nombre||'—'}</span></td><td style="padding:8px 10px;color:var(--text2)">${t.motivo||'—'}</td></tr>` })) };
 
+  const ni = ingresos.data?.length||0, ne = egresos.data?.length||0, nt = traslados.data?.length||0;
   document.getElementById('resumen-content').innerHTML = `
-    <div class="resumen-header-print">
-      <h2>Clínica Morales — Resumen de Internamento</h2>
-      <p>${fechaLabel}</p>
+    <div class="resumen-print-header">
+      <img src="logo.png" alt="Logo">
+      <div class="resumen-print-header-right">
+        <h2>Resumen de Internamento</h2>
+        <p>${fechaLabel}</p>
+      </div>
     </div>
+
     <div class="resumen-section table-wrap" style="margin-bottom:1.25rem">
       <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-        <span style="font-weight:600">Ingresos</span>
-        <span class="badge badge-active">${ingresos.data?.length||0}</span>
+        <span style="font-weight:600">Ingresos</span><span class="badge badge-active">${ni}</span>
       </div>
+      <div class="resumen-section-title" style="display:none">Ingresos <span class="count">${ni}</span></div>
       ${mkTable(['Paciente','Código','Diagnóstico','Empresa','Área'], ingresosRows, 'Sin ingresos este día')}
     </div>
+
     <div class="resumen-section table-wrap" style="margin-bottom:1.25rem">
       <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-        <span style="font-weight:600">Egresos</span>
-        <span class="badge badge-egress">${egresos.data?.length||0}</span>
+        <span style="font-weight:600">Egresos</span><span class="badge badge-egress">${ne}</span>
       </div>
-      ${mkTable(['Paciente','Código','Diagnóstico','Empresa','Motivo'], egresosRows, 'Sin egresos este día')}
+      <div class="resumen-section-title egresos" style="display:none">Egresos <span class="count">${ne}</span></div>
+      ${mkTable(['Paciente','Código','Diagnóstico','Empresa','Motivo egreso'], egresosRows, 'Sin egresos este día')}
     </div>
+
     <div class="resumen-section table-wrap">
       <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-        <span style="font-weight:600">Traslados</span>
-        <span class="badge badge-transfer">${traslados.data?.length||0}</span>
+        <span style="font-weight:600">Traslados</span><span class="badge badge-transfer">${nt}</span>
       </div>
+      <div class="resumen-section-title traslados" style="display:none">Traslados <span class="count">${nt}</span></div>
       ${mkTable(['Paciente','Código','Área origen','Área destino','Motivo'], trasladosRows, 'Sin traslados este día')}
+    </div>
+
+    <div class="resumen-print-footer">
+      <span>Clínica Morales MG, Lda — Sistema de Internamento</span>
+      <span>Generado el ${new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
     </div>`;
 }
 
