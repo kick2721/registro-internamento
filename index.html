@@ -1426,7 +1426,12 @@ async function loadResumen() {
   const egresosRows = { data: (egresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:500">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:var(--text2)">${p.codigo}</td><td style="padding:8px 10px">${p.diagnostico}</td><td style="padding:8px 10px">${p.empresa}</td><td style="padding:8px 10px">${p.motivo_egreso||'—'}</td></tr>` })) };
   const trasladosRows = { data: (traslados.data||[]).map(t => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:500">${t.paciente?.nombre||'—'}</td><td style="padding:8px 10px;font-family:monospace;color:var(--text2)">${t.paciente?.codigo||'—'}</td><td style="padding:8px 10px"><span class="badge badge-egress">${t.origen?.nombre||'—'}</span></td><td style="padding:8px 10px"><span class="badge badge-area">${t.destino?.nombre||'—'}</span></td><td style="padding:8px 10px;color:var(--text2)">${t.motivo||'—'}</td></tr>` })) };
 
-  const ni = ingresos.data?.length||0, ne = egresos.data?.length||0, nt = traslados.data?.length||0;
+  const internados = allPacientes.filter(p => !p.fecha_egreso);
+  const internadosRows = { data: internados.sort((a,b)=>a.fecha_ingreso?.localeCompare(b.fecha_ingreso)).map(p => {
+    const dias = Math.floor((new Date(fecha) - new Date(p.fecha_ingreso)) / 86400000);
+    return { __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:500">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:var(--text2)">${p.codigo}</td><td style="padding:8px 10px">${p.diagnostico}</td><td style="padding:8px 10px"><span class="badge badge-area">${p.areas?.nombre||'—'}</span></td><td style="padding:8px 10px;color:var(--text2)">${fmt(p.fecha_ingreso)}</td><td style="padding:8px 10px;font-family:monospace;font-size:12px">${dias >= 0 ? dias+'d' : '—'}</td></tr>` };
+  }) };
+  const ni = ingresos.data?.length||0, ne = egresos.data?.length||0, nt = traslados.data?.length||0, nint = internados.length;
   document.getElementById('resumen-content').innerHTML = `
     <div class="resumen-print-header">
       <img src="logo.png" alt="Logo">
@@ -1452,12 +1457,20 @@ async function loadResumen() {
       ${mkTable(['Paciente','Código','Diagnóstico','Empresa','Motivo egreso'], egresosRows, 'Sin egresos este día')}
     </div>
 
-    <div class="resumen-section table-wrap">
+    <div class="resumen-section table-wrap" style="margin-bottom:1.25rem">
       <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
         <span style="font-weight:600">Traslados</span><span class="badge badge-transfer">${nt}</span>
       </div>
       <div class="resumen-section-title traslados" style="display:none">Traslados <span class="count">${nt}</span></div>
       ${mkTable(['Paciente','Código','Área origen','Área destino','Motivo'], trasladosRows, 'Sin traslados este día')}
+    </div>
+
+    <div class="resumen-section table-wrap">
+      <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <span style="font-weight:600">Internados actuales</span><span class="badge badge-active">${nint}</span>
+      </div>
+      <div class="resumen-section-title" style="display:none">Internados actuales <span class="count">${nint}</span></div>
+      ${mkTable(['Paciente','Código','Diagnóstico','Área','F. Ingreso','Días'], internadosRows, 'Sin pacientes internados')}
     </div>
 
     <div class="resumen-print-footer">
