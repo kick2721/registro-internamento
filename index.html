@@ -717,7 +717,7 @@ function renderTable(rows) {
           <div class="row-actions">
             <button class="btn btn-outline btn-sm" onclick="openDetalle('${p.id}')">Ver</button>
             <button class="btn btn-outline btn-sm" onclick="openModalEditar('${p.id}')">Editar</button>
-            ${activo ? `<button class="btn btn-outline btn-sm" onclick="openModalTraslado('${p.id}')">Trasladar</button>` : ''}
+            ${activo ? `<button class="btn btn-outline btn-sm" onclick="openModalTraslado('${p.id}')">Trasladar</button><button class="btn btn-danger btn-sm" onclick="darEgreso('${p.id}','${p.nombre}')">Egreso</button>` : ''}
           </div>
         </td>
       </tr>`;
@@ -728,6 +728,16 @@ function renderTable(rows) {
   document.getElementById('btn-prev').disabled = currentPage <= 1;
   document.getElementById('btn-next').disabled = currentPage >= totalPages;
   document.getElementById('pagination-bar').style.display = total > PAGE_SIZE ? 'flex' : 'none';
+}
+
+async function darEgreso(id, nombre) {
+  if (!confirm(`¿Confirmar egreso de ${nombre}?`)) return;
+  const hoy = new Date().toISOString().split('T')[0];
+  const { error } = await sb.from('pacientes').update({ fecha_egreso: hoy }).eq('id', id);
+  if (error) { alert('Error al registrar egreso: ' + error.message); return; }
+  await loadPacientes();
+  loadDashboard();
+  renderAreasPage();
 }
 
 function changePage(dir) {
