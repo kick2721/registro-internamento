@@ -693,6 +693,25 @@
 </div>
 
 <!-- MODAL: CREAR USUARIO -->
+<div class="modal-overlay" id="modal-permisos">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">Permisos — <span id="permisos-nombre"></span></div>
+      <button class="modal-close" onclick="closeModal('modal-permisos')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="permisos-id">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">Los permisos marcados sobreescriben los del rol. Los desmarcados usan el valor por defecto del rol.</p>
+      <div id="permisos-lista" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div id="permisos-msg" style="margin-top:1rem"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-permisos')">Cancelar</button>
+      <button class="btn btn-primary" style="width:auto" onclick="guardarPermisos()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-cambiar-rol">
   <div class="modal" style="max-width:360px">
     <div class="modal-header">
@@ -904,18 +923,29 @@ async function initApp(user) {
   showPage('dashboard');
 }
 
-// ─── ROLE PERMISSIONS ─────────────────────────────────────
+// ─── PERMISSIONS ──────────────────────────────────────────
+const ROLE_DEFAULTS = {
+  admin:          { nuevo_paciente:true, editar_paciente:true, traslado:true, egreso:true, ver_personal:true, crear_usuarios:true, gestionar_areas:true },
+  director:       { nuevo_paciente:false, editar_paciente:false, traslado:false, egreso:false, ver_personal:true, crear_usuarios:false, gestionar_areas:false },
+  medico:         { nuevo_paciente:false, editar_paciente:false, traslado:false, egreso:false, ver_personal:false, crear_usuarios:false, gestionar_areas:false },
+  enfermero:      { nuevo_paciente:false, editar_paciente:false, traslado:false, egreso:false, ver_personal:false, crear_usuarios:false, gestionar_areas:false },
+  recepcionista:  { nuevo_paciente:false, editar_paciente:false, traslado:false, egreso:false, ver_personal:false, crear_usuarios:false, gestionar_areas:false },
+};
+
+let currentPermisos = {};
+
+function buildPermisos(profile) {
+  const defaults = ROLE_DEFAULTS[profile?.rol] || ROLE_DEFAULTS.recepcionista;
+  return { ...defaults, ...(profile?.permisos || {}) };
+}
+
+function can(permiso) { return !!currentPermisos[permiso]; }
+
 function applyRolePermissions() {
-  const rol = currentProfile?.rol;
-  const isAdmin = rol === 'admin';
-  const isAdminOrDirector = isAdmin || rol === 'director';
-
-  // Nuevo paciente button
+  currentPermisos = buildPermisos(currentProfile);
   const btnNuevo = document.getElementById('btn-nuevo-paciente');
-  if (btnNuevo) btnNuevo.style.display = isAdmin ? '' : 'none';
-
-  // Personal tab
-  document.getElementById('nav-staff').style.display = isAdminOrDirector ? '' : 'none';
+  if (btnNuevo) btnNuevo.style.display = can('nuevo_paciente') ? '' : 'none';
+  document.getElementById('nav-staff').style.display = can('ver_personal') ? '' : 'none';
 }
 
 // ─── DATA LOADING ─────────────────────────────────────────
@@ -980,8 +1010,9 @@ function renderTable(rows) {
         <td>
           <div class="row-actions">
             <button class="btn btn-outline btn-sm" onclick="openDetalle('${p.id}')">Ver</button>
-            ${currentProfile?.rol==='admin' ? `<button class="btn btn-outline btn-sm" onclick="openModalEditar('${p.id}')">Editar</button>` : ''}
-            ${activo && currentProfile?.rol==='admin' ? `<button class="btn btn-outline btn-sm" onclick="openModalTraslado('${p.id}')">Trasladar</button><button class="btn btn-danger btn-sm" onclick="darEgreso('${p.id}','${p.nombre}')">Egreso</button>` : ''}
+            ${can('editar_paciente') ? `<button class="btn btn-outline btn-sm" onclick="openModalEditar('${p.id}')">Editar</button>` : ''}
+            ${activo && can('traslado') ? `<button class="btn btn-outline btn-sm" onclick="openModalTraslado('${p.id}')">Trasladar</button>` : ''}
+            ${activo && can('egreso') ? `<button class="btn btn-danger btn-sm" onclick="darEgreso('${p.id}','${p.nombre}')">Egreso</button>` : ''}
           </div>
         </td>
       </tr>`;
@@ -1133,7 +1164,7 @@ async function loadDashboard() {
 
 // ─── AREAS ───────────────────────────────────────────────
 function renderAreasPage() {
-  const isAdmin = currentProfile?.rol === 'admin';
+  const isAdmin = can('gestionar_areas');
   if (isAdmin) document.getElementById('areas-actions').style.display = 'flex';
   const grid = document.getElementById('areas-grid');
   grid.innerHTML = allAreas.map(a => {
@@ -1224,7 +1255,7 @@ async function crearUsuario() {
 
 async function loadStaff() {
   const isAdmin = currentProfile?.rol === 'admin';
-  if (['admin','director'].includes(currentProfile?.rol)) document.getElementById('staff-actions').style.display = 'flex';
+  if (can('crear_usuarios')) document.getElementById('staff-actions').style.display = 'flex';
   const { data } = await sb.from('staff_profiles').select('*').order('created_at');
   const tbody = document.getElementById('staff-body');
   if (!data?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Sin personal registrado</td></tr>'; return; }
@@ -1234,8 +1265,53 @@ async function loadStaff() {
     <td><span class="badge badge-area">${rolLabel[s.rol] || s.rol}</span></td>
     <td style="color:var(--text2)">${s.activo ? 'Activo' : 'Inactivo'}</td>
     <td style="color:var(--text2)">${new Date(s.created_at).toLocaleDateString('es-ES')}</td>
-    <td>${isAdmin && s.id !== currentUser.id ? `<div class="row-actions"><button class="btn btn-outline btn-sm" onclick="openCambiarRol('${s.id}','${s.nombre}','${s.rol}')">Cambiar rol</button><button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${s.id}','${s.nombre}')">Eliminar</button></div>` : ''}</td>
+    <td>${isAdmin && s.id !== currentUser.id ? `<div class="row-actions"><button class="btn btn-outline btn-sm" onclick="openCambiarRol('${s.id}','${s.nombre}','${s.rol}')">Rol</button><button class="btn btn-outline btn-sm" onclick="openCambiarPermisos('${s.id}','${s.nombre}','${s.rol}',${JSON.stringify(s.permisos||{})})">Permisos</button><button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${s.id}','${s.nombre}')">Eliminar</button></div>` : ''}</td>
   </tr>`).join('');
+}
+
+const PERM_LABELS = {
+  nuevo_paciente: 'Añadir nuevos pacientes',
+  editar_paciente: 'Editar datos de pacientes',
+  traslado: 'Registrar traslados',
+  egreso: 'Registrar egresos',
+  ver_personal: 'Ver pestaña Personal',
+  crear_usuarios: 'Crear y eliminar usuarios',
+  gestionar_areas: 'Crear y eliminar áreas',
+};
+
+function openCambiarPermisos(id, nombre, rol, overrides) {
+  document.getElementById('permisos-id').value = id;
+  document.getElementById('permisos-nombre').textContent = nombre;
+  document.getElementById('permisos-msg').innerHTML = '';
+  const defaults = ROLE_DEFAULTS[rol] || ROLE_DEFAULTS.recepcionista;
+  const lista = document.getElementById('permisos-lista');
+  lista.innerHTML = Object.entries(PERM_LABELS).map(([key, label]) => {
+    const defVal = defaults[key];
+    const override = overrides[key];
+    const checked = override !== undefined ? override : defVal;
+    const isOverride = override !== undefined;
+    return `<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;background:${isOverride?'var(--accent-light)':'var(--surface)'}">
+      <input type="checkbox" data-key="${key}" data-default="${defVal}" ${checked?'checked':''} style="width:16px;height:16px;accent-color:var(--accent)" onchange="this.closest('label').style.background=this.checked!=(this.dataset.default==='true')?'var(--accent-light)':'var(--surface)'">
+      <div><div style="font-size:13px;font-weight:500">${label}</div><div style="font-size:11px;color:var(--text2)">Por defecto del rol: ${defVal?'✅ Sí':'❌ No'}</div></div>
+    </label>`;
+  }).join('');
+  openModal('modal-permisos');
+}
+
+async function guardarPermisos() {
+  const id = document.getElementById('permisos-id').value;
+  const msgEl = document.getElementById('permisos-msg');
+  const overrides = {};
+  document.querySelectorAll('#permisos-lista input[type=checkbox]').forEach(cb => {
+    const val = cb.checked;
+    const def = cb.dataset.default === 'true';
+    if (val !== def) overrides[cb.dataset.key] = val;
+  });
+  msgEl.innerHTML = '<div class="msg">Guardando...</div>';
+  const { error } = await sb.from('staff_profiles').update({ permisos: overrides }).eq('id', id);
+  if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
+  closeModal('modal-permisos');
+  loadStaff();
 }
 
 function openCambiarRol(id, nombre, rolActual) {
