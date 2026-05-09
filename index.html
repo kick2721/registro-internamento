@@ -1214,7 +1214,8 @@ async function crearUsuario() {
   if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
 
   if (data.user) {
-    await sb.from('staff_profiles').insert({ id: data.user.id, nombre, rol });
+    const { error: pe } = await tempSb.from('staff_profiles').insert({ id: data.user.id, nombre, rol });
+    if (pe) { msgEl.innerHTML = `<div class="msg msg-error">Usuario creado pero error al guardar perfil: ${pe.message}</div>`; return; }
   }
 
   msgEl.innerHTML = '<div class="msg msg-success">Usuario creado. Ya puede iniciar sesión.</div>';
