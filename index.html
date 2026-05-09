@@ -461,6 +461,35 @@
   </main>
 </div>
 
+<!-- MODAL: EGRESO -->
+<div class="modal-overlay" id="modal-egreso">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Registrar egreso</div>
+      <button class="modal-close" onclick="closeModal('modal-egreso')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="egreso-paciente-id">
+      <div class="form-group"><label>Paciente</label><input type="text" id="egreso-paciente-nombre" disabled style="background:var(--surface2);color:var(--text2)"></div>
+      <div class="form-group"><label>Fecha de egreso</label><input type="date" id="egreso-fecha"></div>
+      <div class="form-group"><label>Motivo</label>
+        <select id="egreso-motivo">
+          <option value="Alta médica">Alta médica</option>
+          <option value="Fallecimiento">Fallecimiento</option>
+          <option value="Traslado externo">Traslado externo</option>
+          <option value="Alta voluntaria">Alta voluntaria</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Notas</label><textarea id="egreso-notas" rows="2" placeholder="Observaciones adicionales..."></textarea></div>
+      <div id="egreso-msg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-egreso')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEgreso()">Confirmar egreso</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: NUEVA ÁREA -->
 <div class="modal-overlay" id="modal-area">
   <div class="modal">
@@ -730,11 +759,29 @@ function renderTable(rows) {
   document.getElementById('pagination-bar').style.display = total > PAGE_SIZE ? 'flex' : 'none';
 }
 
-async function darEgreso(id, nombre) {
-  if (!confirm(`¿Confirmar egreso de ${nombre}?`)) return;
-  const hoy = new Date().toISOString().split('T')[0];
-  const { error } = await sb.from('pacientes').update({ fecha_egreso: hoy }).eq('id', id);
-  if (error) { alert('Error al registrar egreso: ' + error.message); return; }
+function darEgreso(id, nombre) {
+  document.getElementById('egreso-paciente-id').value = id;
+  document.getElementById('egreso-paciente-nombre').value = nombre;
+  document.getElementById('egreso-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('egreso-motivo').value = 'Alta médica';
+  document.getElementById('egreso-notas').value = '';
+  document.getElementById('egreso-msg').innerHTML = '';
+  openModal('modal-egreso');
+}
+
+async function saveEgreso() {
+  const msgEl = document.getElementById('egreso-msg');
+  const id = document.getElementById('egreso-paciente-id').value;
+  const fecha = document.getElementById('egreso-fecha').value;
+  const motivo = document.getElementById('egreso-motivo').value;
+  const notas = document.getElementById('egreso-notas').value.trim();
+  if (!fecha) { msgEl.innerHTML = '<div class="msg msg-error">Selecciona la fecha de egreso.</div>'; return; }
+  msgEl.innerHTML = '<div class="msg">Registrando egreso...</div>';
+  const payload = { fecha_egreso: fecha, motivo_egreso: motivo };
+  if (notas) payload.notas = notas;
+  const { error } = await sb.from('pacientes').update(payload).eq('id', id);
+  if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
+  closeModal('modal-egreso');
   await loadPacientes();
   loadDashboard();
   renderAreasPage();
