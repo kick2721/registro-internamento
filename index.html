@@ -152,7 +152,21 @@
   .page-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
   /* STATS */
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+.stat-card-inner { display: flex; align-items: center; gap: 14px; }
+.stat-card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stat-card-icon svg { width: 20px; height: 20px; }
+.stat-card--activos { border-left: 3px solid #1a5c3a; }
+.stat-card--activos .stat-card-icon { background: #e8f4ed; color: #1a5c3a; }
+.stat-card--ingresos { border-left: 3px solid #1a4d7a; }
+.stat-card--ingresos .stat-card-icon { background: #eef4fb; color: #1a4d7a; }
+.stat-card--egresos { border-left: 3px solid #7a4d1a; }
+.stat-card--egresos .stat-card-icon { background: #faf4ee; color: #7a4d1a; }
+.stat-card--traslados { border-left: 3px solid #6b4d7a; }
+.stat-card--traslados .stat-card-icon { background: #f4eefb; color: #6b4d7a; }
+.dash-tables { display: grid; grid-template-columns: 3fr 2fr; gap: 1rem; }
+.area-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.area-bar { height: 6px; border-radius: 3px; background: #1a5c3a; opacity: 0.7; min-width: 4px; }
   .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
   .stat-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
   .stat-value { font-size: 28px; font-weight: 300; color: var(--text); font-family: 'DM Mono', monospace; }
@@ -365,12 +379,12 @@
         <div><div class="page-title">Dashboard</div><div class="page-subtitle" id="dash-date">Hoy</div></div>
       </div>
       <div class="stats-grid" id="stats-grid">
-        <div class="stat-card"><div class="stat-label">Internados activos</div><div class="stat-value" id="st-activos">–</div></div>
-        <div class="stat-card"><div class="stat-label">Ingresos hoy</div><div class="stat-value" id="st-hoy">–</div></div>
-        <div class="stat-card"><div class="stat-label">Egresos totales</div><div class="stat-value" id="st-egresos">–</div></div>
-        <div class="stat-card"><div class="stat-label">Total registrados</div><div class="stat-value" id="st-total">–</div></div>
+        <div class="stat-card stat-card--activos"><div class="stat-card-inner"><div class="stat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div><div><div class="stat-label">Internados activos</div><div class="stat-value" id="st-activos">–</div></div></div></div>
+        <div class="stat-card stat-card--ingresos"><div class="stat-card-inner"><div class="stat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div><div class="stat-label">Ingresos hoy</div><div class="stat-value" id="st-hoy">–</div></div></div></div>
+        <div class="stat-card stat-card--egresos"><div class="stat-card-inner"><div class="stat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div><div><div class="stat-label">Egresos hoy</div><div class="stat-value" id="st-egresos">–</div></div></div></div>
+        <div class="stat-card stat-card--traslados"><div class="stat-card-inner"><div class="stat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg></div><div><div class="stat-label">Traslados hoy</div><div class="stat-value" id="st-total">–</div></div></div></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="dash-tables">
         <div class="table-wrap">
           <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);font-weight:600;font-size:14px;">Recién ingresados</div>
           <table id="dash-recent"><tbody><tr class="empty-row"><td>Cargando...</td></tr></tbody></table>
@@ -892,27 +906,30 @@ function filterTable() {
 }
 
 // ─── DASHBOARD ───────────────────────────────────────────
-function loadDashboard() {
+async function loadDashboard() {
   const today = new Date().toISOString().split('T')[0];
   const activos = allPacientes.filter(p => !p.fecha_egreso);
-  const hoy = allPacientes.filter(p => p.fecha_ingreso === today);
-  const egresos = allPacientes.filter(p => p.fecha_egreso);
+  const ingresosHoy = allPacientes.filter(p => p.fecha_ingreso === today);
+  const egresosHoy = allPacientes.filter(p => p.fecha_egreso === today);
+
+  const { data: trasladosHoy } = await sb.from('traslados').select('id').gte('fecha_traslado', today + 'T00:00:00').lte('fecha_traslado', today + 'T23:59:59');
 
   document.getElementById('st-activos').textContent = activos.length;
-  document.getElementById('st-hoy').textContent = hoy.length;
-  document.getElementById('st-egresos').textContent = egresos.length;
-  document.getElementById('st-total').textContent = allPacientes.length;
+  document.getElementById('st-hoy').textContent = ingresosHoy.length;
+  document.getElementById('st-egresos').textContent = egresosHoy.length;
+  document.getElementById('st-total').textContent = trasladosHoy?.length ?? 0;
 
-  const recent = [...allPacientes].slice(0, 6);
-  const tbody = document.getElementById('dash-recent').querySelector('tbody') || document.createElement('tbody');
-  document.getElementById('dash-recent').innerHTML = `<thead><tr><th>Paciente</th><th>Ingreso</th><th>Estado</th></tr></thead><tbody>${
-    recent.map(p=>`<tr><td style="font-weight:500">${p.nombre}</td><td>${fmt(p.fecha_ingreso)}</td><td><span class="badge ${p.fecha_egreso?'badge-egress':'badge-active'}">${p.fecha_egreso?'Egresado':'Internado'}</span></td></tr>`).join('')
+  const recent = [...allPacientes].sort((a,b) => new Date(b.fecha_ingreso) - new Date(a.fecha_ingreso)).slice(0, 8);
+  document.getElementById('dash-recent').innerHTML = `<thead><tr><th>Paciente</th><th>Área</th><th>Ingreso</th></tr></thead><tbody>${
+    recent.map(p=>`<tr><td style="font-weight:500">${p.nombre}</td><td><span class="badge badge-area" style="font-size:11px">${p.areas?.nombre||'—'}</span></td><td style="color:var(--text2)">${fmt(p.fecha_ingreso)}</td></tr>`).join('')
   }</tbody>`;
 
   const areaCount = {};
   activos.forEach(p => { const n = p.areas?.nombre||'Sin área'; areaCount[n] = (areaCount[n]||0)+1; });
-  document.getElementById('dash-areas-table').innerHTML = `<thead><tr><th>Área</th><th>Pacientes</th></tr></thead><tbody>${
-    Object.entries(areaCount).sort((a,b)=>b[1]-a[1]).map(([n,c])=>`<tr><td><span class="badge badge-area">${n}</span></td><td style="font-weight:600;font-family:'DM Mono',monospace">${c}</td></tr>`).join('')
+  const sorted = Object.entries(areaCount).sort((a,b)=>b[1]-a[1]);
+  const max = sorted[0]?.[1] || 1;
+  document.getElementById('dash-areas-table').innerHTML = `<tbody>${
+    sorted.map(([n,c])=>`<tr><td style="font-weight:500;font-size:13px">${n}</td><td><div class="area-bar-wrap"><div class="area-bar" style="width:${Math.round((c/max)*80)}px"></div><span style="font-weight:600;font-family:'DM Mono',monospace;font-size:13px">${c}</span></div></td></tr>`).join('')
   }</tbody>`;
 }
 
