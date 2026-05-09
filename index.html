@@ -1206,18 +1206,14 @@ async function crearUsuario() {
 
   const emailFinal = `${usuario}@clinica.internal`;
 
-  // Guardar sesión actual
-  const { data: { session: mySession } } = await sb.auth.getSession();
-
-  const { data, error } = await sb.auth.signUp({ email: emailFinal, password: pass });
+  // Cliente temporal para no tocar la sesión del admin
+  const tempSb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { data, error } = await tempSb.auth.signUp({ email: emailFinal, password: pass });
   if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
 
   if (data.user) {
     await sb.from('staff_profiles').insert({ id: data.user.id, nombre, rol });
   }
-
-  // Restaurar sesión del admin
-  await sb.auth.setSession({ access_token: mySession.access_token, refresh_token: mySession.refresh_token });
 
   msgEl.innerHTML = '<div class="msg msg-success">Usuario creado. Ya puede iniciar sesión.</div>';
   setTimeout(() => { closeModal('modal-crear-usuario'); loadStaff(); }, 1500);
