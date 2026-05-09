@@ -1206,8 +1206,10 @@ async function crearUsuario() {
 
   const emailFinal = `${usuario}@clinica.internal`;
 
-  // Cliente temporal para no tocar la sesión del admin
-  const tempSb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // Cliente temporal sin persistencia para no tocar la sesión del admin
+  const tempSb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
   const { data, error } = await tempSb.auth.signUp({ email: emailFinal, password: pass });
   if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
 
