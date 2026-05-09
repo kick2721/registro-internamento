@@ -238,9 +238,18 @@
     .main { margin-left: 0; padding: 1rem; }
   }
   @media print {
-    .sidebar, .page-actions, .row-actions, .filters-bar { display: none !important; }
-    .main { margin-left: 0; }
+    .sidebar, .no-print, .row-actions, .filters-bar, #pagination-bar { display: none !important; }
+    .main { margin-left: 0; padding: 0; }
+    .page { display: none !important; }
+    #page-resumen { display: block !important; }
     table { font-size: 11px; }
+    .resumen-section { page-break-inside: avoid; margin-bottom: 1.5rem; }
+    body { background: white; }
+  }
+  .resumen-header-print { display: none; }
+  @media print { .resumen-header-print { display: block; text-align: center; margin-bottom: 1.5rem; }
+    .resumen-header-print h2 { font-size: 18px; font-weight: 700; }
+    .resumen-header-print p { font-size: 13px; color: #666; }
   }
 
   /* TIMELINE */
@@ -295,6 +304,10 @@
       <button class="nav-item" onclick="showPage('traslados')" id="nav-traslados">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>
         Traslados
+      </button>
+      <button class="nav-item" onclick="showPage('resumen')" id="nav-resumen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+        Resumen del día
       </button>
       <div class="nav-section" style="margin-top:1rem">Administración</div>
       <button class="nav-item" onclick="showPage('areas')" id="nav-areas">
@@ -408,6 +421,24 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- RESUMEN DEL DÍA -->
+    <div class="page" id="page-resumen">
+      <div class="page-header no-print">
+        <div>
+          <div class="page-title">Resumen del día</div>
+          <div class="page-subtitle" id="resumen-fecha"></div>
+        </div>
+        <div class="page-actions no-print">
+          <select class="filter-select" id="resumen-date-picker" onchange="loadResumen()"></select>
+          <button class="btn btn-primary" onclick="window.print()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Imprimir / PDF
+          </button>
+        </div>
+      </div>
+      <div id="resumen-content"></div>
     </div>
 
     <!-- TRASLADOS -->
@@ -1133,6 +1164,71 @@ function exportExcel() {
   XLSX.writeFile(wb, `Registro_Internados_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
 
+// ─── RESUMEN DEL DÍA ─────────────────────────────────────
+function initResumenDatePicker() {
+  const sel = document.getElementById('resumen-date-picker');
+  const today = new Date();
+  sel.innerHTML = '';
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const val = d.toISOString().split('T')[0];
+    const label = i === 0 ? 'Hoy' : i === 1 ? 'Ayer' : d.toLocaleDateString('es-ES', {weekday:'short', day:'2-digit', month:'short'});
+    const o = document.createElement('option'); o.value = val; o.textContent = label; sel.appendChild(o);
+  }
+}
+
+async function loadResumen() {
+  const fecha = document.getElementById('resumen-date-picker').value;
+  const nomMes = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const d = new Date(fecha + 'T12:00:00');
+  const fechaLabel = `${d.getDate()} de ${nomMes[d.getMonth()]} de ${d.getFullYear()}`;
+  document.getElementById('resumen-fecha').textContent = fechaLabel;
+
+  const [ingresos, egresos, traslados] = await Promise.all([
+    sb.from('pacientes').select('nombre,codigo,diagnostico,empresa,areas(nombre)').eq('fecha_ingreso', fecha).order('created_at'),
+    sb.from('pacientes').select('nombre,codigo,diagnostico,empresa,motivo_egreso,areas(nombre)').eq('fecha_egreso', fecha).order('updated_at'),
+    sb.from('traslados').select('motivo,paciente:paciente_id(nombre,codigo), origen:area_origen_id(nombre), destino:area_destino_id(nombre)').gte('fecha_traslado', fecha+'T00:00:00').lte('fecha_traslado', fecha+'T23:59:59').order('fecha_traslado')
+  ]);
+
+  const mkTable = (cols, rows, empty) => rows?.data?.length
+    ? `<table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr>${cols.map(c=>`<th style="text-align:left;padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase">${c}</th>`).join('')}</tr></thead>
+        <tbody>${rows.data.map(r=>r.__row).join('')}</tbody>
+       </table>`
+    : `<p style="color:var(--text3);font-size:13px;padding:1rem 0">${empty}</p>`;
+
+  const ingresosRows = { data: (ingresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:500">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:var(--text2)">${p.codigo}</td><td style="padding:8px 10px">${p.diagnostico}</td><td style="padding:8px 10px">${p.empresa}</td><td style="padding:8px 10px"><span class="badge badge-area">${p.areas?.nombre||'—'}</span></td></tr>` })) };
+  const egresosRows = { data: (egresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:500">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:var(--text2)">${p.codigo}</td><td style="padding:8px 10px">${p.diagnostico}</td><td style="padding:8px 10px">${p.empresa}</td><td style="padding:8px 10px">${p.motivo_egreso||'—'}</td></tr>` })) };
+  const trasladosRows = { data: (traslados.data||[]).map(t => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:500">${t.paciente?.nombre||'—'}</td><td style="padding:8px 10px;font-family:monospace;color:var(--text2)">${t.paciente?.codigo||'—'}</td><td style="padding:8px 10px"><span class="badge badge-egress">${t.origen?.nombre||'—'}</span></td><td style="padding:8px 10px"><span class="badge badge-area">${t.destino?.nombre||'—'}</span></td><td style="padding:8px 10px;color:var(--text2)">${t.motivo||'—'}</td></tr>` })) };
+
+  document.getElementById('resumen-content').innerHTML = `
+    <div class="resumen-header-print">
+      <h2>Clínica Morales — Resumen de Internamento</h2>
+      <p>${fechaLabel}</p>
+    </div>
+    <div class="resumen-section table-wrap" style="margin-bottom:1.25rem">
+      <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <span style="font-weight:600">Ingresos</span>
+        <span class="badge badge-active">${ingresos.data?.length||0}</span>
+      </div>
+      ${mkTable(['Paciente','Código','Diagnóstico','Empresa','Área'], ingresosRows, 'Sin ingresos este día')}
+    </div>
+    <div class="resumen-section table-wrap" style="margin-bottom:1.25rem">
+      <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <span style="font-weight:600">Egresos</span>
+        <span class="badge badge-egress">${egresos.data?.length||0}</span>
+      </div>
+      ${mkTable(['Paciente','Código','Diagnóstico','Empresa','Motivo'], egresosRows, 'Sin egresos este día')}
+    </div>
+    <div class="resumen-section table-wrap">
+      <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <span style="font-weight:600">Traslados</span>
+        <span class="badge badge-transfer">${traslados.data?.length||0}</span>
+      </div>
+      ${mkTable(['Paciente','Código','Área origen','Área destino','Motivo'], trasladosRows, 'Sin traslados este día')}
+    </div>`;
+}
+
 // ─── NAVIGATION ──────────────────────────────────────────
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1141,6 +1237,7 @@ function showPage(name) {
   document.getElementById(`nav-${name}`)?.classList.add('active');
   if (name==='traslados') loadTraslados();
   if (name==='staff') loadStaff();
+  if (name==='resumen') { initResumenDatePicker(); loadResumen(); }
 }
 
 // ─── BOOTSTRAP ───────────────────────────────────────────
