@@ -747,6 +747,7 @@ function renderAreasPage() {
   grid.innerHTML = allAreas.map(a => {
     const count = allPacientes.filter(p => p.area_id === a.id && !p.fecha_egreso).length;
     return `<div class="table-wrap" style="padding:1.25rem">
+      <div style="font-size:16px;margin-bottom:2px">🏥</div>
       <div style="font-weight:600;font-size:15px;margin-bottom:4px">${a.nombre}</div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${a.descripcion||''}</div>
       <div style="font-size:28px;font-weight:300;font-family:'DM Mono',monospace">${count}</div>
