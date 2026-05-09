@@ -788,7 +788,7 @@ async function loadStaff() {
     <td><span class="badge badge-area">${rolLabel[s.rol] || s.rol}</span></td>
     <td style="color:var(--text2)">${s.activo ? 'Activo' : 'Inactivo'}</td>
     <td style="color:var(--text2)">${new Date(s.created_at).toLocaleDateString('es-ES')}</td>
-    ${currentProfile?.rol==='admin' ? `<td><button class="btn btn-outline btn-sm" onclick="resetPassword('${s.id}')">Cambiar clave</button></td>` : '<td></td>'}
+
   </tr>`).join('');
 }
 
