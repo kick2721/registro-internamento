@@ -269,7 +269,7 @@
       <button class="auth-tab" onclick="switchAuthTab('register')">Registrar cuenta</button>
     </div>
     <div id="auth-login">
-      <div class="form-group"><label>Correo electrónico</label><input type="email" id="login-email" placeholder="usuario@clinica.com"></div>
+      <div class="form-group"><label>Usuario</label><input type="text" id="login-email" placeholder="tunombredeusuario"></div>
       <div class="form-group"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••••"></div>
       <button class="btn btn-primary" onclick="doLogin()">Entrar</button>
     </div>
@@ -472,7 +472,7 @@
     </div>
     <div class="modal-body">
       <div class="form-group"><label>Nombre completo</label><input type="text" id="nu-nombre" placeholder="Dr. Nombre Apellido"></div>
-      <div class="form-group"><label>Correo electrónico</label><input type="email" id="nu-email" placeholder="usuario@clinica.com"></div>
+      <div class="form-group"><label>Usuario</label><input type="text" id="nu-email" placeholder="ej: ignaciomgomez"></div>
       <div class="form-group"><label>Contraseña</label><input type="password" id="nu-pass" placeholder="Mínimo 6 caracteres"></div>
       <div class="form-group"><label>Rol</label>
         <select id="nu-rol">
@@ -578,7 +578,8 @@ function switchAuthTab(tab) {
 }
 
 async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
+  const usuario = document.getElementById('login-email').value.trim();
+  const email = usuario.includes('@') ? usuario : `${usuario}@clinica.internal`;
   const pass = document.getElementById('login-pass').value;
   const msgEl = document.getElementById('auth-msg');
   msgEl.innerHTML = '<div class="msg">Verificando...</div>';
@@ -768,17 +769,19 @@ function openModalCrearUsuario() {
 async function crearUsuario() {
   const msgEl = document.getElementById('nu-msg');
   const nombre = document.getElementById('nu-nombre').value.trim();
-  const email = document.getElementById('nu-email').value.trim();
+  const usuario = document.getElementById('nu-email').value.trim().toLowerCase().replace(/\s+/g,'');
   const pass = document.getElementById('nu-pass').value;
   const rol = document.getElementById('nu-rol').value;
-  if (!nombre||!email||!pass) { msgEl.innerHTML = '<div class="msg msg-error">Completa todos los campos.</div>'; return; }
+  if (!nombre||!usuario||!pass) { msgEl.innerHTML = '<div class="msg msg-error">Completa todos los campos.</div>'; return; }
   if (pass.length < 6) { msgEl.innerHTML = '<div class="msg msg-error">La contraseña debe tener al menos 6 caracteres.</div>'; return; }
   msgEl.innerHTML = '<div class="msg">Creando usuario...</div>';
+
+  const emailFinal = `${usuario}@clinica.internal`;
 
   // Guardar sesión actual
   const { data: { session: mySession } } = await sb.auth.getSession();
 
-  const { data, error } = await sb.auth.signUp({ email, password: pass });
+  const { data, error } = await sb.auth.signUp({ email: emailFinal, password: pass });
   if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
 
   if (data.user) {
@@ -803,6 +806,7 @@ async function loadStaff() {
     <td><span class="badge badge-area">${rolLabel[s.rol] || s.rol}</span></td>
     <td style="color:var(--text2)">${s.activo ? 'Activo' : 'Inactivo'}</td>
     <td style="color:var(--text2)">${new Date(s.created_at).toLocaleDateString('es-ES')}</td>
+    ${currentProfile?.rol==='admin' ? `<td><button class="btn btn-outline btn-sm" onclick="resetPassword('${s.id}')">Cambiar clave</button></td>` : '<td></td>'}
   </tr>`).join('');
 }
 
