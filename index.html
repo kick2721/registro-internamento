@@ -418,7 +418,7 @@
       <div class="table-wrap">
         <div class="table-scroll">
           <table id="traslados-table">
-            <thead><tr><th>Fecha</th><th>Paciente</th><th>Área origen</th><th>Área destino</th><th>Motivo</th><th>Registrado por</th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Paciente</th><th>Área origen</th><th>Área destino</th><th>Motivo</th></tr></thead>
             <tbody id="traslados-body"><tr class="empty-row"><td colspan="6"><div class="loading"><div class="spinner"></div>Cargando...</div></td></tr></tbody>
           </table>
         </div>
@@ -980,7 +980,6 @@ async function loadTraslados() {
     <td><span class="badge badge-egress">${t.origen?.nombre||'—'}</span></td>
     <td><span class="badge badge-area">${t.destino?.nombre||'—'}</span></td>
     <td style="color:var(--text2)">${t.motivo||'—'}</td>
-    <td style="color:var(--text2)">${t.registrado_por ? staffMap[t.registrado_por]||'—' : '—'}</td>
   </tr>`).join('');
 }
 
