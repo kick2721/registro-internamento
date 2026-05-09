@@ -419,6 +419,12 @@
     <div class="page" id="page-areas">
       <div class="page-header">
         <div><div class="page-title">Áreas de internamiento</div></div>
+        <div class="page-actions" id="areas-actions" style="display:none">
+          <button class="btn btn-primary" onclick="openModalNuevaArea()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nueva área
+          </button>
+        </div>
       </div>
       <div id="areas-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;"></div>
     </div>
@@ -443,6 +449,25 @@
     </div>
 
   </main>
+</div>
+
+<!-- MODAL: NUEVA ÁREA -->
+<div class="modal-overlay" id="modal-area">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nueva área</div>
+      <button class="modal-close" onclick="closeModal('modal-area')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nombre del área</label><input type="text" id="area-nombre" placeholder="Ej: Cardiología"></div>
+      <div class="form-group"><label>Descripción (opcional)</label><input type="text" id="area-descripcion" placeholder="Descripción breve"></div>
+      <div id="area-msg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-area')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveArea()">Guardar</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: CREAR USUARIO -->
@@ -716,17 +741,45 @@ function loadDashboard() {
 
 // ─── AREAS ───────────────────────────────────────────────
 function renderAreasPage() {
+  const isAdmin = currentProfile?.rol === 'admin';
+  if (isAdmin) document.getElementById('areas-actions').style.display = 'flex';
   const grid = document.getElementById('areas-grid');
   grid.innerHTML = allAreas.map(a => {
     const count = allPacientes.filter(p => p.area_id === a.id && !p.fecha_egreso).length;
     return `<div class="table-wrap" style="padding:1.25rem">
-      <div style="font-size:16px;margin-bottom:2px">🏥</div>
       <div style="font-weight:600;font-size:15px;margin-bottom:4px">${a.nombre}</div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${a.descripcion||''}</div>
       <div style="font-size:28px;font-weight:300;font-family:'DM Mono',monospace">${count}</div>
-      <div style="font-size:11px;color:var(--text3)">pacientes activos</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:${isAdmin?'12px':'0'}">pacientes activos</div>
+      ${isAdmin ? `<button class="btn btn-danger btn-sm" style="width:100%" onclick="deleteArea('${a.id}','${a.nombre}',${count})">Eliminar</button>` : ''}
     </div>`;
   }).join('');
+}
+
+function openModalNuevaArea() {
+  document.getElementById('area-nombre').value = '';
+  document.getElementById('area-descripcion').value = '';
+  document.getElementById('area-msg').innerHTML = '';
+  openModal('modal-area');
+}
+
+async function saveArea() {
+  const msgEl = document.getElementById('area-msg');
+  const nombre = document.getElementById('area-nombre').value.trim();
+  const descripcion = document.getElementById('area-descripcion').value.trim();
+  if (!nombre) { msgEl.innerHTML = '<div class="msg msg-error">Escribe el nombre del área.</div>'; return; }
+  msgEl.innerHTML = '<div class="msg">Guardando...</div>';
+  const { error } = await sb.from('areas').insert({ nombre, descripcion: descripcion||null });
+  if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
+  closeModal('modal-area');
+  await loadAreas();
+}
+
+async function deleteArea(id, nombre, count) {
+  if (count > 0) { alert(`No se puede eliminar "${nombre}" porque tiene ${count} paciente(s) activo(s). Traslada o da de alta a los pacientes primero.`); return; }
+  if (!confirm(`¿Eliminar el área "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  await sb.from('areas').delete().eq('id', id);
+  await loadAreas();
 }
 
 function populateAreaSelects() {
