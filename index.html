@@ -264,28 +264,10 @@
         <span>Sistema clínico de gestión</span>
       </div>
     </div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="switchAuthTab('login')">Iniciar sesión</button>
-      <button class="auth-tab" onclick="switchAuthTab('register')">Registrar cuenta</button>
-    </div>
     <div id="auth-login">
       <div class="form-group"><label>Usuario</label><input type="text" id="login-email" placeholder="tunombredeusuario"></div>
       <div class="form-group"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••••"></div>
       <button class="btn btn-primary" onclick="doLogin()">Entrar</button>
-    </div>
-    <div id="auth-register" style="display:none">
-      <div class="form-group"><label>Nombre completo</label><input type="text" id="reg-name" placeholder="Dr. Nombre Apellido"></div>
-      <div class="form-group"><label>Correo electrónico</label><input type="email" id="reg-email" placeholder="usuario@clinica.com"></div>
-      <div class="form-group"><label>Contraseña</label><input type="password" id="reg-pass" placeholder="Mínimo 8 caracteres"></div>
-      <div class="form-group"><label>Rol</label>
-        <select id="reg-role">
-          <option value="recepcionista">Recepcionista</option>
-          <option value="enfermero">Enfermero/a</option>
-          <option value="medico">Médico</option>
-          <option value="admin">Administrador</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" onclick="doRegister()">Crear cuenta</button>
     </div>
     <div id="auth-msg"></div>
   </div>
