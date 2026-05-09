@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -547,9 +548,9 @@
         </div>
         <div class="page-actions no-print">
           <input type="date" class="filter-select" id="resumen-date-picker" onchange="loadResumen()">
-          <button class="btn btn-primary" onclick="window.print()">
+          <button class="btn btn-primary" onclick="descargarResumenPDF()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            Imprimir / PDF
+            Descargar PDF
           </button>
         </div>
       </div>
@@ -1400,6 +1401,28 @@ async function doExport() {
 function initResumenDatePicker() {
   const sel = document.getElementById('resumen-date-picker');
   if (!sel.value) sel.value = new Date().toISOString().split('T')[0];
+}
+
+function descargarResumenPDF() {
+  const fecha = document.getElementById('resumen-date-picker').value;
+  const [y, m, d] = fecha.split('-');
+  const nombre = `Internamento ${+d}-${+m}-${y}.pdf`;
+  const el = document.getElementById('resumen-content');
+  const header = document.querySelector('.resumen-print-header');
+  const footer = document.querySelector('.resumen-print-footer');
+  if (header) header.style.display = 'flex';
+  if (footer) footer.style.display = 'flex';
+  html2pdf().set({
+    margin: [14, 14, 14, 14],
+    filename: nombre,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['avoid-all', 'css'] }
+  }).from(el).save().then(() => {
+    if (header) header.style.display = 'none';
+    if (footer) footer.style.display = 'none';
+  });
 }
 
 async function loadResumen() {
