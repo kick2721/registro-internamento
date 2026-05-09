@@ -1160,9 +1160,6 @@ async function loadTraslados() {
     .select('*, paciente:paciente_id(nombre), origen:area_origen_id(nombre), destino:area_destino_id(nombre)')
     .order('created_at', { ascending: false });
   
-  const { data: staff } = await sb.from('staff_profiles').select('id,nombre');
-  const staffMap = Object.fromEntries((staff||[]).map(s=>[s.id,s.nombre]));
-
   const tbody = document.getElementById('traslados-body');
   if (!data?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Sin traslados registrados</td></tr>'; return; }
   tbody.innerHTML = data.map(t => `<tr>
@@ -1300,9 +1297,6 @@ async function openDetalle(id) {
   const { data: traslados } = await sb.from('traslados')
     .select('*, origen:area_origen_id(nombre), destino:area_destino_id(nombre)')
     .eq('paciente_id', id).order('created_at');
-  const { data: staff } = await sb.from('staff_profiles').select('id,nombre');
-  const staffMap = Object.fromEntries((staff||[]).map(s=>[s.id,s.nombre]));
-
   body.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
       <div class="stat-card"><div class="stat-label">Código</div><div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500">${p.codigo}</div></div>
