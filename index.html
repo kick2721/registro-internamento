@@ -411,7 +411,9 @@
           <option value="">Todas las áreas</option>
         </select>
         <select class="filter-select" id="filter-empresa" onchange="filterTable()">
-          <option value="">Todas las empresas</option>
+          <option value="">Particular y asegurados</option>
+          <option value="Particular">Particular</option>
+          <option value="asegurado">Asegurado</option>
         </select>
         <select class="filter-select" id="filter-mes" onchange="filterTable()">
           <option value="">Todos los meses</option>
@@ -608,7 +610,14 @@
       </div>
       <div class="form-group"><label>Diagnóstico</label><input type="text" id="p-diagnostico" placeholder="Diagnóstico clínico"></div>
       <div class="form-row">
-        <div class="form-group"><label>Empresa / Seguro</label><input type="text" id="p-empresa" placeholder="Ej: Saude Mais, Particular"></div>
+        <div class="form-group"><label>Cobertura</label>
+  <select id="p-empresa-tipo" onchange="toggleSeguro()">
+    <option value="Particular">Particular</option>
+    <option value="asegurado">Asegurado</option>
+  </select>
+</div>
+<div class="form-group" id="seguro-nombre-wrap" style="display:none"><label>Nombre del seguro</label><input type="text" id="p-empresa" placeholder="Ej: Saude Mais, Ensa..."></div>
+<input type="hidden" id="p-empresa-particular" value="Particular">
         <div class="form-group"><label>Área</label>
           <select id="p-area"></select>
         </div>
@@ -759,10 +768,7 @@ async function loadPacientes() {
   const activos = allPacientes.filter(p=>!p.fecha_egreso).length;
   document.getElementById('badge-activos').textContent = activos;
 
-  const empresas = [...new Set(allPacientes.map(p=>p.empresa))].sort();
-  const selE = document.getElementById('filter-empresa');
-  selE.innerHTML = '<option value="">Todas las empresas</option>';
-  empresas.forEach(e => { const o = document.createElement('option'); o.value=e; o.textContent=e; selE.appendChild(o); });
+  // empresa filter is static (Particular / Asegurado), no dynamic population needed
 
   // Poblar meses disponibles
   const meses = [...new Set(allPacientes.map(p=>p.fecha_ingreso?.slice(0,7)))].filter(Boolean).sort().reverse();
@@ -878,7 +884,7 @@ function filterTable() {
     const matchQ = !q || p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q) || p.diagnostico.toLowerCase().includes(q);
     const matchStatus = !status || (status==='activo' && !p.fecha_egreso) || (status==='egresado' && p.fecha_egreso);
     const matchArea = !area || p.area_id === area;
-    const matchEmpresa = !empresa || p.empresa === empresa;
+    const matchEmpresa = !empresa || (empresa==='Particular' ? p.empresa==='Particular' : p.empresa!=='Particular');
     const matchMes = !mes || p.fecha_ingreso?.startsWith(mes);
     return matchQ && matchStatus && matchArea && matchEmpresa && matchMes;
   });
@@ -1046,10 +1052,19 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m && mouseDownTarget === m) m.classList.remove('open'); });
 });
 
+function toggleSeguro() {
+  const tipo = document.getElementById('p-empresa-tipo').value;
+  const wrap = document.getElementById('seguro-nombre-wrap');
+  wrap.style.display = tipo === 'asegurado' ? 'block' : 'none';
+  if (tipo === 'Particular') document.getElementById('p-empresa').value = '';
+}
+
 function openModalNuevo() {
   document.getElementById('modal-title').textContent = 'Nuevo paciente';
   document.getElementById('edit-id').value = '';
   ['p-nombre','p-codigo','p-diagnostico','p-empresa','p-notas'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('p-empresa-tipo').value = 'Particular';
+  document.getElementById('seguro-nombre-wrap').style.display = 'none';
   document.getElementById('p-area').value = '';
   document.getElementById('p-ingreso').value = new Date().toISOString().split('T')[0];
   document.getElementById('p-egreso').value = '';
@@ -1067,7 +1082,10 @@ function openModalEditar(id) {
   document.getElementById('p-nombre').value = p.nombre;
   document.getElementById('p-codigo').value = p.codigo;
   document.getElementById('p-diagnostico').value = p.diagnostico;
-  document.getElementById('p-empresa').value = p.empresa;
+  const esParticular = p.empresa === 'Particular';
+  document.getElementById('p-empresa-tipo').value = esParticular ? 'Particular' : 'asegurado';
+  document.getElementById('seguro-nombre-wrap').style.display = esParticular ? 'none' : 'block';
+  document.getElementById('p-empresa').value = esParticular ? '' : p.empresa;
   document.getElementById('p-area').value = p.area_id || '';
   document.getElementById('p-ingreso').value = p.fecha_ingreso;
   document.getElementById('p-egreso').value = p.fecha_egreso || '';
@@ -1083,7 +1101,7 @@ async function savePaciente() {
     nombre: document.getElementById('p-nombre').value.trim(),
     codigo: document.getElementById('p-codigo').value.trim(),
     diagnostico: document.getElementById('p-diagnostico').value.trim(),
-    empresa: document.getElementById('p-empresa').value.trim(),
+    empresa: document.getElementById('p-empresa-tipo').value === 'Particular' ? 'Particular' : (document.getElementById('p-empresa').value.trim() || 'Asegurado'),
     area_id: document.getElementById('p-area').value || null,
     fecha_ingreso: document.getElementById('p-ingreso').value,
     fecha_egreso: document.getElementById('p-egreso').value || null,
