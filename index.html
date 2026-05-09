@@ -599,7 +599,7 @@
       </div>
       <div class="table-wrap">
         <table id="staff-table">
-          <thead><tr><th>Nombre</th><th>Rol</th><th>Estado</th><th>Miembro desde</th></tr></thead>
+          <thead><tr><th>Nombre</th><th>Rol</th><th>Estado</th><th>Miembro desde</th><th></th></tr></thead>
           <tbody id="staff-body"><tr class="empty-row"><td colspan="4"><div class="loading"><div class="spinner"></div>Cargando...</div></td></tr></tbody>
         </table>
       </div>
@@ -693,6 +693,33 @@
 </div>
 
 <!-- MODAL: CREAR USUARIO -->
+<div class="modal-overlay" id="modal-cambiar-rol">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <div class="modal-title">Cambiar rol</div>
+      <button class="modal-close" onclick="closeModal('modal-cambiar-rol')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cambiar-rol-id">
+      <div class="form-group">
+        <label id="cambiar-rol-nombre-label">Usuario</label>
+        <select id="cambiar-rol-select" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px">
+          <option value="recepcionista">Recepcionista</option>
+          <option value="enfermero">Enfermero/a</option>
+          <option value="medico">Médico</option>
+          <option value="director">Director</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <div id="cambiar-rol-msg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-cambiar-rol')">Cancelar</button>
+      <button class="btn btn-primary" style="width:auto" onclick="guardarRol()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-crear-usuario">
   <div class="modal">
     <div class="modal-header">
@@ -1197,18 +1224,44 @@ async function crearUsuario() {
 }
 
 async function loadStaff() {
+  const isAdmin = currentProfile?.rol === 'admin';
   if (['admin','director'].includes(currentProfile?.rol)) document.getElementById('staff-actions').style.display = 'flex';
   const { data } = await sb.from('staff_profiles').select('*').order('created_at');
   const tbody = document.getElementById('staff-body');
-  if (!data?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Sin personal registrado</td></tr>'; return; }
+  if (!data?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Sin personal registrado</td></tr>'; return; }
   const rolLabel = { admin: 'Administrador', director: 'Director', medico: 'Médico', enfermero: 'Enfermero/a', recepcionista: 'Recepcionista' };
   tbody.innerHTML = data.map(s => `<tr>
     <td style="font-weight:500">${s.nombre}</td>
     <td><span class="badge badge-area">${rolLabel[s.rol] || s.rol}</span></td>
     <td style="color:var(--text2)">${s.activo ? 'Activo' : 'Inactivo'}</td>
     <td style="color:var(--text2)">${new Date(s.created_at).toLocaleDateString('es-ES')}</td>
-
+    <td>${isAdmin && s.id !== currentUser.id ? `<div class="row-actions"><button class="btn btn-outline btn-sm" onclick="openCambiarRol('${s.id}','${s.nombre}','${s.rol}')">Cambiar rol</button><button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${s.id}','${s.nombre}')">Eliminar</button></div>` : ''}</td>
   </tr>`).join('');
+}
+
+function openCambiarRol(id, nombre, rolActual) {
+  document.getElementById('cambiar-rol-id').value = id;
+  document.getElementById('cambiar-rol-nombre-label').textContent = nombre;
+  document.getElementById('cambiar-rol-select').value = rolActual;
+  document.getElementById('cambiar-rol-msg').innerHTML = '';
+  openModal('modal-cambiar-rol');
+}
+
+async function guardarRol() {
+  const id = document.getElementById('cambiar-rol-id').value;
+  const rol = document.getElementById('cambiar-rol-select').value;
+  const msgEl = document.getElementById('cambiar-rol-msg');
+  msgEl.innerHTML = '<div class="msg">Guardando...</div>';
+  const { error } = await sb.from('staff_profiles').update({ rol }).eq('id', id);
+  if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
+  closeModal('modal-cambiar-rol');
+  loadStaff();
+}
+
+async function eliminarUsuario(id, nombre) {
+  if (!confirm(`¿Eliminar la cuenta de "${nombre}"? El usuario no podrá iniciar sesión.`)) return;
+  await sb.from('staff_profiles').delete().eq('id', id);
+  loadStaff();
 }
 
 // ─── TRASLADOS ───────────────────────────────────────────
