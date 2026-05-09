@@ -482,7 +482,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Exportar Excel
           </button>
-          <button class="btn btn-primary" onclick="openModalNuevo()">
+          <button class="btn btn-primary" id="btn-nuevo-paciente" onclick="openModalNuevo()" style="display:none">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Nuevo paciente
           </button>
@@ -708,6 +708,7 @@
           <option value="recepcionista">Recepcionista</option>
           <option value="enfermero">Enfermero/a</option>
           <option value="medico">Médico</option>
+          <option value="director">Director</option>
           <option value="admin">Administrador</option>
         </select>
       </div>
@@ -869,10 +870,25 @@ async function initApp(user) {
   const today = new Date().toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   document.getElementById('dash-date').textContent = today.charAt(0).toUpperCase()+today.slice(1);
 
+  applyRolePermissions();
   await loadAreas();
   await loadPacientes();
   loadDashboard();
   showPage('dashboard');
+}
+
+// ─── ROLE PERMISSIONS ─────────────────────────────────────
+function applyRolePermissions() {
+  const rol = currentProfile?.rol;
+  const isAdmin = rol === 'admin';
+  const isAdminOrDirector = isAdmin || rol === 'director';
+
+  // Nuevo paciente button
+  const btnNuevo = document.getElementById('btn-nuevo-paciente');
+  if (btnNuevo) btnNuevo.style.display = isAdmin ? '' : 'none';
+
+  // Personal tab
+  document.getElementById('nav-staff').style.display = isAdminOrDirector ? '' : 'none';
 }
 
 // ─── DATA LOADING ─────────────────────────────────────────
@@ -938,7 +954,7 @@ function renderTable(rows) {
           <div class="row-actions">
             <button class="btn btn-outline btn-sm" onclick="openDetalle('${p.id}')">Ver</button>
             ${currentProfile?.rol==='admin' ? `<button class="btn btn-outline btn-sm" onclick="openModalEditar('${p.id}')">Editar</button>` : ''}
-            ${activo ? `<button class="btn btn-outline btn-sm" onclick="openModalTraslado('${p.id}')">Trasladar</button><button class="btn btn-danger btn-sm" onclick="darEgreso('${p.id}','${p.nombre}')">Egreso</button>` : ''}
+            ${activo && currentProfile?.rol==='admin' ? `<button class="btn btn-outline btn-sm" onclick="openModalTraslado('${p.id}')">Trasladar</button><button class="btn btn-danger btn-sm" onclick="darEgreso('${p.id}','${p.nombre}')">Egreso</button>` : ''}
           </div>
         </td>
       </tr>`;
@@ -1181,11 +1197,11 @@ async function crearUsuario() {
 }
 
 async function loadStaff() {
-  if (currentProfile?.rol === 'admin') document.getElementById('staff-actions').style.display = 'flex';
+  if (['admin','director'].includes(currentProfile?.rol)) document.getElementById('staff-actions').style.display = 'flex';
   const { data } = await sb.from('staff_profiles').select('*').order('created_at');
   const tbody = document.getElementById('staff-body');
   if (!data?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Sin personal registrado</td></tr>'; return; }
-  const rolLabel = { admin: 'Administrador', medico: 'Médico', enfermero: 'Enfermero/a', recepcionista: 'Recepcionista' };
+  const rolLabel = { admin: 'Administrador', director: 'Director', medico: 'Médico', enfermero: 'Enfermero/a', recepcionista: 'Recepcionista' };
   tbody.innerHTML = data.map(s => `<tr>
     <td style="font-weight:500">${s.nombre}</td>
     <td><span class="badge badge-area">${rolLabel[s.rol] || s.rol}</span></td>
