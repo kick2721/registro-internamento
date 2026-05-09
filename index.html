@@ -561,7 +561,7 @@
       </div>
       <div class="form-row">
         <div class="form-group"><label>Fecha de ingreso</label><input type="date" id="p-ingreso"></div>
-        <div class="form-group"><label>Fecha de egreso</label><input type="date" id="p-egreso"></div>
+        <div class="form-group" id="egreso-field-wrap"><label>Fecha de egreso</label><input type="date" id="p-egreso"></div>
       </div>
       <div class="form-group"><label>Notas</label><textarea id="p-notas" rows="2" placeholder="Observaciones adicionales..."></textarea></div>
       <div id="modal-msg"></div>
@@ -996,6 +996,7 @@ function openModalNuevo() {
   document.getElementById('p-area').value = '';
   document.getElementById('p-ingreso').value = new Date().toISOString().split('T')[0];
   document.getElementById('p-egreso').value = '';
+  document.getElementById('egreso-field-wrap').style.display = 'none';
   document.getElementById('modal-msg').innerHTML = '';
   openModal('modal-paciente');
 }
@@ -1003,6 +1004,7 @@ function openModalNuevo() {
 function openModalEditar(id) {
   const p = allPacientes.find(x=>x.id===id);
   if (!p) return;
+  document.getElementById('egreso-field-wrap').style.display = '';
   document.getElementById('modal-title').textContent = 'Editar paciente';
   document.getElementById('edit-id').value = p.id;
   document.getElementById('p-nombre').value = p.nombre;
