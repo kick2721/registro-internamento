@@ -246,10 +246,73 @@
   .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* MOBILE TOPBAR (hidden on desktop) */
+  .mobile-topbar { display: none; }
+
   /* RESPONSIVE */
   @media (max-width: 768px) {
-    .sidebar { transform: translateX(-100%); }
-    .main { margin-left: 0; padding: 1rem; }
+    /* Top bar */
+    .mobile-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1rem; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 99; height: 52px;
+    }
+
+    /* Sidebar → bottom nav */
+    .sidebar {
+      top: auto; bottom: 0; left: 0; right: 0;
+      width: 100%; height: 58px;
+      flex-direction: row;
+      border-right: none; border-top: 1px solid var(--border);
+    }
+    .sidebar-logo, .sidebar-footer { display: none; }
+    .sidebar-nav {
+      display: flex; flex-direction: row;
+      padding: 0; overflow-x: auto; overflow-y: hidden; flex: 1;
+      scrollbar-width: none;
+    }
+    .sidebar-nav::-webkit-scrollbar { display: none; }
+    .nav-section { display: none; }
+    .nav-item {
+      flex-direction: column; gap: 2px;
+      padding: 6px 4px; font-size: 9px;
+      min-width: 56px; flex: 1;
+      border-radius: 0; margin-bottom: 0;
+      align-items: center; justify-content: center;
+    }
+    .nav-item svg { width: 18px; height: 18px; }
+    .nav-badge { display: none; }
+
+    /* Main content */
+    .main {
+      margin-left: 0; padding: 1rem;
+      padding-top: calc(52px + 1rem);
+      padding-bottom: calc(58px + 1rem);
+    }
+
+    /* Stats */
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .stat-value { font-size: 22px; }
+    .dash-tables { grid-template-columns: 1fr; }
+
+    /* Filters */
+    .search-wrap { min-width: 100%; }
+    .filter-select { flex: 1; min-width: calc(50% - 5px); font-size: 12px; }
+
+    /* Form rows → single column */
+    .form-row { grid-template-columns: 1fr; }
+
+    /* Modal → slide from bottom */
+    .modal-overlay { align-items: flex-end; padding: 0; }
+    .modal { border-radius: 14px 14px 0 0; max-height: 88vh; max-width: 100%; }
+
+    /* Page actions */
+    .page-actions .btn { flex: 1; justify-content: center; }
+
+    /* Table scroll */
+    .table-scroll { -webkit-overflow-scrolling: touch; }
   }
   @media print {
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -321,6 +384,19 @@
 
 <!-- APP SCREEN -->
 <div id="app-screen">
+  <!-- MOBILE TOP BAR -->
+  <div class="mobile-topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <img src="logo.png" style="height:28px;width:auto">
+      <span style="font-weight:600;font-size:14px">Internamento</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="user-avatar" id="mobile-user-avatar">--</div>
+      <button class="btn-logout" onclick="doLogout()" title="Cerrar sesión">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-logo">
@@ -747,6 +823,7 @@ async function initApp(user) {
   if (profile) {
     const initials = profile.nombre.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
     document.getElementById('user-avatar').textContent = initials;
+    document.getElementById('mobile-user-avatar').textContent = initials;
     document.getElementById('user-name').textContent = profile.nombre;
     document.getElementById('user-role').textContent = profile.rol;
   } else {
