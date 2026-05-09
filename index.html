@@ -1566,19 +1566,25 @@ async function exportarResumenExcel() {
 
   const wb = XLSX.utils.book_new();
 
-  const wsIng = XLSX.utils.json_to_sheet((ingresos.data||[]).map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Empresa':p.empresa,'Área':p.areas?.nombre||'—'})));
+  const empty = msg => [{'': msg}];
+
+  const ingData = (ingresos.data||[]).map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Empresa':p.empresa,'Área':p.areas?.nombre||'—'}));
+  const wsIng = XLSX.utils.json_to_sheet(ingData.length ? ingData : empty(`Sin ingresos el ${fechaLabel}`));
   wsIng['!cols'] = [30,12,35,20,15].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb, wsIng, 'Ingresos');
 
-  const wsEgr = XLSX.utils.json_to_sheet((egresos.data||[]).map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Empresa':p.empresa,'Motivo egreso':p.motivo_egreso||'—'})));
+  const egrData = (egresos.data||[]).map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Empresa':p.empresa,'Motivo egreso':p.motivo_egreso||'—'}));
+  const wsEgr = XLSX.utils.json_to_sheet(egrData.length ? egrData : empty(`Sin egresos el ${fechaLabel}`));
   wsEgr['!cols'] = [30,12,35,20,20].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb, wsEgr, 'Egresos');
 
-  const wsTra = XLSX.utils.json_to_sheet((traslados.data||[]).map(t=>({'Paciente':t.paciente?.nombre||'—','Código':t.paciente?.codigo||'—','Área origen':t.origen?.nombre||'—','Área destino':t.destino?.nombre||'—','Motivo':t.motivo||'—'})));
+  const traData = (traslados.data||[]).map(t=>({'Paciente':t.paciente?.nombre||'—','Código':t.paciente?.codigo||'—','Área origen':t.origen?.nombre||'—','Área destino':t.destino?.nombre||'—','Motivo':t.motivo||'—'}));
+  const wsTra = XLSX.utils.json_to_sheet(traData.length ? traData : empty(`Sin traslados el ${fechaLabel}`));
   wsTra['!cols'] = [30,12,18,18,30].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb, wsTra, 'Traslados');
 
-  const wsInt = XLSX.utils.json_to_sheet(internados.map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Área':p.areas?.nombre||'—','F. Ingreso':fmt(p.fecha_ingreso)})));
+  const intData = internados.map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Área':p.areas?.nombre||'—','F. Ingreso':fmt(p.fecha_ingreso)}));
+  const wsInt = XLSX.utils.json_to_sheet(intData.length ? intData : empty(`Sin pacientes internados el ${fechaLabel}`));
   wsInt['!cols'] = [30,12,35,15,12].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb, wsInt, 'Internados');
 
