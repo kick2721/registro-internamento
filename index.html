@@ -445,6 +445,12 @@
     <div class="page" id="page-staff">
       <div class="page-header">
         <div><div class="page-title">Personal registrado</div></div>
+        <div class="page-actions" id="staff-actions" style="display:none">
+          <button class="btn btn-primary" onclick="openModalCrearUsuario()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Crear usuario
+          </button>
+        </div>
       </div>
       <div class="table-wrap">
         <table id="staff-table">
@@ -455,6 +461,34 @@
     </div>
 
   </main>
+</div>
+
+<!-- MODAL: CREAR USUARIO -->
+<div class="modal-overlay" id="modal-crear-usuario">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Crear usuario</div>
+      <button class="modal-close" onclick="closeModal('modal-crear-usuario')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nombre completo</label><input type="text" id="nu-nombre" placeholder="Dr. Nombre Apellido"></div>
+      <div class="form-group"><label>Correo electrónico</label><input type="email" id="nu-email" placeholder="usuario@clinica.com"></div>
+      <div class="form-group"><label>Contraseña</label><input type="password" id="nu-pass" placeholder="Mínimo 6 caracteres"></div>
+      <div class="form-group"><label>Rol</label>
+        <select id="nu-rol">
+          <option value="recepcionista">Recepcionista</option>
+          <option value="enfermero">Enfermero/a</option>
+          <option value="medico">Médico</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <div id="nu-msg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-crear-usuario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="crearUsuario()">Crear</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: NUEVO/EDITAR PACIENTE -->
@@ -724,7 +758,42 @@ function populateAreaSelects() {
 }
 
 // ─── PERSONAL ─────────────────────────────────────────────
+function openModalCrearUsuario() {
+  ['nu-nombre','nu-email','nu-pass'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('nu-rol').value = 'recepcionista';
+  document.getElementById('nu-msg').innerHTML = '';
+  openModal('modal-crear-usuario');
+}
+
+async function crearUsuario() {
+  const msgEl = document.getElementById('nu-msg');
+  const nombre = document.getElementById('nu-nombre').value.trim();
+  const email = document.getElementById('nu-email').value.trim();
+  const pass = document.getElementById('nu-pass').value;
+  const rol = document.getElementById('nu-rol').value;
+  if (!nombre||!email||!pass) { msgEl.innerHTML = '<div class="msg msg-error">Completa todos los campos.</div>'; return; }
+  if (pass.length < 6) { msgEl.innerHTML = '<div class="msg msg-error">La contraseña debe tener al menos 6 caracteres.</div>'; return; }
+  msgEl.innerHTML = '<div class="msg">Creando usuario...</div>';
+
+  // Guardar sesión actual
+  const { data: { session: mySession } } = await sb.auth.getSession();
+
+  const { data, error } = await sb.auth.signUp({ email, password: pass });
+  if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
+
+  if (data.user) {
+    await sb.from('staff_profiles').insert({ id: data.user.id, nombre, rol });
+  }
+
+  // Restaurar sesión del admin
+  await sb.auth.setSession({ access_token: mySession.access_token, refresh_token: mySession.refresh_token });
+
+  msgEl.innerHTML = '<div class="msg msg-success">Usuario creado. Ya puede iniciar sesión.</div>';
+  setTimeout(() => { closeModal('modal-crear-usuario'); loadStaff(); }, 1500);
+}
+
 async function loadStaff() {
+  if (currentProfile?.rol === 'admin') document.getElementById('staff-actions').style.display = 'flex';
   const { data } = await sb.from('staff_profiles').select('*').order('created_at');
   const tbody = document.getElementById('staff-body');
   if (!data?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Sin personal registrado</td></tr>'; return; }
