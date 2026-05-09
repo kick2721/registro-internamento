@@ -1339,7 +1339,8 @@ async function guardarRol() {
 
 async function eliminarUsuario(id, nombre) {
   if (!confirm(`¿Eliminar la cuenta de "${nombre}"? El usuario no podrá iniciar sesión.`)) return;
-  await sb.from('staff_profiles').delete().eq('id', id);
+  const { error } = await sb.from('staff_profiles').delete().eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
   loadStaff();
 }
 
