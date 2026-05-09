@@ -1600,11 +1600,11 @@ async function loadResumen() {
   }) };
   const ni = ingresos.data?.length||0, ne = egresos.data?.length||0, nt = traslados.data?.length||0, nint = internados.length;
   document.getElementById('resumen-content').innerHTML = `
-    <div class="resumen-print-header">
+    <div class="resumen-print-header" style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #1a5c3a;padding-bottom:12px;margin-bottom:24px">
       <img src="logo.png" alt="Logo" style="height:48px;width:auto;max-width:160px;object-fit:contain">
-      <div class="resumen-print-header-right">
-        <h2>Resumen de Internamento</h2>
-        <p>${fechaLabel}</p>
+      <div class="resumen-print-header-right" style="text-align:right">
+        <h2 style="font-size:16px;font-weight:700;color:#1a1916;margin:0">Resumen de Internamento</h2>
+        <p style="font-size:12px;color:#6b6860;margin:2px 0 0">${fechaLabel}</p>
       </div>
     </div>
 
