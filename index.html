@@ -394,7 +394,6 @@
                 <th>F. Ingreso</th>
                 <th>F. Egreso</th>
                 <th>Estado</th>
-                <th>Registrado por</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -735,7 +734,7 @@ function renderTable(rows) {
   const page = rows.slice(start, start + PAGE_SIZE);
 
   const tbody = document.getElementById('table-body');
-  if (!page.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No se encontraron pacientes</td></tr>'; }
+  if (!page.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No se encontraron pacientes</td></tr>'; }
   else {
     tbody.innerHTML = page.map(p => {
       const activo = !p.fecha_egreso;
@@ -749,7 +748,6 @@ function renderTable(rows) {
         <td>${fmt(p.fecha_ingreso)}</td>
         <td>${p.fecha_egreso ? fmt(p.fecha_egreso) : '—'}</td>
         <td><span class="badge ${activo?'badge-active':'badge-egress'}">${activo?'Internado':'Egresado'}</span></td>
-        <td style="color:var(--text2)">${staffMap[p.registrado_por]||'—'}</td>
         <td>
           <div class="row-actions">
             <button class="btn btn-outline btn-sm" onclick="openDetalle('${p.id}')">Ver</button>
