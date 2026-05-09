@@ -448,7 +448,7 @@
       </div>
       <div class="table-wrap">
         <table id="staff-table">
-          <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Miembro desde</th></tr></thead>
+          <thead><tr><th>Nombre</th><th>Rol</th><th>Estado</th><th>Miembro desde</th></tr></thead>
           <tbody id="staff-body"><tr class="empty-row"><td colspan="4"><div class="loading"><div class="spinner"></div>Cargando...</div></td></tr></tbody>
         </table>
       </div>
@@ -725,17 +725,14 @@ function populateAreaSelects() {
 
 // ─── PERSONAL ─────────────────────────────────────────────
 async function loadStaff() {
-  const { data } = await sb.from('staff_profiles').select('*, auth_users:id(email)').order('created_at');
-  const { data: users } = await sb.auth.admin?.listUsers?.() || { data: null };
+  const { data } = await sb.from('staff_profiles').select('*').order('created_at');
   const tbody = document.getElementById('staff-body');
-
   if (!data?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Sin personal registrado</td></tr>'; return; }
-  const { data: authData } = await sb.rpc ? { data: null } : { data: null };
-
+  const rolLabel = { admin: 'Administrador', medico: 'Médico', enfermero: 'Enfermero/a', recepcionista: 'Recepcionista' };
   tbody.innerHTML = data.map(s => `<tr>
     <td style="font-weight:500">${s.nombre}</td>
-    <td style="color:var(--text2)">—</td>
-    <td><span class="badge badge-area">${s.rol}</span></td>
+    <td><span class="badge badge-area">${rolLabel[s.rol] || s.rol}</span></td>
+    <td style="color:var(--text2)">${s.activo ? 'Activo' : 'Inactivo'}</td>
     <td style="color:var(--text2)">${new Date(s.created_at).toLocaleDateString('es-ES')}</td>
   </tr>`).join('');
 }
