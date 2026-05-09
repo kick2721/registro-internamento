@@ -394,6 +394,7 @@
                 <th>F. Ingreso</th>
                 <th>F. Egreso</th>
                 <th>Estado</th>
+                <th>Registrado por</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -694,7 +695,11 @@ async function loadAreas() {
   renderAreasPage();
 }
 
+let staffMap = {};
+
 async function loadPacientes() {
+  const { data: staffData } = await sb.from('staff_profiles').select('id,nombre');
+  staffMap = Object.fromEntries((staffData||[]).map(s=>[s.id,s.nombre]));
   const { data } = await sb.from('pacientes').select('*, areas(nombre)').order('fecha_ingreso', { ascending: false });
   allPacientes = data || [];
   currentPage = 1;
@@ -730,7 +735,7 @@ function renderTable(rows) {
   const page = rows.slice(start, start + PAGE_SIZE);
 
   const tbody = document.getElementById('table-body');
-  if (!page.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No se encontraron pacientes</td></tr>'; }
+  if (!page.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No se encontraron pacientes</td></tr>'; }
   else {
     tbody.innerHTML = page.map(p => {
       const activo = !p.fecha_egreso;
@@ -744,10 +749,11 @@ function renderTable(rows) {
         <td>${fmt(p.fecha_ingreso)}</td>
         <td>${p.fecha_egreso ? fmt(p.fecha_egreso) : '—'}</td>
         <td><span class="badge ${activo?'badge-active':'badge-egress'}">${activo?'Internado':'Egresado'}</span></td>
+        <td style="color:var(--text2)">${staffMap[p.registrado_por]||'—'}</td>
         <td>
           <div class="row-actions">
             <button class="btn btn-outline btn-sm" onclick="openDetalle('${p.id}')">Ver</button>
-            <button class="btn btn-outline btn-sm" onclick="openModalEditar('${p.id}')">Editar</button>
+            ${currentProfile?.rol==='admin' ? `<button class="btn btn-outline btn-sm" onclick="openModalEditar('${p.id}')">Editar</button>` : ''}
             ${activo ? `<button class="btn btn-outline btn-sm" onclick="openModalTraslado('${p.id}')">Trasladar</button><button class="btn btn-danger btn-sm" onclick="darEgreso('${p.id}','${p.nombre}')">Egreso</button>` : ''}
           </div>
         </td>
@@ -1040,6 +1046,7 @@ async function savePaciente() {
   if (id) {
     ({ error } = await sb.from('pacientes').update(payload).eq('id', id));
   } else {
+    payload.registrado_por = currentUser.id;
     ({ error } = await sb.from('pacientes').insert(payload));
   }
   if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
