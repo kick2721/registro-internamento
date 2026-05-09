@@ -966,7 +966,7 @@ async function loadStaff() {
 // ─── TRASLADOS ───────────────────────────────────────────
 async function loadTraslados() {
   const { data } = await sb.from('traslados')
-    .select('*, paciente:paciente_id(nombre), origen:area_origen_id(nombre), destino:area_destino_id(nombre), registrado:registrado_por(nombre:id)')
+    .select('*, paciente:paciente_id(nombre), origen:area_origen_id(nombre), destino:area_destino_id(nombre)')
     .order('created_at', { ascending: false });
   
   const { data: staff } = await sb.from('staff_profiles').select('id,nombre');
