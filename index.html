@@ -1556,16 +1556,22 @@ function descargarResumenPDF() {
   const footer = document.querySelector('.resumen-print-footer');
   if (header) header.style.display = 'flex';
   if (footer) footer.style.display = 'flex';
+  el.style.width = '720px';
+  el.style.backgroundColor = 'white';
+  el.style.padding = '0';
   html2pdf().set({
-    margin: [14, 14, 14, 14],
+    margin: [12, 12, 12, 12],
     filename: nombre,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak: { mode: ['avoid-all', 'css'] }
   }).from(el).save().then(() => {
     if (header) header.style.display = 'none';
     if (footer) footer.style.display = 'none';
+    el.style.width = '';
+    el.style.backgroundColor = '';
+    el.style.padding = '';
   });
 }
 
