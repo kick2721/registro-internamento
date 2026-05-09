@@ -906,6 +906,43 @@ function filterTable() {
 }
 
 // ─── DASHBOARD ───────────────────────────────────────────
+async function exportExcelFull() {
+  const { data: traslados } = await sb.from('traslados')
+    .select('fecha_traslado, motivo, paciente:paciente_id(nombre,codigo), origen:area_origen_id(nombre), destino:area_destino_id(nombre)')
+    .order('fecha_traslado');
+
+  const rowsPacientes = allPacientes.map(p => ({
+    'Código': p.codigo,
+    'Nombre Paciente': p.nombre,
+    'Diagnóstico': p.diagnostico,
+    'Empresa / Seguro': p.empresa,
+    'Área': p.areas?.nombre || '',
+    'F. Ingreso': fmt(p.fecha_ingreso),
+    'F. Egreso': p.fecha_egreso ? fmt(p.fecha_egreso) : '',
+    'Estado': p.fecha_egreso ? 'Egresado' : 'Internado',
+    'Notas': p.notas || ''
+  }));
+
+  const rowsTraslados = (traslados || []).map(t => ({
+    'Fecha': new Date(t.fecha_traslado).toLocaleString('es-ES'),
+    'Código': t.paciente?.codigo || '',
+    'Paciente': t.paciente?.nombre || '',
+    'Área origen': t.origen?.nombre || '',
+    'Área destino': t.destino?.nombre || '',
+    'Motivo': t.motivo || ''
+  }));
+
+  const ws1 = XLSX.utils.json_to_sheet(rowsPacientes);
+  ws1['!cols'] = [8,30,35,20,15,12,12,12,30].map(w=>({wch:w}));
+  const ws2 = XLSX.utils.json_to_sheet(rowsTraslados);
+  ws2['!cols'] = [18,10,30,18,18,30].map(w=>({wch:w}));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws1, 'Internados');
+  XLSX.utils.book_append_sheet(wb, ws2, 'Traslados');
+  XLSX.writeFile(wb, `Registro_Internados_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
 async function loadDashboard() {
   const today = new Date().toISOString().split('T')[0];
   const activos = allPacientes.filter(p => !p.fecha_egreso);
@@ -1203,24 +1240,7 @@ async function openDetalle(id) {
 }
 
 // ─── EXPORT ──────────────────────────────────────────────
-function exportExcel() {
-  const rows = allPacientes.map(p => ({
-    'Código': p.codigo,
-    'Nombre Paciente': p.nombre,
-    'Diagnóstico': p.diagnostico,
-    'Empresa / Seguro': p.empresa,
-    'Área': p.areas?.nombre || '',
-    'F. Ingreso': fmt(p.fecha_ingreso),
-    'F. Egreso': p.fecha_egreso ? fmt(p.fecha_egreso) : '',
-    'Estado': p.fecha_egreso ? 'Egresado' : 'Internado',
-    'Notas': p.notas || ''
-  }));
-  const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [8,30,35,20,15,12,12,12,30].map(w=>({wch:w}));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Internados');
-  XLSX.writeFile(wb, `Registro_Internados_${new Date().toISOString().split('T')[0]}.xlsx`);
-}
+function exportExcel() { exportExcelFull(); }
 
 // ─── RESUMEN DEL DÍA ─────────────────────────────────────
 function initResumenDatePicker() {
