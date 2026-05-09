@@ -548,9 +548,13 @@
         </div>
         <div class="page-actions no-print">
           <input type="date" class="filter-select" id="resumen-date-picker" onchange="loadResumen()">
+          <button class="btn btn-outline" onclick="exportarResumenExcel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Excel
+          </button>
           <button class="btn btn-primary" onclick="descargarResumenPDF()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            Descargar PDF
+            PDF
           </button>
         </div>
       </div>
@@ -1545,6 +1549,40 @@ async function doExport() {
 function initResumenDatePicker() {
   const sel = document.getElementById('resumen-date-picker');
   if (!sel.value) sel.value = new Date().toISOString().split('T')[0];
+}
+
+async function exportarResumenExcel() {
+  const fecha = document.getElementById('resumen-date-picker').value;
+  const [y, m, d] = fecha.split('-');
+  const nomMes = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const fechaLabel = `${+d} de ${nomMes[+m-1]} de ${y}`;
+
+  const [ingresos, egresos, traslados] = await Promise.all([
+    sb.from('pacientes').select('nombre,codigo,diagnostico,empresa,areas(nombre)').eq('fecha_ingreso', fecha).order('created_at'),
+    sb.from('pacientes').select('nombre,codigo,diagnostico,empresa,motivo_egreso,areas(nombre)').eq('fecha_egreso', fecha).order('updated_at'),
+    sb.from('traslados').select('motivo,paciente:paciente_id(nombre,codigo),origen:area_origen_id(nombre),destino:area_destino_id(nombre)').gte('fecha_traslado', fecha+'T00:00:00').lte('fecha_traslado', fecha+'T23:59:59').order('fecha_traslado')
+  ]);
+  const internados = allPacientes.filter(p => p.fecha_ingreso <= fecha && (!p.fecha_egreso || p.fecha_egreso >= fecha));
+
+  const wb = XLSX.utils.book_new();
+
+  const wsIng = XLSX.utils.json_to_sheet((ingresos.data||[]).map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Empresa':p.empresa,'Área':p.areas?.nombre||'—'})));
+  wsIng['!cols'] = [30,12,35,20,15].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, wsIng, 'Ingresos');
+
+  const wsEgr = XLSX.utils.json_to_sheet((egresos.data||[]).map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Empresa':p.empresa,'Motivo egreso':p.motivo_egreso||'—'})));
+  wsEgr['!cols'] = [30,12,35,20,20].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, wsEgr, 'Egresos');
+
+  const wsTra = XLSX.utils.json_to_sheet((traslados.data||[]).map(t=>({'Paciente':t.paciente?.nombre||'—','Código':t.paciente?.codigo||'—','Área origen':t.origen?.nombre||'—','Área destino':t.destino?.nombre||'—','Motivo':t.motivo||'—'})));
+  wsTra['!cols'] = [30,12,18,18,30].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, wsTra, 'Traslados');
+
+  const wsInt = XLSX.utils.json_to_sheet(internados.map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Área':p.areas?.nombre||'—','F. Ingreso':fmt(p.fecha_ingreso)})));
+  wsInt['!cols'] = [30,12,35,15,12].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, wsInt, 'Internados');
+
+  XLSX.writeFile(wb, `Resumen_${+d}-${+m}-${y}.xlsx`);
 }
 
 function descargarResumenPDF() {
