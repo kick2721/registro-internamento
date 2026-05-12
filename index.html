@@ -202,7 +202,8 @@
   .badge-area { background: var(--warn-light); color: var(--warn); }
 
   /* ACTIONS ROW */
-  .row-actions { display: flex; gap: 6px; }
+  .row-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .row-actions .btn { white-space: nowrap; }
 
   /* MODAL */
   .modal-overlay {
@@ -314,6 +315,7 @@
 
     /* Table scroll */
     .table-scroll { -webkit-overflow-scrolling: touch; }
+    .row-actions { min-width: 190px; }
   }
   @media print {
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -1394,7 +1396,7 @@ function openModalNuevo() {
 function openModalEditar(id) {
   const p = allPacientes.find(x=>x.id===id);
   if (!p) return;
-  document.getElementById('egreso-field-wrap').style.display = '';
+  document.getElementById('egreso-field-wrap').style.display = p.fecha_egreso ? '' : 'none';
   document.getElementById('modal-title').textContent = 'Editar paciente';
   document.getElementById('edit-id').value = p.id;
   document.getElementById('p-nombre').value = p.nombre;
@@ -1415,18 +1417,24 @@ function openModalEditar(id) {
 async function savePaciente() {
   const msgEl = document.getElementById('modal-msg');
   const id = document.getElementById('edit-id').value;
+  const currentPaciente = id ? allPacientes.find(p=>p.id===id) : null;
+  const selectedArea = document.getElementById('p-area').value;
+  const selectedEgreso = document.getElementById('p-egreso').value;
   const payload = {
     nombre: document.getElementById('p-nombre').value.trim(),
     codigo: document.getElementById('p-codigo').value.trim(),
     diagnostico: document.getElementById('p-diagnostico').value.trim(),
     empresa: document.getElementById('p-empresa-tipo').value === 'Particular' ? 'Particular' : (document.getElementById('p-empresa').value.trim() || 'Asegurado'),
-    area_id: document.getElementById('p-area').value || null,
+    area_id: selectedArea || currentPaciente?.area_id || null,
     fecha_ingreso: document.getElementById('p-ingreso').value,
-    fecha_egreso: document.getElementById('p-egreso').value || null,
+    fecha_egreso: selectedEgreso || null,
     notas: document.getElementById('p-notas').value.trim() || null,
   };
   if (!payload.nombre||!payload.codigo||!payload.diagnostico||!payload.empresa||!payload.fecha_ingreso) {
     msgEl.innerHTML = '<div class="msg msg-error">Completa los campos obligatorios.</div>'; return;
+  }
+  if (!payload.fecha_egreso && !payload.area_id) {
+    msgEl.innerHTML = '<div class="msg msg-error">Selecciona un Ã¡rea para pacientes internados.</div>'; return;
   }
   msgEl.innerHTML = '<div class="msg">Guardando...</div>';
   let error;
