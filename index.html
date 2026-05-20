@@ -1436,6 +1436,33 @@ async function savePaciente() {
   if (!payload.fecha_egreso && !payload.area_id) {
     msgEl.innerHTML = '<div class="msg msg-error">Selecciona un Ã¡rea para pacientes internados.</div>'; return;
   }
+  let activeQuery = sb.from('pacientes')
+    .select('id,nombre,fecha_ingreso,areas(nombre)')
+    .eq('codigo', payload.codigo)
+    .is('fecha_egreso', null)
+    .limit(1);
+  if (id) activeQuery = activeQuery.neq('id', id);
+  const { data: activeMatches, error: activeErr } = await activeQuery;
+  if (activeErr) { msgEl.innerHTML = `<div class="msg msg-error">${activeErr.message}</div>`; return; }
+  if (activeMatches?.length) {
+    const p = activeMatches[0];
+    msgEl.innerHTML = `<div class="msg msg-error">Ya existe un paciente internado con el codigo ${payload.codigo}: ${p.nombre}. No se puede tener el mismo codigo activo dos veces.</div>`;
+    return;
+  }
+  if (!id) {
+    const { data: historyMatches, error: historyErr } = await sb.from('pacientes')
+      .select('nombre,fecha_egreso')
+      .eq('codigo', payload.codigo)
+      .not('fecha_egreso', 'is', null)
+      .order('fecha_egreso', { ascending: false })
+      .limit(1);
+    if (historyErr) { msgEl.innerHTML = `<div class="msg msg-error">${historyErr.message}</div>`; return; }
+    if (historyMatches?.length) {
+      const prev = historyMatches[0];
+      const ok = confirm(`El codigo ${payload.codigo} ya pertenece a ${prev.nombre}, egresada/o el ${fmt(prev.fecha_egreso)}. ¿Registrar este caso como un nuevo ingreso con el mismo codigo?`);
+      if (!ok) return;
+    }
+  }
   msgEl.innerHTML = '<div class="msg">Guardando...</div>';
   let error;
   if (id) {
