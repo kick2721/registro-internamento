@@ -36,8 +36,8 @@
   .brand-title { font-size: 18px; font-weight: bold; padding-top: 8px; }
   .brand-sub { color: #6b6860; font-size: 13px; }
   .logout-row { clear: both; padding-top: 10px; text-align: right; }
-  .tabs { clear: both; padding-top: 10px; display: table; width: 100%; table-layout: fixed; }
-  .tab { display: table-cell; padding: 10px 4px; border: 1px solid #ccc9c0; background: #fff; color: #1a1916; text-align: center; font-size: 13px; font-weight: bold; }
+  .tabs { clear: both; padding-top: 12px; }
+  .tab { display: inline-block; min-width: 148px; min-height: 54px; margin: 0 7px 8px 0; padding: 16px 12px; border: 1px solid #ccc9c0; border-radius: 7px; background: #fff; color: #1a1916; text-align: center; font-size: 16px; font-weight: bold; }
   .tab.active { background: #1f6b43; color: #fff; border-color: #1f6b43; }
   .row { margin-left: -5px; margin-right: -5px; }
   .row:after, .toolbar:after, .stats:after { content: ""; display: table; clear: both; }
@@ -82,7 +82,7 @@
     .brand img { width: 112px; }
     .brand-title { font-size: 16px; }
     .logout-row { text-align: left; }
-    .tab { display: block; width: 100%; margin-bottom: 4px; border-radius: 6px; }
+    .tab { display: block; width: 100%; margin: 0 0 7px; border-radius: 7px; }
     .modal { margin: 0 auto 20px; }
   }
 </style>
@@ -132,7 +132,6 @@
       <div class="card no-print">
         <h1>Dashboard</h1>
         <p id="today-label"></p>
-        <button class="btn btn-light" onclick="loadAll()">Actualizar</button>
         <div id="dash-msg"></div>
       </div>
       <div class="stats">
@@ -157,7 +156,6 @@
           <h1>Pacientes</h1>
           <button id="btn-new-patient" class="btn hidden" onclick="openPatientModal('')">Nuevo paciente</button>
           <button class="btn btn-light" onclick="exportPatientsCsv()">Exportar CSV</button>
-          <button class="btn btn-light" onclick="loadAll()">Actualizar</button>
         </div>
         <div class="row">
           <div class="col"><input id="search" type="text" placeholder="Buscar nombre, codigo o diagnostico" onkeyup="renderPatients()"></div>
@@ -177,7 +175,6 @@
     <div id="page-traslados" class="hidden">
       <div class="card no-print">
         <h1>Historial de traslados</h1>
-        <button class="btn btn-light" onclick="loadTransfersPage()">Actualizar</button>
         <div id="traslados-msg"></div>
       </div>
       <div class="card" id="traslados-list">Cargando...</div>
@@ -186,12 +183,9 @@
     <div id="page-resumen" class="hidden">
       <div class="card no-print">
         <h1>Resumen del dia</h1>
-        <div class="row">
-          <div class="col"><label for="summary-date">Fecha</label><input id="summary-date" type="date"></div>
-          <div class="col"><label>&nbsp;</label><button class="btn btn-full" onclick="loadSummary()">Generar</button></div>
-        </div>
+        <label for="summary-date">Fecha</label>
+        <input id="summary-date" type="date" onchange="lastSummaryReady=false;lastSummaryData=null;">
         <button class="btn btn-light btn-full" style="margin-top:10px" onclick="downloadSummaryPdf()">Descargar PDF</button>
-        <button class="btn btn-light btn-full" style="margin-top:10px" onclick="exportSummaryCsv()">Exportar CSV del resumen</button>
         <div id="summary-msg"></div>
       </div>
       <div id="summary-content" class="card"><div class="empty">Selecciona una fecha y genera el resumen.</div></div>
@@ -201,7 +195,6 @@
       <div class="card no-print">
         <h1>Areas</h1>
         <button id="btn-new-area" class="btn hidden" onclick="openAreaModal()">Nueva area</button>
-        <button class="btn btn-light" onclick="loadAll()">Actualizar</button>
         <div id="areas-msg"></div>
       </div>
       <div id="areas-list"></div>
@@ -211,7 +204,6 @@
       <div class="card no-print">
         <h1>Personal</h1>
         <button id="btn-new-user" class="btn hidden" onclick="openUserModal()">Crear usuario</button>
-        <button class="btn btn-light" onclick="loadStaff()">Actualizar</button>
         <div id="staff-msg"></div>
       </div>
       <div class="card" id="staff-list">Cargando...</div>
