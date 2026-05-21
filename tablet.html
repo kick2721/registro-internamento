@@ -64,6 +64,14 @@
   .empty { padding: 18px; text-align: center; color: #6b6860; }
   .actions { margin-top: 10px; }
   .actions .btn { margin-right: 6px; margin-bottom: 6px; }
+  .area-grid { margin-left: -6px; margin-right: -6px; }
+  .area-grid:after { content: ""; display: table; clear: both; }
+  .area-tile { float: left; width: 25%; padding: 6px; }
+  .area-box { height: 150px; background: #fff; border: 1px solid #e2dfd8; border-radius: 8px; padding: 12px; overflow: hidden; }
+  .area-name { font-size: 16px; font-weight: bold; line-height: 1.2; height: 38px; overflow: hidden; }
+  .area-desc { color: #6b6860; font-size: 12px; height: 18px; overflow: hidden; margin: 4px 0 8px; }
+  .area-count { font-size: 32px; font-weight: bold; line-height: 1; }
+  .area-caption { color: #6b6860; font-size: 12px; margin-top: 3px; }
   .section-title { border-bottom: 1px solid #e2dfd8; padding-bottom: 8px; margin-bottom: 10px; }
   .hidden { display: none !important; }
   .modal-bg { display: none; position: fixed; z-index: 10; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.35); padding: 12px; overflow: auto; }
@@ -78,6 +86,7 @@
   @media (max-width: 720px) {
     .wrap { padding: 10px; }
     .col, .col3, .stat { float: none; width: 100%; }
+    .area-tile { width: 50%; }
     .patient-name { float: none; max-width: 100%; }
     .code { float: none; display: block; margin-top: 3px; }
     .brand img { width: 112px; }
@@ -85,6 +94,9 @@
     .logout-row { text-align: left; }
     .tab { display: block; width: 100%; margin: 0 0 7px; border-radius: 7px; }
     .modal { margin: 0 auto 20px; }
+  }
+  @media (max-width: 420px) {
+    .area-tile { width: 100%; }
   }
 </style>
 </head>
@@ -784,15 +796,16 @@ function loadTransfersPage() {
 }
 
 function renderAreas() {
-  var html = '';
+  var html = '<div class="area-grid">';
   for (var i = 0; i < allAreas.length; i++) {
     var count = 0;
     for (var p = 0; p < allPacientes.length; p++) if (allPacientes[p].area_id === allAreas[i].id && !allPacientes[p].fecha_egreso) count++;
-    html += '<div class="card"><h2>' + esc(allAreas[i].nombre) + '</h2><p>' + esc(allAreas[i].descripcion || '') + '</p><div class="stat-value">' + count + '</div><p>pacientes activos</p>';
+    html += '<div class="area-tile"><div class="area-box"><div class="area-name">' + esc(allAreas[i].nombre) + '</div><div class="area-desc">' + esc(allAreas[i].descripcion || '') + '</div><div class="area-count">' + count + '</div><div class="area-caption">pacientes activos</div>';
     if (can('gestionar_areas')) html += '<button class="btn btn-danger btn-small" onclick="deleteArea(\'' + allAreas[i].id + '\',' + count + ')">Eliminar</button>';
-    html += '</div>';
+    html += '</div></div>';
   }
-  byId('areas-list').innerHTML = html || '<div class="card empty">Sin areas registradas.</div>';
+  html += '</div>';
+  byId('areas-list').innerHTML = allAreas.length ? html : '<div class="card empty">Sin areas registradas.</div>';
 }
 function openAreaModal() { byId('area-name').value = ''; byId('area-desc').value = ''; setBox('area-msg', '', 'info'); openModal('modal-area'); }
 function saveArea() {
