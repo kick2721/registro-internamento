@@ -56,6 +56,7 @@
   .patient-head { overflow: hidden; margin-bottom: 6px; }
   .patient-name { font-weight: bold; font-size: 17px; float: left; max-width: 68%; }
   .code { float: right; font-family: monospace; color: #6b6860; }
+  .inline-code { display: block; margin-top: 3px; font-family: monospace; color: #6b6860; }
   .meta { color: #4b4943; font-size: 14px; line-height: 1.45; }
   .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; background: #faf4ee; color: #7a4d1a; font-size: 12px; font-weight: bold; }
   .badge-ok { background: #e9f5ee; color: #1f6b43; }
@@ -775,7 +776,7 @@ function loadTransfersPage() {
     var html = '<table><thead><tr><th>Fecha</th><th>Paciente</th><th>Origen</th><th>Destino</th><th>Motivo</th></tr></thead><tbody>';
     for (var i = 0; i < rows.length; i++) {
       var t = rows[i];
-      html += '<tr><td>' + esc(String(t.fecha_traslado || '').replace('T', ' ').slice(0, 16)) + '</td><td>' + esc(t.paciente && t.paciente.nombre ? t.paciente.nombre : '-') + '<br><span class="code">' + esc(t.paciente && t.paciente.codigo ? t.paciente.codigo : '') + '</span></td><td>' + esc(t.origen && t.origen.nombre ? t.origen.nombre : 'Sin area') + '</td><td>' + esc(t.destino && t.destino.nombre ? t.destino.nombre : '-') + '</td><td>' + esc(t.motivo || '-') + '</td></tr>';
+      html += '<tr><td>' + esc(String(t.fecha_traslado || '').replace('T', ' ').slice(0, 16)) + '</td><td>' + esc(t.paciente && t.paciente.nombre ? t.paciente.nombre : '-') + '<span class="inline-code">' + esc(t.paciente && t.paciente.codigo ? t.paciente.codigo : '') + '</span></td><td>' + esc(t.origen && t.origen.nombre ? t.origen.nombre : 'Sin area') + '</td><td>' + esc(t.destino && t.destino.nombre ? t.destino.nombre : '-') + '</td><td>' + esc(t.motivo || '-') + '</td></tr>';
     }
     html += '</tbody></table>';
     byId('traslados-list').innerHTML = html;
