@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -6,179 +6,99 @@
 <title>Internamento Tablet</title>
 <style>
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    background: #f4f2ee;
-    color: #1a1916;
-    font-size: 15px;
-  }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #f4f2ee; color: #1a1916; font-size: 15px; }
   button, input, select, textarea { font-family: Arial, Helvetica, sans-serif; }
-  .screen { min-height: 100vh; }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 14px; }
-  .card {
-    background: #fff;
-    border: 1px solid #e2dfd8;
-    border-radius: 8px;
-    padding: 14px;
-    margin-bottom: 12px;
-  }
-  .login-card { max-width: 420px; margin: 28px auto 0; }
-  .logo { display: block; max-width: 190px; height: auto; margin: 0 auto 12px; }
   h1 { font-size: 22px; margin: 0 0 5px; }
   h2 { font-size: 18px; margin: 0 0 10px; }
   h3 { font-size: 16px; margin: 0 0 8px; }
   p { color: #6b6860; line-height: 1.4; margin: 0 0 10px; }
   label { display: block; font-size: 13px; font-weight: bold; margin: 10px 0 5px; }
-  input, select, textarea {
-    width: 100%;
-    padding: 11px;
-    border: 1px solid #ccc9c0;
-    border-radius: 6px;
-    background: #fff;
-    color: #1a1916;
-    font-size: 16px;
-  }
+  input, select, textarea { width: 100%; padding: 11px; border: 1px solid #ccc9c0; border-radius: 6px; background: #fff; color: #1a1916; font-size: 16px; }
   textarea { min-height: 72px; }
-  .btn {
-    display: inline-block;
-    min-height: 44px;
-    padding: 11px 14px;
-    border: 0;
-    border-radius: 6px;
-    background: #1f6b43;
-    color: #fff;
-    font-size: 15px;
-    font-weight: bold;
-    text-align: center;
-  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 12px; }
+  th, td { border-bottom: 1px solid #e2dfd8; text-align: left; padding: 7px 6px; vertical-align: top; }
+  th { background: #f9f8f5; color: #6b6860; font-size: 11px; text-transform: uppercase; }
+  .screen { min-height: 100vh; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 14px; }
+  .card { background: #fff; border: 1px solid #e2dfd8; border-radius: 8px; padding: 14px; margin-bottom: 12px; }
+  .login-card { max-width: 420px; margin: 28px auto 0; }
+  .logo { display: block; max-width: 190px; height: auto; margin: 0 auto 12px; }
+  .btn { display: inline-block; min-height: 44px; padding: 11px 14px; border: 0; border-radius: 6px; background: #1f6b43; color: #fff; font-size: 15px; font-weight: bold; text-align: center; text-decoration: none; }
   .btn-full { width: 100%; }
   .btn-light { background: #fff; color: #1a1916; border: 1px solid #ccc9c0; }
   .btn-danger { background: #fdf0ee; color: #8a2f26; border: 1px solid #f0c0bb; }
   .btn-small { min-height: 38px; padding: 8px 10px; font-size: 14px; }
   .btn:disabled { opacity: 0.65; }
-  .topbar {
-    background: #fff;
-    border-bottom: 1px solid #e2dfd8;
-    padding: 10px 14px;
-  }
-  .topbar-inner {
-    max-width: 860px;
-    margin: 0 auto;
-  }
+  .topbar { background: #fff; border-bottom: 1px solid #e2dfd8; padding: 10px 14px; }
+  .topbar-inner { max-width: 980px; margin: 0 auto; }
   .brand { overflow: hidden; }
   .brand img { width: 130px; height: auto; float: left; margin-right: 10px; }
   .brand-title { font-size: 18px; font-weight: bold; padding-top: 8px; }
   .brand-sub { color: #6b6860; font-size: 13px; }
-  .tabs {
-    clear: both;
-    padding-top: 10px;
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-  }
-  .tab {
-    display: table-cell;
-    padding: 10px 5px;
-    border: 1px solid #ccc9c0;
-    background: #fff;
-    color: #1a1916;
-    text-align: center;
-    font-size: 14px;
-    font-weight: bold;
-  }
+  .tabs { clear: both; padding-top: 10px; display: table; width: 100%; table-layout: fixed; }
+  .tab { display: table-cell; padding: 10px 4px; border: 1px solid #ccc9c0; background: #fff; color: #1a1916; text-align: center; font-size: 13px; font-weight: bold; }
   .tab.active { background: #1f6b43; color: #fff; border-color: #1f6b43; }
-  .tab:first-child { border-radius: 6px 0 0 6px; }
-  .tab:last-child { border-radius: 0 6px 6px 0; }
   .row { margin-left: -5px; margin-right: -5px; }
-  .row:after { content: ""; display: table; clear: both; }
+  .row:after, .toolbar:after, .stats:after { content: ""; display: table; clear: both; }
   .col { float: left; width: 50%; padding: 0 5px; }
-  .msg {
-    margin-top: 12px;
-    padding: 11px;
-    border-radius: 6px;
-    font-size: 14px;
-    line-height: 1.4;
-    white-space: pre-wrap;
-  }
+  .col3 { float: left; width: 33.333%; padding: 0 5px; }
+  .toolbar .btn { margin-right: 6px; margin-bottom: 6px; }
+  .msg { margin-top: 12px; padding: 11px; border-radius: 6px; font-size: 14px; line-height: 1.4; white-space: pre-wrap; }
   .ok { background: #e9f5ee; border: 1px solid #b5d8c4; color: #1f6b43; }
   .err { background: #fdf0ee; border: 1px solid #f0c0bb; color: #8a2f26; }
   .info { background: #f9f8f5; border: 1px solid #e2dfd8; color: #4b4943; }
-  .patient {
-    background: #fff;
-    border: 1px solid #e2dfd8;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 10px;
-  }
+  .stat { float: left; width: 25%; padding: 0 5px; margin-bottom: 10px; }
+  .stat-box { background: #fff; border: 1px solid #e2dfd8; border-left: 4px solid #1f6b43; border-radius: 8px; padding: 12px; }
+  .stat-label { color: #6b6860; font-size: 12px; font-weight: bold; }
+  .stat-value { font-size: 28px; font-weight: bold; }
+  .patient { background: #fff; border: 1px solid #e2dfd8; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
   .patient-head { overflow: hidden; margin-bottom: 6px; }
   .patient-name { font-weight: bold; font-size: 17px; float: left; max-width: 68%; }
   .code { float: right; font-family: monospace; color: #6b6860; }
   .meta { color: #4b4943; font-size: 14px; line-height: 1.45; }
-  .badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    background: #faf4ee;
-    color: #7a4d1a;
-    font-size: 12px;
-    font-weight: bold;
-  }
+  .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; background: #faf4ee; color: #7a4d1a; font-size: 12px; font-weight: bold; }
+  .badge-ok { background: #e9f5ee; color: #1f6b43; }
+  .badge-off { background: #f4f2ee; color: #6b6860; }
   .empty { padding: 18px; text-align: center; color: #6b6860; }
   .actions { margin-top: 10px; }
   .actions .btn { margin-right: 6px; margin-bottom: 6px; }
-  .section-title {
-    border-bottom: 1px solid #e2dfd8;
-    padding-bottom: 8px;
-    margin-bottom: 10px;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    margin-bottom: 12px;
-  }
-  th, td {
-    border-bottom: 1px solid #e2dfd8;
-    text-align: left;
-    padding: 7px 6px;
-    vertical-align: top;
-  }
-  th { background: #f9f8f5; color: #6b6860; font-size: 11px; text-transform: uppercase; }
+  .section-title { border-bottom: 1px solid #e2dfd8; padding-bottom: 8px; margin-bottom: 10px; }
+  .hidden { display: none !important; }
+  .modal-bg { display: none; position: fixed; z-index: 10; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.35); padding: 12px; overflow: auto; }
+  .modal-bg.open { display: block; }
+  .modal { max-width: 640px; margin: 20px auto; background: #fff; border-radius: 8px; border: 1px solid #e2dfd8; }
+  .modal-head { padding: 13px 14px; border-bottom: 1px solid #e2dfd8; overflow: hidden; }
+  .modal-title { float: left; font-weight: bold; font-size: 17px; }
+  .modal-close { float: right; background: #fff; border: 1px solid #ccc9c0; color: #1a1916; border-radius: 6px; padding: 5px 10px; font-weight: bold; }
+  .modal-body { padding: 14px; }
+  .modal-foot { padding: 12px 14px; border-top: 1px solid #e2dfd8; text-align: right; }
+  .modal-foot .btn { margin-left: 6px; }
   .print-header, .print-footer { display: none; }
-  .hidden { display: none; }
 
-  @media (max-width: 520px) {
+  @media (max-width: 720px) {
     .wrap { padding: 10px; }
-    .col { float: none; width: 100%; }
+    .col, .col3, .stat { float: none; width: 100%; }
     .patient-name { float: none; max-width: 100%; }
     .code { float: none; display: block; margin-top: 3px; }
     .brand img { width: 112px; }
     .brand-title { font-size: 16px; }
+    .tab { display: block; width: 100%; margin-bottom: 4px; border-radius: 6px; }
+    .modal { margin: 0 auto 20px; }
   }
 
   @media print {
     body { background: #fff; color: #111; }
-    .topbar, .no-print, #auth-screen { display: none !important; }
+    .topbar, .no-print, #auth-screen, .modal-bg { display: none !important; }
     .wrap { max-width: none; padding: 0; }
     .card { border: 0; padding: 0; margin: 0; }
-    .print-header {
-      display: block;
-      border-bottom: 2px solid #1f6b43;
-      padding-bottom: 10px;
-      margin-bottom: 16px;
-    }
+    #app-screen .wrap > div { display: none; }
+    #page-resumen { display: block !important; }
+    #summary-content { display: block !important; }
+    .print-header { display: block; border-bottom: 2px solid #1f6b43; padding-bottom: 10px; margin-bottom: 16px; }
     .print-header img { width: 150px; height: auto; float: left; }
     .print-title { text-align: right; padding-top: 8px; }
     .print-header:after { content: ""; display: table; clear: both; }
-    .print-footer {
-      display: block;
-      border-top: 1px solid #ccc;
-      margin-top: 16px;
-      padding-top: 8px;
-      font-size: 11px;
-      color: #555;
-    }
+    .print-footer { display: block; border-top: 1px solid #ccc; margin-top: 16px; padding-top: 8px; font-size: 11px; color: #555; }
     table { page-break-inside: auto; font-size: 11px; }
     tr { page-break-inside: avoid; }
     th, td { padding: 5px; }
@@ -212,88 +132,225 @@
         <div class="brand-sub" id="user-label">Tablet</div>
       </div>
       <div class="tabs">
-        <button class="tab active" id="tab-pacientes" onclick="showTab('pacientes')">Internados</button>
+        <button class="tab active" id="tab-dashboard" onclick="showTab('dashboard')">Inicio</button>
+        <button class="tab" id="tab-pacientes" onclick="showTab('pacientes')">Pacientes</button>
+        <button class="tab" id="tab-traslados" onclick="showTab('traslados')">Traslados</button>
         <button class="tab" id="tab-resumen" onclick="showTab('resumen')">Resumen</button>
+        <button class="tab" id="tab-areas" onclick="showTab('areas')">Areas</button>
+        <button class="tab hidden" id="tab-personal" onclick="showTab('personal')">Personal</button>
         <button class="tab" onclick="logout()">Salir</button>
       </div>
     </div>
   </div>
 
   <div class="wrap">
-    <div id="page-pacientes">
+    <div id="page-dashboard">
       <div class="card no-print">
-        <h1>Pacientes internados</h1>
+        <h1>Dashboard</h1>
+        <p id="today-label"></p>
+        <button class="btn btn-light" onclick="loadAll()">Actualizar</button>
+        <div id="dash-msg"></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-box"><div class="stat-label">Internados</div><div class="stat-value" id="st-activos">-</div></div></div>
+        <div class="stat"><div class="stat-box"><div class="stat-label">Ingresos hoy</div><div class="stat-value" id="st-ingresos">-</div></div></div>
+        <div class="stat"><div class="stat-box"><div class="stat-label">Egresos hoy</div><div class="stat-value" id="st-egresos">-</div></div></div>
+        <div class="stat"><div class="stat-box"><div class="stat-label">Traslados hoy</div><div class="stat-value" id="st-traslados">-</div></div></div>
+      </div>
+      <div class="card">
+        <h2>Pacientes recientes</h2>
+        <div id="recent-list" class="empty">Cargando...</div>
+      </div>
+      <div class="card">
+        <h2>Ocupacion por area</h2>
+        <div id="area-counts" class="empty">Cargando...</div>
+      </div>
+    </div>
+
+    <div id="page-pacientes" class="hidden">
+      <div class="card no-print">
+        <div class="toolbar">
+          <h1>Pacientes</h1>
+          <button id="btn-new-patient" class="btn hidden" onclick="openPatientModal('')">Nuevo paciente</button>
+          <button class="btn btn-light" onclick="exportPatientsCsv()">Exportar CSV</button>
+          <button class="btn btn-light" onclick="loadAll()">Actualizar</button>
+        </div>
+        <div class="row">
+          <div class="col"><input id="search" type="text" placeholder="Buscar nombre, codigo o diagnostico" onkeyup="renderPatients()"></div>
+          <div class="col"><select id="filter-status" onchange="renderPatients()"><option value="activo">Internados</option><option value="">Todos</option><option value="egresado">Egresados</option></select></div>
+        </div>
+        <div class="row">
+          <div class="col3"><select id="filter-area" onchange="renderPatients()"><option value="">Todas las areas</option></select></div>
+          <div class="col3"><select id="filter-empresa" onchange="renderPatients()"><option value="">Particular y asegurados</option><option value="Particular">Particular</option><option value="asegurado">Asegurados</option></select></div>
+          <div class="col3"><select id="filter-month" onchange="renderPatients()"><option value="">Todos los meses</option></select></div>
+        </div>
         <p id="patient-count">Cargando...</p>
-        <input id="search" type="text" placeholder="Buscar por nombre o codigo" onkeyup="renderPatients()">
-        <button class="btn btn-light btn-full" style="margin-top:10px" onclick="loadAll()">Actualizar</button>
         <div id="main-msg"></div>
       </div>
       <div id="patient-list"></div>
+    </div>
+
+    <div id="page-traslados" class="hidden">
+      <div class="card no-print">
+        <h1>Historial de traslados</h1>
+        <button class="btn btn-light" onclick="loadTransfersPage()">Actualizar</button>
+        <div id="traslados-msg"></div>
+      </div>
+      <div class="card" id="traslados-list">Cargando...</div>
     </div>
 
     <div id="page-resumen" class="hidden">
       <div class="card no-print">
         <h1>Resumen del dia</h1>
         <div class="row">
-          <div class="col">
-            <label for="summary-date">Fecha</label>
-            <input id="summary-date" type="date">
-          </div>
-          <div class="col">
-            <label>&nbsp;</label>
-            <button class="btn btn-full" onclick="loadSummary()">Generar</button>
-          </div>
+          <div class="col"><label for="summary-date">Fecha</label><input id="summary-date" type="date"></div>
+          <div class="col"><label>&nbsp;</label><button class="btn btn-full" onclick="loadSummary()">Generar</button></div>
         </div>
         <button class="btn btn-light btn-full" style="margin-top:10px" onclick="printSummary()">Imprimir / Guardar PDF</button>
+        <button class="btn btn-light btn-full" style="margin-top:10px" onclick="exportSummaryCsv()">Exportar CSV del resumen</button>
         <div id="summary-msg"></div>
       </div>
-      <div id="summary-content" class="card">
-        <div class="empty">Selecciona una fecha y genera el resumen.</div>
-      </div>
+      <div id="summary-content" class="card"><div class="empty">Selecciona una fecha y genera el resumen.</div></div>
     </div>
+
+    <div id="page-areas" class="hidden">
+      <div class="card no-print">
+        <h1>Areas</h1>
+        <button id="btn-new-area" class="btn hidden" onclick="openAreaModal()">Nueva area</button>
+        <button class="btn btn-light" onclick="loadAll()">Actualizar</button>
+        <div id="areas-msg"></div>
+      </div>
+      <div id="areas-list"></div>
+    </div>
+
+    <div id="page-personal" class="hidden">
+      <div class="card no-print">
+        <h1>Personal</h1>
+        <button id="btn-new-user" class="btn hidden" onclick="openUserModal()">Crear usuario</button>
+        <button class="btn btn-light" onclick="loadStaff()">Actualizar</button>
+        <div id="staff-msg"></div>
+      </div>
+      <div class="card" id="staff-list">Cargando...</div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-patient" class="modal-bg">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title" id="patient-modal-title">Paciente</div><button class="modal-close" onclick="closeModal('modal-patient')">X</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="p-id">
+      <div class="row"><div class="col"><label>Nombre completo</label><input id="p-nombre" type="text"></div><div class="col"><label>Codigo</label><input id="p-codigo" type="text"></div></div>
+      <label>Diagnostico</label><input id="p-diagnostico" type="text">
+      <div class="row"><div class="col"><label>Cobertura</label><select id="p-empresa-tipo" onchange="toggleSeguro()"><option value="Particular">Particular</option><option value="asegurado">Asegurado</option></select></div><div class="col" id="seguro-wrap"><label>Nombre del seguro</label><input id="p-empresa" type="text" placeholder="Ej: ENSA"></div></div>
+      <div class="row"><div class="col"><label>Area</label><select id="p-area"></select></div><div class="col"><label>Fecha de ingreso</label><input id="p-ingreso" type="date"></div></div>
+      <div id="p-egreso-wrap"><label>Fecha de egreso</label><input id="p-egreso" type="date"></div>
+      <label>Notas</label><textarea id="p-notas"></textarea>
+      <div id="patient-msg"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-light" onclick="closeModal('modal-patient')">Cancelar</button><button class="btn" onclick="savePatient()">Guardar</button></div>
+  </div>
+</div>
+
+<div id="modal-egreso" class="modal-bg">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Registrar egreso</div><button class="modal-close" onclick="closeModal('modal-egreso')">X</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="e-id">
+      <label>Paciente</label><input id="e-name" type="text" disabled>
+      <label>Fecha de egreso</label><input id="e-fecha" type="date">
+      <label>Motivo</label><select id="e-motivo" onchange="toggleOtherReason()"><option>Alta medica</option><option>Alta voluntaria</option><option>Referido</option><option>Fallecimiento</option><option>Otro</option></select>
+      <div id="e-otro-wrap" class="hidden"><label>Especifica el motivo</label><textarea id="e-otro"></textarea></div>
+      <label>Notas</label><textarea id="e-notas"></textarea>
+      <div id="egreso-msg"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-light" onclick="closeModal('modal-egreso')">Cancelar</button><button class="btn" onclick="saveDischarge()">Confirmar egreso</button></div>
+  </div>
+</div>
+
+<div id="modal-transfer" class="modal-bg">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Registrar traslado</div><button class="modal-close" onclick="closeModal('modal-transfer')">X</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="t-patient-id"><input type="hidden" id="t-origin-id">
+      <label>Paciente</label><input id="t-patient-name" type="text" disabled>
+      <label>Area actual</label><input id="t-origin-name" type="text" disabled>
+      <label>Trasladar a</label><select id="t-destino"></select>
+      <label>Motivo del traslado</label><textarea id="t-motivo"></textarea>
+      <div id="transfer-msg"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-light" onclick="closeModal('modal-transfer')">Cancelar</button><button class="btn" onclick="saveTransfer()">Confirmar traslado</button></div>
+  </div>
+</div>
+
+<div id="modal-detail" class="modal-bg">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Ficha del paciente</div><button class="modal-close" onclick="closeModal('modal-detail')">X</button></div>
+    <div class="modal-body" id="detail-body">Cargando...</div>
+  </div>
+</div>
+
+<div id="modal-area" class="modal-bg">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Nueva area</div><button class="modal-close" onclick="closeModal('modal-area')">X</button></div>
+    <div class="modal-body">
+      <label>Nombre del area</label><input id="area-name" type="text">
+      <label>Descripcion</label><input id="area-desc" type="text">
+      <div id="area-msg"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-light" onclick="closeModal('modal-area')">Cancelar</button><button class="btn" onclick="saveArea()">Guardar</button></div>
+  </div>
+</div>
+
+<div id="modal-user" class="modal-bg">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Crear usuario</div><button class="modal-close" onclick="closeModal('modal-user')">X</button></div>
+    <div class="modal-body">
+      <label>Nombre</label><input id="u-name" type="text">
+      <label>Usuario</label><input id="u-user" type="text" placeholder="ej: maria">
+      <label>Contrasena</label><input id="u-pass" type="password">
+      <label>Rol</label><select id="u-role"><option value="recepcionista">Recepcionista</option><option value="enfermero">Enfermero/a</option><option value="medico">Medico</option><option value="director">Director</option><option value="admin">Administrador</option></select>
+      <div id="user-msg"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-light" onclick="closeModal('modal-user')">Cancelar</button><button class="btn" onclick="saveUser()">Crear</button></div>
   </div>
 </div>
 
 <script>
 var SUPABASE_URL = 'https://jnkcheqzmlkyksnpyncz.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impua2NoZXF6bWxreWtzbnB5bmN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMDQzMzYsImV4cCI6MjA4OTU4MDMzNn0.fsJRCk7x4rJ3tPCbobpXI0PAvRi2qNodW51R9AowH68';
-
 var token = '';
 var userId = '';
 var profile = null;
+var permisos = {};
 var allPacientes = [];
 var allAreas = [];
+var staffMap = {};
+var staffRows = [];
 var lastSummaryReady = false;
+var lastSummaryData = null;
+var currentTab = 'dashboard';
+var ROLE_DEFAULTS = {
+  admin: { nuevo_paciente: true, editar_paciente: true, traslado: true, egreso: true, ver_personal: true, crear_usuarios: true, gestionar_areas: true },
+  director: { nuevo_paciente: false, editar_paciente: false, traslado: false, egreso: false, ver_personal: true, crear_usuarios: false, gestionar_areas: false },
+  medico: { nuevo_paciente: false, editar_paciente: false, traslado: false, egreso: false, ver_personal: false, crear_usuarios: false, gestionar_areas: false },
+  enfermero: { nuevo_paciente: false, editar_paciente: false, traslado: false, egreso: false, ver_personal: false, crear_usuarios: false, gestionar_areas: false },
+  recepcionista: { nuevo_paciente: false, editar_paciente: false, traslado: false, egreso: false, ver_personal: false, crear_usuarios: false, gestionar_areas: false }
+};
 
 function byId(id) { return document.getElementById(id); }
-
-function setBox(id, text, type) {
-  var el = byId(id);
-  if (!el) return;
-  if (!text) { el.innerHTML = ''; return; }
-  el.innerHTML = '<div class="msg ' + (type || 'info') + '">' + esc(text) + '</div>';
-}
-
-function esc(v) {
-  if (v === null || v === undefined) return '';
-  return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function todayISO() {
-  var d = new Date();
-  var m = String(d.getMonth() + 1);
-  var day = String(d.getDate());
-  if (m.length < 2) m = '0' + m;
-  if (day.length < 2) day = '0' + day;
-  return d.getFullYear() + '-' + m + '-' + day;
-}
-
-function fmt(dateStr) {
-  if (!dateStr) return '-';
-  var p = dateStr.split('-');
-  if (p.length !== 3) return dateStr;
-  return p[2] + '/' + p[1] + '/' + p[0];
-}
+function esc(v) { if (v === null || v === undefined) return ''; return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function trim(v) { return String(v || '').replace(/^\s+|\s+$/g, ''); }
+function hasClass(el, c) { return (' ' + el.className + ' ').indexOf(' ' + c + ' ') >= 0; }
+function addClass(el, c) { if (!hasClass(el, c)) el.className = trim(el.className + ' ' + c); }
+function removeClass(el, c) { el.className = trim((' ' + el.className + ' ').replace(' ' + c + ' ', ' ')); }
+function setBox(id, text, type) { var el = byId(id); if (!el) return; if (!text) { el.innerHTML = ''; return; } el.innerHTML = '<div class="msg ' + (type || 'info') + '">' + esc(text) + '</div>'; }
+function todayISO() { var d = new Date(); var m = String(d.getMonth() + 1); var day = String(d.getDate()); if (m.length < 2) m = '0' + m; if (day.length < 2) day = '0' + day; return d.getFullYear() + '-' + m + '-' + day; }
+function fmt(dateStr) { if (!dateStr) return '-'; var p = String(dateStr).split('-'); if (p.length !== 3) return dateStr; return p[2] + '/' + p[1] + '/' + p[0]; }
+function findPatient(id) { for (var i = 0; i < allPacientes.length; i++) if (allPacientes[i].id === id) return allPacientes[i]; return null; }
+function findArea(id) { for (var i = 0; i < allAreas.length; i++) if (allAreas[i].id === id) return allAreas[i]; return null; }
+function areaName(p) { return p && p.areas && p.areas.nombre ? p.areas.nombre : 'Sin area'; }
+function can(name) { return !!permisos[name]; }
 
 function request(method, url, headers, body, timeoutMs, callback) {
   var done = false;
@@ -304,7 +361,6 @@ function request(method, url, headers, body, timeoutMs, callback) {
     try { xhr.abort(); } catch (e) {}
     callback(new Error('Tiempo agotado. No se pudo conectar.'));
   }, timeoutMs || 20000);
-
   xhr.onreadystatechange = function() {
     if (xhr.readyState !== 4 || done) return;
     done = true;
@@ -312,186 +368,505 @@ function request(method, url, headers, body, timeoutMs, callback) {
     var text = xhr.responseText || '';
     var data = null;
     try { data = text ? JSON.parse(text) : null; } catch (e) {}
-    if (xhr.status >= 200 && xhr.status < 300) {
-      callback(null, data, xhr.status);
-    } else {
+    if (xhr.status >= 200 && xhr.status < 300) callback(null, data, xhr.status);
+    else {
       var msg = 'Error HTTP ' + xhr.status;
       if (data && data.msg) msg = data.msg;
       else if (data && data.message) msg = data.message;
+      else if (data && data.details) msg = data.details;
       else if (text) msg = text;
       callback(new Error(msg), data, xhr.status);
     }
   };
-
   try {
     xhr.open(method, url, true);
-    for (var k in headers) {
-      if (headers.hasOwnProperty(k)) xhr.setRequestHeader(k, headers[k]);
-    }
+    for (var k in headers) if (headers.hasOwnProperty(k)) xhr.setRequestHeader(k, headers[k]);
     xhr.send(body ? JSON.stringify(body) : null);
   } catch (e) {
-    if (!done) {
-      done = true;
-      clearTimeout(timer);
-      callback(e);
-    }
+    if (!done) { done = true; clearTimeout(timer); callback(e); }
   }
 }
 
-function authHeaders() {
-  return {
-    apikey: SUPABASE_KEY,
-    Authorization: 'Bearer ' + token
-  };
+function authHeaders(extra) {
+  var h = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + token };
+  if (extra) for (var k in extra) if (extra.hasOwnProperty(k)) h[k] = extra[k];
+  return h;
 }
+function rest(path, callback) { request('GET', SUPABASE_URL + '/rest/v1/' + path, authHeaders(), null, 25000, callback); }
+function insert(table, payload, callback) { request('POST', SUPABASE_URL + '/rest/v1/' + table, authHeaders({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }), payload, 25000, callback); }
+function patch(table, id, payload, callback) { request('PATCH', SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + encodeURIComponent(id), authHeaders({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }), payload, 25000, callback); }
+function removeRow(table, id, callback) { request('DELETE', SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + encodeURIComponent(id), authHeaders({ Prefer: 'return=minimal' }), null, 25000, callback); }
 
 function login() {
-  var usuario = byId('login-user').value.replace(/^\s+|\s+$/g, '');
+  var usuario = trim(byId('login-user').value);
   var pass = byId('login-pass').value;
   var email = usuario.indexOf('@') >= 0 ? usuario : usuario + '@clinica.internal';
-  if (!usuario || !pass) {
-    setBox('auth-msg', 'Completa usuario y contrasena.', 'err');
-    return;
-  }
+  if (!usuario || !pass) { setBox('auth-msg', 'Completa usuario y contrasena.', 'err'); return; }
   byId('login-btn').disabled = true;
   setBox('auth-msg', 'Verificando...', 'info');
-  request('POST', SUPABASE_URL + '/auth/v1/token?grant_type=password', {
-    apikey: SUPABASE_KEY,
-    'Content-Type': 'application/json'
-  }, { email: email, password: pass }, 20000, function(err, data) {
-    if (err) {
-      byId('login-btn').disabled = false;
-      setBox('auth-msg', 'No se pudo iniciar sesion.\n' + err.message, 'err');
-      return;
-    }
+  request('POST', SUPABASE_URL + '/auth/v1/token?grant_type=password', { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' }, { email: email, password: pass }, 20000, function(err, data) {
+    if (err) { byId('login-btn').disabled = false; setBox('auth-msg', 'No se pudo iniciar sesion.\n' + err.message, 'err'); return; }
     token = data.access_token;
     userId = data.user && data.user.id ? data.user.id : '';
-    try {
-      localStorage.setItem('tablet_token', token);
-      localStorage.setItem('tablet_user', userId);
-    } catch (e) {}
+    try { localStorage.setItem('tablet_token', token); localStorage.setItem('tablet_user', userId); } catch (e) {}
     loadProfile();
   });
 }
 
 function loadProfile() {
   setBox('auth-msg', 'Leyendo perfil...', 'info');
-  request('GET', SUPABASE_URL + '/rest/v1/staff_profiles?select=nombre,rol&id=eq.' + encodeURIComponent(userId), authHeaders(), null, 20000, function(err, rows) {
+  rest('staff_profiles?select=*&id=eq.' + encodeURIComponent(userId), function(err, rows) {
     byId('login-btn').disabled = false;
-    if (err) {
-      setBox('auth-msg', 'Login correcto, pero no se pudo leer perfil.\n' + err.message, 'err');
-      return;
-    }
-    if (!rows || !rows.length) {
-      setBox('auth-msg', 'Este usuario no tiene perfil de personal.', 'err');
-      return;
-    }
+    if (err) { setBox('auth-msg', 'Login correcto, pero no se pudo leer perfil.\n' + err.message, 'err'); return; }
+    if (!rows || !rows.length) { setBox('auth-msg', 'Este usuario no tiene perfil de personal.', 'err'); return; }
     profile = rows[0];
+    buildPermissions();
     byId('user-label').innerHTML = esc(profile.nombre + ' - ' + profile.rol);
     byId('auth-screen').className = 'screen hidden';
     byId('app-screen').className = 'screen';
     byId('summary-date').value = todayISO();
+    byId('today-label').innerHTML = 'Hoy: ' + fmt(todayISO());
+    applyPermissions();
     loadAll();
   });
+}
+
+function buildPermissions() {
+  var defaults = ROLE_DEFAULTS[profile && profile.rol ? profile.rol : 'recepcionista'] || ROLE_DEFAULTS.recepcionista;
+  permisos = {};
+  for (var k in defaults) if (defaults.hasOwnProperty(k)) permisos[k] = defaults[k];
+  if (profile && profile.permisos) for (var p in profile.permisos) if (profile.permisos.hasOwnProperty(p)) permisos[p] = profile.permisos[p];
+}
+
+function applyPermissions() {
+  if (can('nuevo_paciente')) removeClass(byId('btn-new-patient'), 'hidden'); else addClass(byId('btn-new-patient'), 'hidden');
+  if (can('gestionar_areas')) removeClass(byId('btn-new-area'), 'hidden'); else addClass(byId('btn-new-area'), 'hidden');
+  if (can('ver_personal')) removeClass(byId('tab-personal'), 'hidden'); else addClass(byId('tab-personal'), 'hidden');
+  if (can('crear_usuarios')) removeClass(byId('btn-new-user'), 'hidden'); else addClass(byId('btn-new-user'), 'hidden');
 }
 
 function logout() {
   token = '';
   userId = '';
   profile = null;
-  try {
-    localStorage.removeItem('tablet_token');
-    localStorage.removeItem('tablet_user');
-  } catch (e) {}
+  try { localStorage.removeItem('tablet_token'); localStorage.removeItem('tablet_user'); } catch (e) {}
   byId('app-screen').className = 'screen hidden';
   byId('auth-screen').className = 'screen';
 }
 
 function restoreSession() {
-  try {
-    token = localStorage.getItem('tablet_token') || '';
-    userId = localStorage.getItem('tablet_user') || '';
-  } catch (e) {}
+  try { token = localStorage.getItem('tablet_token') || ''; userId = localStorage.getItem('tablet_user') || ''; } catch (e) {}
   if (token && userId) loadProfile();
 }
 
 function showTab(name) {
-  byId('page-pacientes').className = name === 'pacientes' ? '' : 'hidden';
-  byId('page-resumen').className = name === 'resumen' ? '' : 'hidden';
-  byId('tab-pacientes').className = name === 'pacientes' ? 'tab active' : 'tab';
-  byId('tab-resumen').className = name === 'resumen' ? 'tab active' : 'tab';
+  currentTab = name;
+  var pages = ['dashboard','pacientes','traslados','resumen','areas','personal'];
+  for (var i = 0; i < pages.length; i++) {
+    byId('page-' + pages[i]).className = pages[i] === name ? '' : 'hidden';
+    var tab = byId('tab-' + pages[i]);
+    if (tab) tab.className = (pages[i] === name ? 'tab active' : 'tab') + (pages[i] === 'personal' && !can('ver_personal') ? ' hidden' : '');
+  }
   if (name === 'resumen' && !lastSummaryReady) loadSummary();
+  if (name === 'traslados') loadTransfersPage();
+  if (name === 'personal') loadStaff();
 }
 
 function loadAll() {
+  setBox('dash-msg', 'Cargando datos...', 'info');
   setBox('main-msg', 'Cargando datos...', 'info');
-  loadAreas(function() {
-    loadPacientes(function() {
-      setBox('main-msg', '', 'info');
-      renderPatients();
+  loadStaffMap(function() {
+    loadAreas(function() {
+      loadPacientes(function() {
+        setBox('dash-msg', '', 'info');
+        setBox('main-msg', '', 'info');
+        renderDashboard();
+        renderPatients();
+        renderAreas();
+      });
     });
   });
 }
 
+function loadStaffMap(callback) {
+  rest('staff_profiles?select=id,nombre,rol,permisos,activo,created_at&order=created_at', function(err, rows) {
+    staffRows = rows || [];
+    staffMap = {};
+    for (var i = 0; i < staffRows.length; i++) staffMap[staffRows[i].id] = staffRows[i].nombre;
+    if (callback) callback();
+  });
+}
+
 function loadAreas(callback) {
-  request('GET', SUPABASE_URL + '/rest/v1/areas?select=id,nombre&order=nombre', authHeaders(), null, 20000, function(err, rows) {
-    if (err) {
-      setBox('main-msg', 'No se pudieron cargar areas.\n' + err.message, 'err');
-      return;
-    }
+  rest('areas?select=*&order=nombre', function(err, rows) {
+    if (err) { setBox('main-msg', 'No se pudieron cargar areas.\n' + err.message, 'err'); return; }
     allAreas = rows || [];
+    populateAreaSelects();
     if (callback) callback();
   });
 }
 
 function loadPacientes(callback) {
-  var select = 'id,nombre,codigo,diagnostico,empresa,fecha_ingreso,fecha_egreso,area_id,motivo_egreso,notas,areas(nombre)';
-  request('GET', SUPABASE_URL + '/rest/v1/pacientes?select=' + encodeURIComponent(select) + '&order=fecha_ingreso.desc&limit=1000', authHeaders(), null, 25000, function(err, rows) {
-    if (err) {
-      setBox('main-msg', 'No se pudieron cargar pacientes.\n' + err.message, 'err');
-      return;
-    }
+  var select = 'id,nombre,codigo,diagnostico,empresa,fecha_ingreso,fecha_egreso,area_id,motivo_egreso,notas,registrado_por,created_at,updated_at,areas(nombre)';
+  rest('pacientes?select=' + encodeURIComponent(select) + '&order=fecha_ingreso.desc&limit=1500', function(err, rows) {
+    if (err) { setBox('main-msg', 'No se pudieron cargar pacientes.\n' + err.message, 'err'); return; }
     allPacientes = rows || [];
+    populateMonthFilter();
     if (callback) callback();
   });
 }
 
-function renderPatients() {
-  var q = byId('search').value.toLowerCase();
-  var list = [];
-  var i;
-  for (i = 0; i < allPacientes.length; i++) {
+function populateAreaSelects() {
+  var ids = ['filter-area', 'p-area', 't-destino'];
+  for (var s = 0; s < ids.length; s++) {
+    var sel = byId(ids[s]);
+    if (!sel) continue;
+    var previous = sel.value;
+    var html = ids[s] === 'filter-area' ? '<option value="">Todas las areas</option>' : '<option value="">Seleccionar area...</option>';
+    for (var i = 0; i < allAreas.length; i++) html += '<option value="' + esc(allAreas[i].id) + '">' + esc(allAreas[i].nombre) + '</option>';
+    sel.innerHTML = html;
+    sel.value = previous;
+  }
+}
+
+function populateMonthFilter() {
+  var sel = byId('filter-month');
+  var used = {};
+  var months = [];
+  for (var i = 0; i < allPacientes.length; i++) {
+    var m = allPacientes[i].fecha_ingreso ? allPacientes[i].fecha_ingreso.slice(0, 7) : '';
+    if (m && !used[m]) { used[m] = true; months.push(m); }
+  }
+  months.sort();
+  months.reverse();
+  var names = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var html = '<option value="">Todos los meses</option>';
+  for (i = 0; i < months.length; i++) {
+    var parts = months[i].split('-');
+    html += '<option value="' + months[i] + '">' + names[Number(parts[1]) - 1] + ' ' + parts[0] + '</option>';
+  }
+  var old = sel.value;
+  sel.innerHTML = html;
+  sel.value = old;
+}
+
+function renderDashboard() {
+  var today = todayISO();
+  var activos = [];
+  var ingresos = 0;
+  var egresos = 0;
+  var areaCounts = {};
+  for (var i = 0; i < allPacientes.length; i++) {
     var p = allPacientes[i];
-    if (p.fecha_egreso) continue;
-    var hay = (p.nombre || '').toLowerCase() + ' ' + (p.codigo || '').toLowerCase() + ' ' + (p.diagnostico || '').toLowerCase();
+    if (!p.fecha_egreso) {
+      activos.push(p);
+      var an = areaName(p);
+      areaCounts[an] = (areaCounts[an] || 0) + 1;
+    }
+    if (p.fecha_ingreso === today) ingresos++;
+    if (p.fecha_egreso === today) egresos++;
+  }
+  byId('st-activos').innerHTML = activos.length;
+  byId('st-ingresos').innerHTML = ingresos;
+  byId('st-egresos').innerHTML = egresos;
+  countTransfersToday(function(n) { byId('st-traslados').innerHTML = n; });
+  var html = '<table><thead><tr><th>Paciente</th><th>Area</th><th>Ingreso</th></tr></thead><tbody>';
+  var limit = allPacientes.length < 8 ? allPacientes.length : 8;
+  for (i = 0; i < limit; i++) html += '<tr><td>' + esc(allPacientes[i].nombre) + '</td><td><span class="badge">' + esc(areaName(allPacientes[i])) + '</span></td><td>' + fmt(allPacientes[i].fecha_ingreso) + '</td></tr>';
+  html += '</tbody></table>';
+  byId('recent-list').innerHTML = limit ? html : '<div class="empty">Sin pacientes registrados.</div>';
+  var areaHtml = '<table><thead><tr><th>Area</th><th>Internados</th></tr></thead><tbody>';
+  var any = false;
+  for (var k in areaCounts) if (areaCounts.hasOwnProperty(k)) { any = true; areaHtml += '<tr><td>' + esc(k) + '</td><td><b>' + areaCounts[k] + '</b></td></tr>'; }
+  areaHtml += '</tbody></table>';
+  byId('area-counts').innerHTML = any ? areaHtml : '<div class="empty">Sin pacientes internados.</div>';
+}
+
+function countTransfersToday(callback) {
+  var today = todayISO();
+  rest('traslados?select=id&fecha_traslado=gte.' + encodeURIComponent(today + 'T00:00:00') + '&fecha_traslado=lte.' + encodeURIComponent(today + 'T23:59:59'), function(err, rows) {
+    callback(err || !rows ? 0 : rows.length);
+  });
+}
+
+function renderPatients() {
+  var q = trim(byId('search').value).toLowerCase();
+  var status = byId('filter-status').value;
+  var area = byId('filter-area').value;
+  var empresa = byId('filter-empresa').value;
+  var month = byId('filter-month').value;
+  var list = [];
+  for (var i = 0; i < allPacientes.length; i++) {
+    var p = allPacientes[i];
+    var hay = String((p.nombre || '') + ' ' + (p.codigo || '') + ' ' + (p.diagnostico || '')).toLowerCase();
     if (q && hay.indexOf(q) < 0) continue;
+    if (status === 'activo' && p.fecha_egreso) continue;
+    if (status === 'egresado' && !p.fecha_egreso) continue;
+    if (area && p.area_id !== area) continue;
+    if (empresa === 'Particular' && p.empresa !== 'Particular') continue;
+    if (empresa === 'asegurado' && p.empresa === 'Particular') continue;
+    if (month && (!p.fecha_ingreso || p.fecha_ingreso.indexOf(month) !== 0)) continue;
     list.push(p);
   }
-  byId('patient-count').innerHTML = list.length + ' internado(s)';
-  if (!list.length) {
-    byId('patient-list').innerHTML = '<div class="card empty">No hay pacientes internados para mostrar.</div>';
-    return;
-  }
+  byId('patient-count').innerHTML = list.length + ' paciente(s)';
+  if (!list.length) { byId('patient-list').innerHTML = '<div class="card empty">No hay pacientes para mostrar.</div>'; return; }
   var html = '';
   for (i = 0; i < list.length; i++) html += patientCard(list[i]);
   byId('patient-list').innerHTML = html;
 }
 
 function patientCard(p) {
-  var area = p.areas && p.areas.nombre ? p.areas.nombre : 'Sin area';
-  return '' +
-    '<div class="patient">' +
-      '<div class="patient-head">' +
-        '<div class="patient-name">' + esc(p.nombre) + '</div>' +
-        '<div class="code">' + esc(p.codigo) + '</div>' +
-      '</div>' +
-      '<div class="meta">' +
-        '<b>Diagnostico:</b> ' + esc(p.diagnostico) + '<br>' +
-        '<b>Empresa:</b> ' + esc(p.empresa) + '<br>' +
-        '<b>Area:</b> <span class="badge">' + esc(area) + '</span><br>' +
-        '<b>Ingreso:</b> ' + fmt(p.fecha_ingreso) +
-      '</div>' +
-    '</div>';
+  var active = !p.fecha_egreso;
+  var html = '<div class="patient"><div class="patient-head"><div class="patient-name">' + esc(p.nombre) + '</div><div class="code">' + esc(p.codigo) + '</div></div>';
+  html += '<div class="meta"><b>Diagnostico:</b> ' + esc(p.diagnostico) + '<br><b>Empresa:</b> ' + esc(p.empresa) + '<br><b>Area:</b> <span class="badge">' + esc(areaName(p)) + '</span><br><b>Ingreso:</b> ' + fmt(p.fecha_ingreso) + '<br><b>Estado:</b> <span class="badge ' + (active ? 'badge-ok' : 'badge-off') + '">' + (active ? 'Internado' : 'Egresado ' + fmt(p.fecha_egreso)) + '</span></div>';
+  html += '<div class="actions"><button class="btn btn-light btn-small" onclick="openDetail(\'' + p.id + '\')">Ver</button>';
+  if (can('editar_paciente')) html += '<button class="btn btn-light btn-small" onclick="openPatientModal(\'' + p.id + '\')">Editar</button>';
+  if (active && can('traslado')) html += '<button class="btn btn-light btn-small" onclick="openTransferModal(\'' + p.id + '\')">Trasladar</button>';
+  if (active && can('egreso')) html += '<button class="btn btn-danger btn-small" onclick="openDischargeModal(\'' + p.id + '\')">Egreso</button>';
+  html += '</div></div>';
+  return html;
+}
+
+function openModal(id) { byId(id).className = 'modal-bg open'; }
+function closeModal(id) { byId(id).className = 'modal-bg'; }
+function toggleSeguro() { byId('seguro-wrap').className = byId('p-empresa-tipo').value === 'Particular' ? 'col hidden' : 'col'; }
+
+function openPatientModal(id) {
+  var isEdit = !!id;
+  var p = isEdit ? findPatient(id) : null;
+  byId('patient-modal-title').innerHTML = isEdit ? 'Editar paciente' : 'Nuevo paciente';
+  byId('p-id').value = isEdit ? p.id : '';
+  byId('p-nombre').value = isEdit ? p.nombre || '' : '';
+  byId('p-codigo').value = isEdit ? p.codigo || '' : '';
+  byId('p-diagnostico').value = isEdit ? p.diagnostico || '' : '';
+  var particular = !isEdit || p.empresa === 'Particular';
+  byId('p-empresa-tipo').value = particular ? 'Particular' : 'asegurado';
+  byId('p-empresa').value = particular ? '' : p.empresa || '';
+  byId('p-area').value = isEdit ? p.area_id || '' : '';
+  byId('p-ingreso').value = isEdit ? p.fecha_ingreso || todayISO() : todayISO();
+  byId('p-egreso').value = isEdit ? p.fecha_egreso || '' : '';
+  byId('p-egreso-wrap').className = isEdit && p.fecha_egreso ? '' : 'hidden';
+  byId('p-notas').value = isEdit ? p.notas || '' : '';
+  setBox('patient-msg', '', 'info');
+  toggleSeguro();
+  openModal('modal-patient');
+}
+
+function savePatient() {
+  var id = byId('p-id').value;
+  var current = id ? findPatient(id) : null;
+  var payload = {
+    nombre: trim(byId('p-nombre').value),
+    codigo: trim(byId('p-codigo').value),
+    diagnostico: trim(byId('p-diagnostico').value),
+    empresa: byId('p-empresa-tipo').value === 'Particular' ? 'Particular' : (trim(byId('p-empresa').value) || 'Asegurado'),
+    area_id: byId('p-area').value || (current ? current.area_id : null) || null,
+    fecha_ingreso: byId('p-ingreso').value,
+    fecha_egreso: byId('p-egreso').value || null,
+    notas: trim(byId('p-notas').value) || null
+  };
+  if (!payload.nombre || !payload.codigo || !payload.diagnostico || !payload.empresa || !payload.fecha_ingreso) { setBox('patient-msg', 'Completa los campos obligatorios.', 'err'); return; }
+  if (!payload.fecha_egreso && !payload.area_id) { setBox('patient-msg', 'Selecciona un area para pacientes internados.', 'err'); return; }
+  validateCode(id, payload.codigo, function(ok) {
+    if (!ok) return;
+    setBox('patient-msg', 'Guardando...', 'info');
+    if (id) patch('pacientes', id, payload, afterPatientSave);
+    else { payload.registrado_por = userId; insert('pacientes', payload, afterPatientSave); }
+  });
+}
+
+function validateCode(id, code, callback) {
+  var path = 'pacientes?select=id,nombre,fecha_ingreso,fecha_egreso&codigo=eq.' + encodeURIComponent(code) + '&fecha_egreso=is.null&limit=1';
+  if (id) path += '&id=neq.' + encodeURIComponent(id);
+  rest(path, function(err, rows) {
+    if (err) { setBox('patient-msg', err.message, 'err'); callback(false); return; }
+    if (rows && rows.length) {
+      setBox('patient-msg', 'Ya existe un paciente internado con el codigo ' + code + ': ' + rows[0].nombre + '. No se puede tener el mismo codigo activo dos veces.', 'err');
+      callback(false);
+      return;
+    }
+    if (id) { callback(true); return; }
+    rest('pacientes?select=nombre,fecha_egreso&codigo=eq.' + encodeURIComponent(code) + '&fecha_egreso=not.is.null&order=fecha_egreso.desc&limit=1', function(err2, hist) {
+      if (err2) { setBox('patient-msg', err2.message, 'err'); callback(false); return; }
+      if (hist && hist.length) {
+        if (!confirm('El codigo ' + code + ' ya pertenece a ' + hist[0].nombre + ', egresada/o el ' + fmt(hist[0].fecha_egreso) + '. Registrar este caso como un nuevo ingreso con el mismo codigo?')) { callback(false); return; }
+      }
+      callback(true);
+    });
+  });
+}
+
+function afterPatientSave(err) {
+  if (err) { setBox('patient-msg', err.message, 'err'); return; }
+  closeModal('modal-patient');
+  loadAll();
+}
+
+function openDischargeModal(id) {
+  var p = findPatient(id);
+  if (!p) return;
+  byId('e-id').value = p.id;
+  byId('e-name').value = p.nombre;
+  byId('e-fecha').value = todayISO();
+  byId('e-motivo').value = 'Alta medica';
+  byId('e-otro').value = '';
+  byId('e-notas').value = '';
+  toggleOtherReason();
+  setBox('egreso-msg', '', 'info');
+  openModal('modal-egreso');
+}
+function toggleOtherReason() { byId('e-otro-wrap').className = byId('e-motivo').value === 'Otro' ? '' : 'hidden'; }
+function saveDischarge() {
+  var id = byId('e-id').value;
+  var fecha = byId('e-fecha').value;
+  var motivo = byId('e-motivo').value === 'Otro' ? (trim(byId('e-otro').value) || 'Otro') : byId('e-motivo').value;
+  var notas = trim(byId('e-notas').value);
+  if (!fecha) { setBox('egreso-msg', 'Selecciona la fecha de egreso.', 'err'); return; }
+  var payload = { fecha_egreso: fecha, motivo_egreso: motivo };
+  if (notas) payload.notas = notas;
+  setBox('egreso-msg', 'Registrando egreso...', 'info');
+  patch('pacientes', id, payload, function(err) {
+    if (err) { setBox('egreso-msg', err.message, 'err'); return; }
+    closeModal('modal-egreso');
+    loadAll();
+  });
+}
+
+function openTransferModal(id) {
+  var p = findPatient(id);
+  if (!p) return;
+  byId('t-patient-id').value = p.id;
+  byId('t-origin-id').value = p.area_id || '';
+  byId('t-patient-name').value = p.nombre;
+  byId('t-origin-name').value = areaName(p);
+  byId('t-motivo').value = '';
+  populateAreaSelects();
+  byId('t-destino').value = '';
+  setBox('transfer-msg', '', 'info');
+  openModal('modal-transfer');
+}
+function saveTransfer() {
+  var pacienteId = byId('t-patient-id').value;
+  var destinoId = byId('t-destino').value;
+  if (!destinoId) { setBox('transfer-msg', 'Selecciona el area de destino.', 'err'); return; }
+  var payload = { paciente_id: pacienteId, area_origen_id: byId('t-origin-id').value || null, area_destino_id: destinoId, motivo: trim(byId('t-motivo').value) || null, registrado_por: userId, fecha_traslado: new Date().toISOString() };
+  setBox('transfer-msg', 'Registrando traslado...', 'info');
+  insert('traslados', payload, function(err) {
+    if (err) { setBox('transfer-msg', err.message, 'err'); return; }
+    patch('pacientes', pacienteId, { area_id: destinoId }, function(err2) {
+      if (err2) { setBox('transfer-msg', err2.message, 'err'); return; }
+      closeModal('modal-transfer');
+      loadAll();
+    });
+  });
+}
+
+function openDetail(id) {
+  var p = findPatient(id);
+  if (!p) return;
+  byId('detail-body').innerHTML = 'Cargando...';
+  openModal('modal-detail');
+  var select = 'fecha_traslado,motivo,origen:area_origen_id(nombre),destino:area_destino_id(nombre)';
+  rest('traslados?select=' + encodeURIComponent(select) + '&paciente_id=eq.' + encodeURIComponent(id) + '&order=fecha_traslado', function(err, rows) {
+    var html = '<table><tbody>';
+    html += '<tr><td><b>Codigo</b></td><td>' + esc(p.codigo) + '</td></tr>';
+    html += '<tr><td><b>Paciente</b></td><td>' + esc(p.nombre) + '</td></tr>';
+    html += '<tr><td><b>Diagnostico</b></td><td>' + esc(p.diagnostico) + '</td></tr>';
+    html += '<tr><td><b>Empresa</b></td><td>' + esc(p.empresa) + '</td></tr>';
+    html += '<tr><td><b>Area actual</b></td><td>' + esc(areaName(p)) + '</td></tr>';
+    html += '<tr><td><b>Fecha ingreso</b></td><td>' + fmt(p.fecha_ingreso) + '</td></tr>';
+    html += '<tr><td><b>Fecha egreso</b></td><td>' + (p.fecha_egreso ? fmt(p.fecha_egreso) : 'Aun internado') + '</td></tr>';
+    html += '<tr><td><b>Notas</b></td><td>' + esc(p.notas || '-') + '</td></tr></tbody></table>';
+    html += '<h3>Historial de traslados</h3>';
+    if (err) html += '<p>No se pudo cargar historial.</p>';
+    else if (!rows || !rows.length) html += '<p>Sin traslados registrados.</p>';
+    else {
+      html += '<table><thead><tr><th>Fecha</th><th>Origen</th><th>Destino</th><th>Motivo</th></tr></thead><tbody>';
+      for (var i = 0; i < rows.length; i++) html += '<tr><td>' + esc(String(rows[i].fecha_traslado || '').replace('T', ' ').slice(0, 16)) + '</td><td>' + esc(rows[i].origen && rows[i].origen.nombre ? rows[i].origen.nombre : 'Sin area') + '</td><td>' + esc(rows[i].destino && rows[i].destino.nombre ? rows[i].destino.nombre : '-') + '</td><td>' + esc(rows[i].motivo || '-') + '</td></tr>';
+      html += '</tbody></table>';
+    }
+    byId('detail-body').innerHTML = html;
+  });
+}
+
+function loadTransfersPage() {
+  setBox('traslados-msg', 'Cargando...', 'info');
+  var select = 'fecha_traslado,motivo,paciente:paciente_id(nombre,codigo),origen:area_origen_id(nombre),destino:area_destino_id(nombre)';
+  rest('traslados?select=' + encodeURIComponent(select) + '&order=fecha_traslado.desc&limit=300', function(err, rows) {
+    setBox('traslados-msg', '', 'info');
+    if (err) { byId('traslados-list').innerHTML = '<div class="msg err">' + esc(err.message) + '</div>'; return; }
+    if (!rows || !rows.length) { byId('traslados-list').innerHTML = '<div class="empty">Sin traslados registrados.</div>'; return; }
+    var html = '<table><thead><tr><th>Fecha</th><th>Paciente</th><th>Origen</th><th>Destino</th><th>Motivo</th></tr></thead><tbody>';
+    for (var i = 0; i < rows.length; i++) {
+      var t = rows[i];
+      html += '<tr><td>' + esc(String(t.fecha_traslado || '').replace('T', ' ').slice(0, 16)) + '</td><td>' + esc(t.paciente && t.paciente.nombre ? t.paciente.nombre : '-') + '<br><span class="code">' + esc(t.paciente && t.paciente.codigo ? t.paciente.codigo : '') + '</span></td><td>' + esc(t.origen && t.origen.nombre ? t.origen.nombre : 'Sin area') + '</td><td>' + esc(t.destino && t.destino.nombre ? t.destino.nombre : '-') + '</td><td>' + esc(t.motivo || '-') + '</td></tr>';
+    }
+    html += '</tbody></table>';
+    byId('traslados-list').innerHTML = html;
+  });
+}
+
+function renderAreas() {
+  var html = '';
+  for (var i = 0; i < allAreas.length; i++) {
+    var count = 0;
+    for (var p = 0; p < allPacientes.length; p++) if (allPacientes[p].area_id === allAreas[i].id && !allPacientes[p].fecha_egreso) count++;
+    html += '<div class="card"><h2>' + esc(allAreas[i].nombre) + '</h2><p>' + esc(allAreas[i].descripcion || '') + '</p><div class="stat-value">' + count + '</div><p>pacientes activos</p>';
+    if (can('gestionar_areas')) html += '<button class="btn btn-danger btn-small" onclick="deleteArea(\'' + allAreas[i].id + '\',' + count + ')">Eliminar</button>';
+    html += '</div>';
+  }
+  byId('areas-list').innerHTML = html || '<div class="card empty">Sin areas registradas.</div>';
+}
+function openAreaModal() { byId('area-name').value = ''; byId('area-desc').value = ''; setBox('area-msg', '', 'info'); openModal('modal-area'); }
+function saveArea() {
+  var nombre = trim(byId('area-name').value);
+  if (!nombre) { setBox('area-msg', 'Escribe el nombre del area.', 'err'); return; }
+  setBox('area-msg', 'Guardando...', 'info');
+  insert('areas', { nombre: nombre, descripcion: trim(byId('area-desc').value) || null }, function(err) {
+    if (err) { setBox('area-msg', err.message, 'err'); return; }
+    closeModal('modal-area');
+    loadAll();
+  });
+}
+function deleteArea(id, count) {
+  var area = findArea(id);
+  var name = area ? area.nombre : 'esta area';
+  if (count > 0) { alert('No se puede eliminar "' + name + '" porque tiene ' + count + ' paciente(s) activo(s).'); return; }
+  if (!confirm('Eliminar el area "' + name + '"?')) return;
+  removeRow('areas', id, function() { loadAll(); });
+}
+
+function loadStaff() {
+  if (!can('ver_personal')) return;
+  setBox('staff-msg', 'Cargando...', 'info');
+  loadStaffMap(function() {
+    setBox('staff-msg', '', 'info');
+    if (!staffRows.length) { byId('staff-list').innerHTML = '<div class="empty">Sin personal registrado.</div>'; return; }
+    var labels = { admin: 'Administrador', director: 'Director', medico: 'Medico', enfermero: 'Enfermero/a', recepcionista: 'Recepcionista' };
+    var html = '<table><thead><tr><th>Nombre</th><th>Rol</th><th>Estado</th><th>Creado</th></tr></thead><tbody>';
+    for (var i = 0; i < staffRows.length; i++) html += '<tr><td>' + esc(staffRows[i].nombre) + '</td><td><span class="badge">' + esc(labels[staffRows[i].rol] || staffRows[i].rol) + '</span></td><td>' + (staffRows[i].activo === false ? 'Inactivo' : 'Activo') + '</td><td>' + esc(String(staffRows[i].created_at || '').slice(0, 10)) + '</td></tr>';
+    html += '</tbody></table>';
+    byId('staff-list').innerHTML = html;
+  });
+}
+function openUserModal() { byId('u-name').value = ''; byId('u-user').value = ''; byId('u-pass').value = ''; byId('u-role').value = 'recepcionista'; setBox('user-msg', '', 'info'); openModal('modal-user'); }
+function saveUser() {
+  var nombre = trim(byId('u-name').value);
+  var usuario = trim(byId('u-user').value).toLowerCase().replace(/\s+/g, '');
+  var pass = byId('u-pass').value;
+  var rol = byId('u-role').value;
+  if (!nombre || !usuario || !pass) { setBox('user-msg', 'Completa todos los campos.', 'err'); return; }
+  if (pass.length < 6) { setBox('user-msg', 'La contrasena debe tener al menos 6 caracteres.', 'err'); return; }
+  setBox('user-msg', 'Creando usuario...', 'info');
+  request('POST', SUPABASE_URL + '/auth/v1/signup', { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' }, { email: usuario + '@clinica.internal', password: pass }, 25000, function(err, data) {
+    if (err) { setBox('user-msg', err.message, 'err'); return; }
+    if (!data || !data.user || !data.user.id) { setBox('user-msg', 'Usuario creado, pero no se recibio el identificador.', 'err'); return; }
+    insert('staff_profiles', { id: data.user.id, nombre: nombre, rol: rol }, function(err2) {
+      if (err2) { setBox('user-msg', 'Usuario creado, pero no se pudo guardar perfil: ' + err2.message, 'err'); return; }
+      setBox('user-msg', 'Usuario creado. Ya puede iniciar sesion.', 'ok');
+      setTimeout(function() { closeModal('modal-user'); loadStaff(); }, 1000);
+    });
+  });
 }
 
 function loadSummary() {
@@ -500,102 +875,111 @@ function loadSummary() {
   byId('summary-date').value = fecha;
   setBox('summary-msg', 'Generando resumen...', 'info');
   loadPacientes(function() {
-    loadTraslados(fecha, function(traslados) {
+    loadSummaryTransfers(fecha, function(traslados) {
       renderSummary(fecha, traslados || []);
       setBox('summary-msg', '', 'info');
       lastSummaryReady = true;
     });
   });
 }
-
-function loadTraslados(fecha, callback) {
-  var start = encodeURIComponent(fecha + 'T00:00:00');
-  var end = encodeURIComponent(fecha + 'T23:59:59');
+function loadSummaryTransfers(fecha, callback) {
   var select = 'motivo,fecha_traslado,paciente:paciente_id(nombre,codigo),origen:area_origen_id(nombre),destino:area_destino_id(nombre)';
-  var url = SUPABASE_URL + '/rest/v1/traslados?select=' + encodeURIComponent(select) + '&fecha_traslado=gte.' + start + '&fecha_traslado=lte.' + end + '&order=fecha_traslado';
-  request('GET', url, authHeaders(), null, 20000, function(err, rows) {
-    if (err) {
-      setBox('summary-msg', 'No se pudieron cargar traslados.\n' + err.message, 'err');
-      callback([]);
-      return;
-    }
-    callback(rows || []);
-  });
+  var url = 'traslados?select=' + encodeURIComponent(select) + '&fecha_traslado=gte.' + encodeURIComponent(fecha + 'T00:00:00') + '&fecha_traslado=lte.' + encodeURIComponent(fecha + 'T23:59:59') + '&order=fecha_traslado';
+  rest(url, function(err, rows) { if (err) { setBox('summary-msg', 'No se pudieron cargar traslados.\n' + err.message, 'err'); callback([]); return; } callback(rows || []); });
 }
-
 function renderSummary(fecha, traslados) {
   var ingresos = [];
   var egresos = [];
   var internados = [];
-  var i;
-  for (i = 0; i < allPacientes.length; i++) {
+  for (var i = 0; i < allPacientes.length; i++) {
     var p = allPacientes[i];
     if (p.fecha_ingreso === fecha) ingresos.push(p);
     if (p.fecha_egreso === fecha) egresos.push(p);
     if (p.fecha_ingreso <= fecha && (!p.fecha_egreso || p.fecha_egreso > fecha)) internados.push(p);
   }
-  var html = '' +
-    '<div class="print-header">' +
-      '<img src="logo.png" alt="Clinica Morales">' +
-      '<div class="print-title"><h2>Resumen de Internamento</h2><p>' + fmt(fecha) + '</p></div>' +
-    '</div>' +
-    '<div class="section-title"><h2>Resumen de Internamento</h2><p>' + fmt(fecha) + '</p></div>' +
-    tablePatients('Ingresos', ingresos, ['Paciente','Codigo','Diagnostico','Empresa','Area'], 'Sin ingresos este dia') +
-    tablePatients('Egresos', egresos, ['Paciente','Codigo','Diagnostico','Empresa','Motivo'], 'Sin egresos este dia') +
-    tableTraslados('Traslados', traslados) +
-    tablePatients('Internados actuales', internados, ['Paciente','Codigo','Diagnostico','Area','Ingreso'], 'Sin pacientes internados') +
-    '<div class="print-footer">Clinica Morales MG, Lda - Sistema de Internamento - Generado el ' + fmt(todayISO()) + '</div>';
+  lastSummaryData = { fecha: fecha, ingresos: ingresos, egresos: egresos, traslados: traslados, internados: internados };
+  var html = '<div class="print-header"><img src="logo.png" alt="Clinica Morales"><div class="print-title"><h2>Resumen de Internamento</h2><p>' + fmt(fecha) + '</p></div></div>';
+  html += '<div class="section-title"><h2>Resumen de Internamento</h2><p>' + fmt(fecha) + '</p></div>';
+  html += tablePatients('Ingresos', ingresos, 'ingresos');
+  html += tablePatients('Egresos', egresos, 'egresos');
+  html += tableTransfers('Traslados', traslados);
+  html += tablePatients('Internados actuales', internados, 'internados');
+  html += '<div class="print-footer">Clinica Morales MG, Lda - Sistema de Internamento - Generado el ' + fmt(todayISO()) + '</div>';
   byId('summary-content').innerHTML = html;
 }
-
-function tablePatients(title, rows, cols, emptyText) {
+function tablePatients(title, rows, type) {
   var html = '<h3>' + esc(title) + ' (' + rows.length + ')</h3>';
-  if (!rows.length) return html + '<p>' + esc(emptyText) + '</p>';
-  html += '<table><thead><tr>';
-  var i;
-  for (i = 0; i < cols.length; i++) html += '<th>' + esc(cols[i]) + '</th>';
+  if (!rows.length) return html + '<p>Sin registros.</p>';
+  html += '<table><thead><tr><th>Paciente</th><th>Codigo</th><th>Diagnostico</th>';
+  if (type === 'egresos') html += '<th>Empresa</th><th>Motivo</th>';
+  else if (type === 'internados') html += '<th>Area</th><th>Ingreso</th><th>Dias</th>';
+  else html += '<th>Empresa</th><th>Area</th>';
   html += '</tr></thead><tbody>';
-  for (i = 0; i < rows.length; i++) {
+  for (var i = 0; i < rows.length; i++) {
     var p = rows[i];
-    var area = p.areas && p.areas.nombre ? p.areas.nombre : '-';
-    html += '<tr>' +
-      '<td>' + esc(p.nombre) + '</td>' +
-      '<td>' + esc(p.codigo) + '</td>' +
-      '<td>' + esc(p.diagnostico) + '</td>';
-    if (title === 'Egresos') {
-      html += '<td>' + esc(p.empresa) + '</td><td>' + esc(p.motivo_egreso || p.notas || '-') + '</td>';
-    } else if (title === 'Internados actuales') {
-      html += '<td>' + esc(area) + '</td><td>' + fmt(p.fecha_ingreso) + '</td>';
-    } else {
-      html += '<td>' + esc(p.empresa) + '</td><td>' + esc(area) + '</td>';
-    }
+    html += '<tr><td>' + esc(p.nombre) + '</td><td>' + esc(p.codigo) + '</td><td>' + esc(p.diagnostico) + '</td>';
+    if (type === 'egresos') html += '<td>' + esc(p.empresa) + '</td><td>' + esc(p.motivo_egreso || p.notas || '-') + '</td>';
+    else if (type === 'internados') html += '<td>' + esc(areaName(p)) + '</td><td>' + fmt(p.fecha_ingreso) + '</td><td>' + daysBetween(p.fecha_ingreso, lastSummaryData.fecha) + '</td>';
+    else html += '<td>' + esc(p.empresa) + '</td><td>' + esc(areaName(p)) + '</td>';
     html += '</tr>';
   }
   html += '</tbody></table>';
   return html;
 }
-
-function tableTraslados(title, rows) {
+function tableTransfers(title, rows) {
   var html = '<h3>' + esc(title) + ' (' + rows.length + ')</h3>';
-  if (!rows.length) return html + '<p>Sin traslados este dia</p>';
+  if (!rows.length) return html + '<p>Sin traslados este dia.</p>';
   html += '<table><thead><tr><th>Paciente</th><th>Codigo</th><th>Origen</th><th>Destino</th><th>Motivo</th></tr></thead><tbody>';
   for (var i = 0; i < rows.length; i++) {
     var t = rows[i];
-    html += '<tr>' +
-      '<td>' + esc(t.paciente && t.paciente.nombre ? t.paciente.nombre : '-') + '</td>' +
-      '<td>' + esc(t.paciente && t.paciente.codigo ? t.paciente.codigo : '-') + '</td>' +
-      '<td>' + esc(t.origen && t.origen.nombre ? t.origen.nombre : '-') + '</td>' +
-      '<td>' + esc(t.destino && t.destino.nombre ? t.destino.nombre : '-') + '</td>' +
-      '<td>' + esc(t.motivo || '-') + '</td>' +
-    '</tr>';
+    html += '<tr><td>' + esc(t.paciente && t.paciente.nombre ? t.paciente.nombre : '-') + '</td><td>' + esc(t.paciente && t.paciente.codigo ? t.paciente.codigo : '-') + '</td><td>' + esc(t.origen && t.origen.nombre ? t.origen.nombre : '-') + '</td><td>' + esc(t.destino && t.destino.nombre ? t.destino.nombre : '-') + '</td><td>' + esc(t.motivo || '-') + '</td></tr>';
   }
   html += '</tbody></table>';
   return html;
 }
+function daysBetween(start, end) { var a = new Date(start + 'T00:00:00'); var b = new Date(end + 'T00:00:00'); var d = Math.floor((b.getTime() - a.getTime()) / 86400000); return d >= 0 ? d + 'd' : '-'; }
+function printSummary() { if (!lastSummaryReady) loadSummary(); setTimeout(function() { window.print(); }, 500); }
 
-function printSummary() {
-  if (!lastSummaryReady) loadSummary();
-  setTimeout(function() { window.print(); }, 300);
+function exportPatientsCsv() {
+  var rows = [['Codigo','Paciente','Diagnostico','Empresa','Area','Fecha ingreso','Fecha egreso','Estado','Notas']];
+  for (var i = 0; i < allPacientes.length; i++) rows.push([allPacientes[i].codigo, allPacientes[i].nombre, allPacientes[i].diagnostico, allPacientes[i].empresa, areaName(allPacientes[i]), fmt(allPacientes[i].fecha_ingreso), allPacientes[i].fecha_egreso ? fmt(allPacientes[i].fecha_egreso) : '', allPacientes[i].fecha_egreso ? 'Egresado' : 'Internado', allPacientes[i].notas || '']);
+  downloadCsv('Registro_Internados.csv', rows);
+}
+function exportSummaryCsv() {
+  if (!lastSummaryData) { alert('Genera el resumen primero.'); return; }
+  var rows = [['Seccion','Codigo','Paciente','Diagnostico','Empresa/Origen','Area/Destino','Fecha/Motivo']];
+  var i;
+  for (i = 0; i < lastSummaryData.ingresos.length; i++) rows.push(['Ingresos', lastSummaryData.ingresos[i].codigo, lastSummaryData.ingresos[i].nombre, lastSummaryData.ingresos[i].diagnostico, lastSummaryData.ingresos[i].empresa, areaName(lastSummaryData.ingresos[i]), fmt(lastSummaryData.ingresos[i].fecha_ingreso)]);
+  for (i = 0; i < lastSummaryData.egresos.length; i++) rows.push(['Egresos', lastSummaryData.egresos[i].codigo, lastSummaryData.egresos[i].nombre, lastSummaryData.egresos[i].diagnostico, lastSummaryData.egresos[i].empresa, lastSummaryData.egresos[i].motivo_egreso || '', fmt(lastSummaryData.egresos[i].fecha_egreso)]);
+  for (i = 0; i < lastSummaryData.traslados.length; i++) rows.push(['Traslados', lastSummaryData.traslados[i].paciente && lastSummaryData.traslados[i].paciente.codigo ? lastSummaryData.traslados[i].paciente.codigo : '', lastSummaryData.traslados[i].paciente && lastSummaryData.traslados[i].paciente.nombre ? lastSummaryData.traslados[i].paciente.nombre : '', '', lastSummaryData.traslados[i].origen && lastSummaryData.traslados[i].origen.nombre ? lastSummaryData.traslados[i].origen.nombre : '', lastSummaryData.traslados[i].destino && lastSummaryData.traslados[i].destino.nombre ? lastSummaryData.traslados[i].destino.nombre : '', lastSummaryData.traslados[i].motivo || '']);
+  for (i = 0; i < lastSummaryData.internados.length; i++) rows.push(['Internados actuales', lastSummaryData.internados[i].codigo, lastSummaryData.internados[i].nombre, lastSummaryData.internados[i].diagnostico, '', areaName(lastSummaryData.internados[i]), fmt(lastSummaryData.internados[i].fecha_ingreso)]);
+  downloadCsv('Resumen_' + lastSummaryData.fecha + '.csv', rows);
+}
+function csvCell(v) { return '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"'; }
+function downloadCsv(name, rows) {
+  var lines = [];
+  for (var i = 0; i < rows.length; i++) {
+    var cells = [];
+    for (var j = 0; j < rows[i].length; j++) cells.push(csvCell(rows[i][j]));
+    lines.push(cells.join(','));
+  }
+  var csv = lines.join('\r\n');
+  var blob;
+  try {
+    blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    if (window.navigator && window.navigator.msSaveBlob) window.navigator.msSaveBlob(blob, name);
+    else {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  } catch (e) {
+    var w = window.open('', '_blank');
+    if (w) w.document.write('<pre>' + esc(csv) + '</pre>');
+  }
 }
 
 restoreSession();
