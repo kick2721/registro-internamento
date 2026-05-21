@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prueba tablet - Internamento</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f2ee;
+    color: #1a1916;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 22px 14px;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid #e2dfd8;
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .logo {
+    display: block;
+    max-width: 180px;
+    height: auto;
+    margin: 0 auto 14px;
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0 0 6px;
+    text-align: center;
+  }
+  p {
+    color: #6b6860;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0 0 16px;
+    text-align: center;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    margin: 12px 0 6px;
+  }
+  input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc9c0;
+    border-radius: 6px;
+    font-size: 16px;
+  }
+  button {
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    border: 0;
+    border-radius: 6px;
+    background: #1f6b43;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  button:disabled {
+    opacity: 0.65;
+  }
+  .msg {
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+  }
+  .ok {
+    background: #e9f5ee;
+    border: 1px solid #b5d8c4;
+    color: #1f6b43;
+  }
+  .err {
+    background: #fdf0ee;
+    border: 1px solid #f0c0bb;
+    color: #8a2f26;
+  }
+  .info {
+    background: #f9f8f5;
+    border: 1px solid #e2dfd8;
+    color: #4b4943;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <img class="logo" src="logo.png" alt="Clinica Morales">
+    <h1>Prueba de tablet</h1>
+    <p>Esta pagina solo verifica si el tablet viejo puede iniciar sesion y leer el perfil.</p>
+
+    <label for="usuario">Usuario</label>
+    <input id="usuario" type="text" autocomplete="username" placeholder="Ej: ignacio">
+
+    <label for="clave">Contrasena</label>
+    <input id="clave" type="password" autocomplete="current-password">
+
+    <button id="btn" onclick="login()">Entrar</button>
+    <div id="msg" class="msg info">Listo para probar.</div>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL = 'https://jnkcheqzmlkyksnpyncz.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impua2NoZXF6bWxreWtzbnB5bmN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMDQzMzYsImV4cCI6MjA4OTU4MDMzNn0.fsJRCk7x4rJ3tPCbobpXI0PAvRi2qNodW51R9AowH68';
+
+function setMsg(text, type) {
+  var el = document.getElementById('msg');
+  el.className = 'msg ' + (type || 'info');
+  el.innerHTML = text;
+}
+
+function request(method, url, headers, body, timeoutMs, callback) {
+  var done = false;
+  var xhr = new XMLHttpRequest();
+  var timer = setTimeout(function() {
+    if (done) return;
+    done = true;
+    try { xhr.abort(); } catch (e) {}
+    callback(new Error('Tiempo agotado. El tablet no pudo conectar en ' + Math.round(timeoutMs / 1000) + ' segundos.'));
+  }, timeoutMs);
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4 || done) return;
+    done = true;
+    clearTimeout(timer);
+
+    var text = xhr.responseText || '';
+    var data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (e) {}
+
+    if (xhr.status >= 200 && xhr.status < 300) {
+      callback(null, data, xhr.status);
+    } else {
+      var msg = 'Error HTTP ' + xhr.status;
+      if (data && data.msg) msg = data.msg;
+      else if (data && data.message) msg = data.message;
+      else if (text) msg = text;
+      callback(new Error(msg), data, xhr.status);
+    }
+  };
+
+  try {
+    xhr.open(method, url, true);
+    for (var k in headers) {
+      if (headers.hasOwnProperty(k)) xhr.setRequestHeader(k, headers[k]);
+    }
+    xhr.send(body ? JSON.stringify(body) : null);
+  } catch (e) {
+    if (!done) {
+      done = true;
+      clearTimeout(timer);
+      callback(e);
+    }
+  }
+}
+
+function login() {
+  var usuario = document.getElementById('usuario').value.replace(/^\s+|\s+$/g, '');
+  var pass = document.getElementById('clave').value;
+  var email = usuario.indexOf('@') >= 0 ? usuario : usuario + '@clinica.internal';
+  var btn = document.getElementById('btn');
+
+  if (!usuario || !pass) {
+    setMsg('Completa usuario y contrasena.', 'err');
+    return;
+  }
+
+  btn.disabled = true;
+  setMsg('Verificando login...', 'info');
+
+  request(
+    'POST',
+    SUPABASE_URL + '/auth/v1/token?grant_type=password',
+    {
+      'apikey': SUPABASE_KEY,
+      'Content-Type': 'application/json'
+    },
+    {
+      email: email,
+      password: pass
+    },
+    20000,
+    function(err, data) {
+      if (err) {
+        btn.disabled = false;
+        setMsg('No se pudo iniciar sesion.\n\n' + err.message, 'err');
+        return;
+      }
+      if (!data || !data.access_token || !data.user) {
+        btn.disabled = false;
+        setMsg('Login respondio, pero no devolvio sesion valida.', 'err');
+        return;
+      }
+      setMsg('Login correcto. Leyendo perfil...', 'info');
+      readProfile(data.access_token, data.user.id, btn);
+    }
+  );
+}
+
+function readProfile(token, userId, btn) {
+  request(
+    'GET',
+    SUPABASE_URL + '/rest/v1/staff_profiles?select=nombre,rol&id=eq.' + encodeURIComponent(userId),
+    {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + token
+    },
+    null,
+    20000,
+    function(err, rows) {
+      btn.disabled = false;
+      if (err) {
+        setMsg('Login funciono, pero no se pudo leer el perfil.\n\n' + err.message, 'err');
+        return;
+      }
+      if (!rows || !rows.length) {
+        setMsg('Login funciono, pero este usuario no tiene perfil en staff_profiles.', 'err');
+        return;
+      }
+      setMsg('FUNCIONA EN ESTE TABLET.\n\nUsuario: ' + rows[0].nombre + '\nRol: ' + rows[0].rol, 'ok');
+    }
+  );
+}
+</script>
+</body>
+</html>
