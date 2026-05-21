@@ -915,21 +915,21 @@ function renderSummary(fecha, traslados) {
 function tablePatients(title, rows, type) {
   var badge = type === 'egresos' ? 'badge-egress' : 'badge-active';
   var titleClass = type === 'egresos' ? ' egresos' : '';
-  var html = '<div class="resumen-section table-wrap" style="margin-bottom:1.25rem">';
+  var html = '<div class="resumen-section table-wrap" style="margin-bottom:1.25rem;border-radius:4px">';
   html += '<div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px"><span style="font-weight:600">' + esc(title) + '</span><span class="badge ' + badge + '">' + rows.length + '</span></div>';
   html += '<div class="resumen-section-title' + titleClass + '" style="display:none">' + esc(title) + ' <span class="count">' + rows.length + '</span></div>';
   if (!rows.length) return html + '<p style="color:var(--text3);font-size:13px;padding:1rem 0">Sin registros.</p></div>';
-  html += '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed">' + colGroup(type) + '<thead><tr>';
   html += th('Paciente') + th('Codigo') + th('Diagnostico');
   if (type === 'egresos') html += th('Empresa') + th('Motivo egreso');
-  else if (type === 'internados') html += th('Area') + th('F. Ingreso') + th('Dias');
+  else if (type === 'internados') html += th('Area') + th('F. Ingreso') + th('Dias', 'text-align:right');
   else html += th('Empresa') + th('Area');
   html += '</tr></thead><tbody>';
   for (var i = 0; i < rows.length; i++) {
     var p = rows[i];
-    html += '<tr style="border-bottom:1px solid var(--border)">' + td(p.nombre, 'font-weight:500') + td(p.codigo, 'font-family:monospace;color:var(--text2)') + td(p.diagnostico, '');
+    html += '<tr style="border-bottom:1px solid var(--border)">' + td(p.nombre, 'font-weight:700;color:#111') + td(p.codigo, 'font-family:monospace;color:#858079') + td(p.diagnostico, 'color:#4b4943');
     if (type === 'egresos') html += td(p.empresa, '') + td(p.motivo_egreso || p.notas || '-', '');
-    else if (type === 'internados') html += '<td style="padding:8px 10px"><span class="badge badge-area">' + esc(areaName(p)) + '</span></td>' + td(fmt(p.fecha_ingreso), 'color:var(--text2)') + td(daysBetween(p.fecha_ingreso, lastSummaryData.fecha), 'font-family:monospace;font-size:12px');
+    else if (type === 'internados') html += areaCell(areaName(p)) + td(fmt(p.fecha_ingreso), 'color:#77736b;white-space:nowrap') + td(daysBetween(p.fecha_ingreso, lastSummaryData.fecha), 'font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap');
     else html += td(p.empresa, '') + '<td style="padding:8px 10px"><span class="badge badge-area">' + esc(areaName(p)) + '</span></td>';
     html += '</tr>';
   }
@@ -937,20 +937,26 @@ function tablePatients(title, rows, type) {
   return html;
 }
 function tableTransfers(title, rows) {
-  var html = '<div class="resumen-section table-wrap" style="margin-bottom:1.25rem">';
+  var html = '<div class="resumen-section table-wrap" style="margin-bottom:1.25rem;border-radius:4px">';
   html += '<div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px"><span style="font-weight:600">' + esc(title) + '</span><span class="badge badge-transfer">' + rows.length + '</span></div>';
   html += '<div class="resumen-section-title traslados" style="display:none">' + esc(title) + ' <span class="count">' + rows.length + '</span></div>';
   if (!rows.length) return html + '<p style="color:var(--text3);font-size:13px;padding:1rem 0">Sin traslados este dia.</p></div>';
-  html += '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>' + th('Paciente') + th('Codigo') + th('Area origen') + th('Area destino') + th('Motivo') + '</tr></thead><tbody>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed"><colgroup><col style="width:27%"><col style="width:13%"><col style="width:19%"><col style="width:19%"><col style="width:22%"></colgroup><thead><tr>' + th('Paciente') + th('Codigo') + th('Area origen') + th('Area destino') + th('Motivo') + '</tr></thead><tbody>';
   for (var i = 0; i < rows.length; i++) {
     var t = rows[i];
-    html += '<tr style="border-bottom:1px solid var(--border)">' + td(t.paciente && t.paciente.nombre ? t.paciente.nombre : '-', 'font-weight:500') + td(t.paciente && t.paciente.codigo ? t.paciente.codigo : '-', 'font-family:monospace;color:var(--text2)') + '<td style="padding:8px 10px"><span class="badge badge-egress">' + esc(t.origen && t.origen.nombre ? t.origen.nombre : '-') + '</span></td><td style="padding:8px 10px"><span class="badge badge-area">' + esc(t.destino && t.destino.nombre ? t.destino.nombre : '-') + '</span></td>' + td(t.motivo || '-', 'color:var(--text2)') + '</tr>';
+    html += '<tr style="border-bottom:1px solid var(--border)">' + td(t.paciente && t.paciente.nombre ? t.paciente.nombre : '-', 'font-weight:700;color:#111') + td(t.paciente && t.paciente.codigo ? t.paciente.codigo : '-', 'font-family:monospace;color:#858079') + '<td style="padding:8px 10px"><span class="badge badge-egress">' + esc(t.origen && t.origen.nombre ? t.origen.nombre : '-') + '</span></td><td style="padding:8px 10px"><span class="badge badge-area">' + esc(t.destino && t.destino.nombre ? t.destino.nombre : '-') + '</span></td>' + td(t.motivo || '-', 'color:#77736b') + '</tr>';
   }
   html += '</tbody></table></div>';
   return html;
 }
-function th(text) { return '<th style="text-align:left;padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase">' + esc(text) + '</th>'; }
+function colGroup(type) {
+  if (type === 'internados') return '<colgroup><col style="width:24%"><col style="width:12%"><col style="width:28%"><col style="width:17%"><col style="width:13%"><col style="width:6%"></colgroup>';
+  if (type === 'egresos') return '<colgroup><col style="width:27%"><col style="width:13%"><col style="width:28%"><col style="width:15%"><col style="width:17%"></colgroup>';
+  return '<colgroup><col style="width:27%"><col style="width:13%"><col style="width:30%"><col style="width:15%"><col style="width:15%"></colgroup>';
+}
+function th(text, style) { return '<th style="text-align:left;padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10.5px;font-weight:700;color:#77736b;text-transform:uppercase' + (style ? ';' + style : '') + '">' + esc(text) + '</th>'; }
 function td(text, style) { return '<td style="padding:8px 10px' + (style ? ';' + style : '') + '">' + esc(text) + '</td>'; }
+function areaCell(text) { return '<td style="padding:7px 8px"><span class="badge badge-area" style="max-width:100%;white-space:normal;line-height:1.15;text-align:left">' + esc(text) + '</span></td>'; }
 function formatDateTime(d) { return two(d.getDate()) + '/' + two(d.getMonth() + 1) + '/' + d.getFullYear() + ', ' + two(d.getHours()) + ':' + two(d.getMinutes()); }
 function two(n) { return n < 10 ? '0' + n : String(n); }
 function daysBetween(start, end) { var a = new Date(start + 'T00:00:00'); var b = new Date(end + 'T00:00:00'); var d = Math.floor((b.getTime() - a.getTime()) / 86400000); return d >= 0 ? d + 'd' : '-'; }
