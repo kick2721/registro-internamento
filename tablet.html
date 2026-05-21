@@ -35,6 +35,7 @@
   .brand img { width: 130px; height: auto; float: left; margin-right: 10px; }
   .brand-title { font-size: 18px; font-weight: bold; padding-top: 8px; }
   .brand-sub { color: #6b6860; font-size: 13px; }
+  .logout-row { clear: both; padding-top: 10px; text-align: right; }
   .tabs { clear: both; padding-top: 10px; display: table; width: 100%; table-layout: fixed; }
   .tab { display: table-cell; padding: 10px 4px; border: 1px solid #ccc9c0; background: #fff; color: #1a1916; text-align: center; font-size: 13px; font-weight: bold; }
   .tab.active { background: #1f6b43; color: #fff; border-color: #1f6b43; }
@@ -73,8 +74,6 @@
   .modal-body { padding: 14px; }
   .modal-foot { padding: 12px 14px; border-top: 1px solid #e2dfd8; text-align: right; }
   .modal-foot .btn { margin-left: 6px; }
-  .print-header, .print-footer { display: none; }
-
   @media (max-width: 720px) {
     .wrap { padding: 10px; }
     .col, .col3, .stat { float: none; width: 100%; }
@@ -82,26 +81,9 @@
     .code { float: none; display: block; margin-top: 3px; }
     .brand img { width: 112px; }
     .brand-title { font-size: 16px; }
+    .logout-row { text-align: left; }
     .tab { display: block; width: 100%; margin-bottom: 4px; border-radius: 6px; }
     .modal { margin: 0 auto 20px; }
-  }
-
-  @media print {
-    body { background: #fff; color: #111; }
-    .topbar, .no-print, #auth-screen, .modal-bg { display: none !important; }
-    .wrap { max-width: none; padding: 0; }
-    .card { border: 0; padding: 0; margin: 0; }
-    #app-screen .wrap > div { display: none; }
-    #page-resumen { display: block !important; }
-    #summary-content { display: block !important; }
-    .print-header { display: block; border-bottom: 2px solid #1f6b43; padding-bottom: 10px; margin-bottom: 16px; }
-    .print-header img { width: 150px; height: auto; float: left; }
-    .print-title { text-align: right; padding-top: 8px; }
-    .print-header:after { content: ""; display: table; clear: both; }
-    .print-footer { display: block; border-top: 1px solid #ccc; margin-top: 16px; padding-top: 8px; font-size: 11px; color: #555; }
-    table { page-break-inside: auto; font-size: 11px; }
-    tr { page-break-inside: avoid; }
-    th, td { padding: 5px; }
   }
 </style>
 </head>
@@ -138,7 +120,9 @@
         <button class="tab" id="tab-resumen" onclick="showTab('resumen')">Resumen</button>
         <button class="tab" id="tab-areas" onclick="showTab('areas')">Areas</button>
         <button class="tab hidden" id="tab-personal" onclick="showTab('personal')">Personal</button>
-        <button class="tab" onclick="logout()">Salir</button>
+      </div>
+      <div class="logout-row">
+        <button class="btn btn-light btn-small" onclick="logout()">Salir</button>
       </div>
     </div>
   </div>
@@ -206,7 +190,7 @@
           <div class="col"><label for="summary-date">Fecha</label><input id="summary-date" type="date"></div>
           <div class="col"><label>&nbsp;</label><button class="btn btn-full" onclick="loadSummary()">Generar</button></div>
         </div>
-        <button class="btn btn-light btn-full" style="margin-top:10px" onclick="printSummary()">Imprimir / Guardar PDF</button>
+        <button class="btn btn-light btn-full" style="margin-top:10px" onclick="downloadSummaryPdf()">Descargar PDF</button>
         <button class="btn btn-light btn-full" style="margin-top:10px" onclick="exportSummaryCsv()">Exportar CSV del resumen</button>
         <div id="summary-msg"></div>
       </div>
@@ -869,7 +853,7 @@ function saveUser() {
   });
 }
 
-function loadSummary() {
+function loadSummary(callback) {
   lastSummaryReady = false;
   var fecha = byId('summary-date').value || todayISO();
   byId('summary-date').value = fecha;
@@ -879,6 +863,7 @@ function loadSummary() {
       renderSummary(fecha, traslados || []);
       setBox('summary-msg', '', 'info');
       lastSummaryReady = true;
+      if (callback) callback();
     });
   });
 }
@@ -898,13 +883,11 @@ function renderSummary(fecha, traslados) {
     if (p.fecha_ingreso <= fecha && (!p.fecha_egreso || p.fecha_egreso > fecha)) internados.push(p);
   }
   lastSummaryData = { fecha: fecha, ingresos: ingresos, egresos: egresos, traslados: traslados, internados: internados };
-  var html = '<div class="print-header"><img src="logo.png" alt="Clinica Morales"><div class="print-title"><h2>Resumen de Internamento</h2><p>' + fmt(fecha) + '</p></div></div>';
-  html += '<div class="section-title"><h2>Resumen de Internamento</h2><p>' + fmt(fecha) + '</p></div>';
+  var html = '<div class="section-title"><h2>Resumen de Internamento</h2><p>' + fmt(fecha) + '</p></div>';
   html += tablePatients('Ingresos', ingresos, 'ingresos');
   html += tablePatients('Egresos', egresos, 'egresos');
   html += tableTransfers('Traslados', traslados);
   html += tablePatients('Internados actuales', internados, 'internados');
-  html += '<div class="print-footer">Clinica Morales MG, Lda - Sistema de Internamento - Generado el ' + fmt(todayISO()) + '</div>';
   byId('summary-content').innerHTML = html;
 }
 function tablePatients(title, rows, type) {
@@ -938,7 +921,133 @@ function tableTransfers(title, rows) {
   return html;
 }
 function daysBetween(start, end) { var a = new Date(start + 'T00:00:00'); var b = new Date(end + 'T00:00:00'); var d = Math.floor((b.getTime() - a.getTime()) / 86400000); return d >= 0 ? d + 'd' : '-'; }
-function printSummary() { if (!lastSummaryReady) loadSummary(); setTimeout(function() { window.print(); }, 500); }
+
+function downloadSummaryPdf() {
+  if (!lastSummaryReady || !lastSummaryData) {
+    loadSummary(function() { createSummaryPdf(); });
+    return;
+  }
+  createSummaryPdf();
+}
+
+function cleanPdfText(text) {
+  var s = String(text === null || text === undefined ? '' : text);
+  var from = 'áàäâÁÀÄÂéèëêÉÈËÊíìïîÍÌÏÎóòöôÓÒÖÔúùüûÚÙÜÛñÑçÇ';
+  var to =   'aaaaAAAAeeeeEEEEiiiiIIIIooooOOOOuuuuUUUUnNcC';
+  for (var i = 0; i < from.length; i++) s = s.split(from.charAt(i)).join(to.charAt(i));
+  s = s.replace(/[\r\n\t]/g, ' ');
+  return s.replace(/[^\x20-\x7E]/g, '');
+}
+
+function pdfEscape(text) {
+  return cleanPdfText(text).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+}
+
+function createSummaryPdf() {
+  if (!lastSummaryData) { alert('Genera el resumen primero.'); return; }
+  var fecha = lastSummaryData.fecha;
+  var parts = fecha.split('-');
+  var fileName = 'Internamento ' + Number(parts[2]) + '-' + Number(parts[1]) + '-' + parts[0] + '.pdf';
+  var pages = [];
+  var commands = [];
+  var y = 800;
+
+  function newPage() {
+    if (commands.length) pages.push(commands.join('\n'));
+    commands = [];
+    y = 800;
+  }
+  function line(x, size, text, bold) {
+    if (y < 42) newPage();
+    commands.push('BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + x + ' ' + y + ' Td (' + pdfEscape(text) + ') Tj ET');
+    y -= size + 5;
+  }
+  function rule() {
+    if (y < 42) newPage();
+    commands.push('0.1 w 36 ' + y + ' m 559 ' + y + ' l S');
+    y -= 14;
+  }
+  function wrapLine(prefix, text) {
+    var full = prefix + cleanPdfText(text);
+    while (full.length > 92) {
+      line(48, 9, full.slice(0, 92), false);
+      full = '  ' + full.slice(92);
+    }
+    line(48, 9, full, false);
+  }
+  function section(title, count) {
+    y -= 4;
+    line(36, 12, title + ' (' + count + ')', true);
+  }
+  function patientRows(rows, type) {
+    if (!rows.length) { line(48, 9, 'Sin registros.', false); return; }
+    for (var i = 0; i < rows.length; i++) {
+      var p = rows[i];
+      if (type === 'egresos') wrapLine('', p.nombre + ' | ' + p.codigo + ' | ' + p.diagnostico + ' | ' + p.empresa + ' | ' + (p.motivo_egreso || p.notas || '-'));
+      else if (type === 'internados') wrapLine('', p.nombre + ' | ' + p.codigo + ' | ' + p.diagnostico + ' | ' + areaName(p) + ' | ' + fmt(p.fecha_ingreso) + ' | ' + daysBetween(p.fecha_ingreso, fecha));
+      else wrapLine('', p.nombre + ' | ' + p.codigo + ' | ' + p.diagnostico + ' | ' + p.empresa + ' | ' + areaName(p));
+    }
+  }
+  function transferRows(rows) {
+    if (!rows.length) { line(48, 9, 'Sin traslados este dia.', false); return; }
+    for (var i = 0; i < rows.length; i++) {
+      var t = rows[i];
+      wrapLine('', (t.paciente && t.paciente.nombre ? t.paciente.nombre : '-') + ' | ' + (t.paciente && t.paciente.codigo ? t.paciente.codigo : '-') + ' | ' + (t.origen && t.origen.nombre ? t.origen.nombre : '-') + ' -> ' + (t.destino && t.destino.nombre ? t.destino.nombre : '-') + ' | ' + (t.motivo || '-'));
+    }
+  }
+
+  line(36, 16, 'Clinica Morales MG, Lda', true);
+  line(36, 14, 'Resumen de Internamento', true);
+  line(36, 11, fmt(fecha), false);
+  rule();
+  section('Ingresos', lastSummaryData.ingresos.length);
+  patientRows(lastSummaryData.ingresos, 'ingresos');
+  section('Egresos', lastSummaryData.egresos.length);
+  patientRows(lastSummaryData.egresos, 'egresos');
+  section('Traslados', lastSummaryData.traslados.length);
+  transferRows(lastSummaryData.traslados);
+  section('Internados actuales', lastSummaryData.internados.length);
+  patientRows(lastSummaryData.internados, 'internados');
+  y -= 8;
+  rule();
+  line(36, 8, 'Sistema de Internamento - Generado el ' + fmt(todayISO()), false);
+  pages.push(commands.join('\n'));
+  savePdf(fileName, pages);
+}
+
+function savePdf(fileName, pageStreams) {
+  var objects = [];
+  var pageRefs = [];
+  function addObject(body) { objects.push(body); return objects.length; }
+  addObject('<< /Type /Catalog /Pages 2 0 R >>');
+  addObject('');
+  addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
+  for (var i = 0; i < pageStreams.length; i++) {
+    var stream = pageStreams[i];
+    var contentId = addObject('<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream');
+    var pageId = addObject('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + contentId + ' 0 R >>');
+    pageRefs.push(pageId + ' 0 R');
+  }
+  objects[1] = '<< /Type /Pages /Kids [' + pageRefs.join(' ') + '] /Count ' + pageRefs.length + ' >>';
+  var pdf = '%PDF-1.4\n';
+  var offsets = [0];
+  for (i = 0; i < objects.length; i++) {
+    offsets.push(pdf.length);
+    pdf += (i + 1) + ' 0 obj\n' + objects[i] + '\nendobj\n';
+  }
+  var xref = pdf.length;
+  pdf += 'xref\n0 ' + (objects.length + 1) + '\n0000000000 65535 f \n';
+  for (i = 1; i < offsets.length; i++) pdf += pad10(offsets[i]) + ' 00000 n \n';
+  pdf += 'trailer\n<< /Size ' + (objects.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+  downloadBlob(fileName, pdf, 'application/pdf');
+}
+
+function pad10(n) {
+  var s = String(n);
+  while (s.length < 10) s = '0' + s;
+  return s;
+}
 
 function exportPatientsCsv() {
   var rows = [['Codigo','Paciente','Diagnostico','Empresa','Area','Fecha ingreso','Fecha egreso','Estado','Notas']];
@@ -964,9 +1073,13 @@ function downloadCsv(name, rows) {
     lines.push(cells.join(','));
   }
   var csv = lines.join('\r\n');
+  downloadBlob(name, csv, 'text/csv;charset=utf-8');
+}
+
+function downloadBlob(name, content, type) {
   var blob;
   try {
-    blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    blob = new Blob([content], { type: type });
     if (window.navigator && window.navigator.msSaveBlob) window.navigator.msSaveBlob(blob, name);
     else {
       var a = document.createElement('a');
@@ -978,7 +1091,7 @@ function downloadCsv(name, rows) {
     }
   } catch (e) {
     var w = window.open('', '_blank');
-    if (w) w.document.write('<pre>' + esc(csv) + '</pre>');
+    if (w) w.document.write('<pre>' + esc(content) + '</pre>');
   }
 }
 
