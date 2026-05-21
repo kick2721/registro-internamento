@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Internamento Tablet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   * { box-sizing: border-box; }
+  :root { --surface2: #f9f8f5; --border: #e2dfd8; --text2: #6b6860; }
   body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #f4f2ee; color: #1a1916; font-size: 15px; }
   button, input, select, textarea { font-family: Arial, Helvetica, sans-serif; }
   h1 { font-size: 22px; margin: 0 0 5px; }
@@ -61,7 +63,13 @@
   .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; background: #faf4ee; color: #7a4d1a; font-size: 12px; font-weight: bold; }
   .badge-ok { background: #e9f5ee; color: #1f6b43; }
   .badge-off { background: #f4f2ee; color: #6b6860; }
+  .badge-active { background: #e8f4ed; color: #1a5c3a; }
+  .badge-egress { background: #f4f2ee; color: #6b6860; }
+  .badge-transfer { background: #eef4fb; color: #1a4d7a; }
+  .badge-area { background: #fef9ec; color: #b7770d; }
   .empty { padding: 18px; text-align: center; color: #6b6860; }
+  .table-wrap { background: #fff; border: 1px solid #e2dfd8; border-radius: 8px; overflow: hidden; }
+  .resumen-print-header, .resumen-print-footer { display: none; }
   .actions { margin-top: 10px; }
   .actions .btn { margin-right: 6px; margin-bottom: 6px; }
   .area-grid { margin-left: -6px; margin-right: -6px; }
@@ -882,6 +890,9 @@ function renderSummary(fecha, traslados) {
   var ingresos = [];
   var egresos = [];
   var internados = [];
+  var nomMes = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var d = new Date(fecha + 'T12:00:00');
+  var fechaLabel = d.getDate() + ' de ' + nomMes[d.getMonth()] + ' de ' + d.getFullYear();
   for (var i = 0; i < allPacientes.length; i++) {
     var p = allPacientes[i];
     if (p.fecha_ingreso === fecha) ingresos.push(p);
@@ -889,170 +900,98 @@ function renderSummary(fecha, traslados) {
     if (p.fecha_ingreso <= fecha && (!p.fecha_egreso || p.fecha_egreso > fecha)) internados.push(p);
   }
   lastSummaryData = { fecha: fecha, ingresos: ingresos, egresos: egresos, traslados: traslados, internados: internados };
-  var html = '<div class="section-title"><h2>Resumen de Internamento</h2><p>' + fmt(fecha) + '</p></div>';
+  var html = '<div class="resumen-print-header" style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #1a5c3a;padding-bottom:12px;margin-bottom:24px">';
+  html += '<img src="logo.png" alt="Logo" style="height:48px;width:auto;max-width:160px;object-fit:contain">';
+  html += '<div class="resumen-print-header-right" style="text-align:right"><h2 style="font-size:16px;font-weight:700;color:#1a1916;margin:0">Resumen de Internamento</h2><p style="font-size:12px;color:#6b6860;margin:2px 0 0">' + fechaLabel + '</p></div></div>';
   html += tablePatients('Ingresos', ingresos, 'ingresos');
   html += tablePatients('Egresos', egresos, 'egresos');
   html += tableTransfers('Traslados', traslados);
   html += tablePatients('Internados actuales', internados, 'internados');
+  html += '<div class="resumen-print-footer" style="margin-top:32px;border-top:1px solid #e2dfd8;padding-top:10px;font-size:10px;color:#9b9890;display:flex;justify-content:space-between">';
+  html += '<span>Clinica Morales MG, Lda - Sistema de Internamento</span><span>Generado el ' + formatDateTime(new Date()) + '</span></div>';
   byId('summary-content').innerHTML = html;
 }
 function tablePatients(title, rows, type) {
-  var html = '<h3>' + esc(title) + ' (' + rows.length + ')</h3>';
-  if (!rows.length) return html + '<p>Sin registros.</p>';
-  html += '<table><thead><tr><th>Paciente</th><th>Codigo</th><th>Diagnostico</th>';
-  if (type === 'egresos') html += '<th>Empresa</th><th>Motivo</th>';
-  else if (type === 'internados') html += '<th>Area</th><th>Ingreso</th><th>Dias</th>';
-  else html += '<th>Empresa</th><th>Area</th>';
+  var badge = type === 'egresos' ? 'badge-egress' : 'badge-active';
+  var titleClass = type === 'egresos' ? ' egresos' : '';
+  var html = '<div class="resumen-section table-wrap" style="margin-bottom:1.25rem">';
+  html += '<div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px"><span style="font-weight:600">' + esc(title) + '</span><span class="badge ' + badge + '">' + rows.length + '</span></div>';
+  html += '<div class="resumen-section-title' + titleClass + '" style="display:none">' + esc(title) + ' <span class="count">' + rows.length + '</span></div>';
+  if (!rows.length) return html + '<p style="color:var(--text3);font-size:13px;padding:1rem 0">Sin registros.</p></div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>';
+  html += th('Paciente') + th('Codigo') + th('Diagnostico');
+  if (type === 'egresos') html += th('Empresa') + th('Motivo egreso');
+  else if (type === 'internados') html += th('Area') + th('F. Ingreso') + th('Dias');
+  else html += th('Empresa') + th('Area');
   html += '</tr></thead><tbody>';
   for (var i = 0; i < rows.length; i++) {
     var p = rows[i];
-    html += '<tr><td>' + esc(p.nombre) + '</td><td>' + esc(p.codigo) + '</td><td>' + esc(p.diagnostico) + '</td>';
-    if (type === 'egresos') html += '<td>' + esc(p.empresa) + '</td><td>' + esc(p.motivo_egreso || p.notas || '-') + '</td>';
-    else if (type === 'internados') html += '<td>' + esc(areaName(p)) + '</td><td>' + fmt(p.fecha_ingreso) + '</td><td>' + daysBetween(p.fecha_ingreso, lastSummaryData.fecha) + '</td>';
-    else html += '<td>' + esc(p.empresa) + '</td><td>' + esc(areaName(p)) + '</td>';
+    html += '<tr style="border-bottom:1px solid var(--border)">' + td(p.nombre, 'font-weight:500') + td(p.codigo, 'font-family:monospace;color:var(--text2)') + td(p.diagnostico, '');
+    if (type === 'egresos') html += td(p.empresa, '') + td(p.motivo_egreso || p.notas || '-', '');
+    else if (type === 'internados') html += '<td style="padding:8px 10px"><span class="badge badge-area">' + esc(areaName(p)) + '</span></td>' + td(fmt(p.fecha_ingreso), 'color:var(--text2)') + td(daysBetween(p.fecha_ingreso, lastSummaryData.fecha), 'font-family:monospace;font-size:12px');
+    else html += td(p.empresa, '') + '<td style="padding:8px 10px"><span class="badge badge-area">' + esc(areaName(p)) + '</span></td>';
     html += '</tr>';
   }
-  html += '</tbody></table>';
+  html += '</tbody></table></div>';
   return html;
 }
 function tableTransfers(title, rows) {
-  var html = '<h3>' + esc(title) + ' (' + rows.length + ')</h3>';
-  if (!rows.length) return html + '<p>Sin traslados este dia.</p>';
-  html += '<table><thead><tr><th>Paciente</th><th>Codigo</th><th>Origen</th><th>Destino</th><th>Motivo</th></tr></thead><tbody>';
+  var html = '<div class="resumen-section table-wrap" style="margin-bottom:1.25rem">';
+  html += '<div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px"><span style="font-weight:600">' + esc(title) + '</span><span class="badge badge-transfer">' + rows.length + '</span></div>';
+  html += '<div class="resumen-section-title traslados" style="display:none">' + esc(title) + ' <span class="count">' + rows.length + '</span></div>';
+  if (!rows.length) return html + '<p style="color:var(--text3);font-size:13px;padding:1rem 0">Sin traslados este dia.</p></div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>' + th('Paciente') + th('Codigo') + th('Area origen') + th('Area destino') + th('Motivo') + '</tr></thead><tbody>';
   for (var i = 0; i < rows.length; i++) {
     var t = rows[i];
-    html += '<tr><td>' + esc(t.paciente && t.paciente.nombre ? t.paciente.nombre : '-') + '</td><td>' + esc(t.paciente && t.paciente.codigo ? t.paciente.codigo : '-') + '</td><td>' + esc(t.origen && t.origen.nombre ? t.origen.nombre : '-') + '</td><td>' + esc(t.destino && t.destino.nombre ? t.destino.nombre : '-') + '</td><td>' + esc(t.motivo || '-') + '</td></tr>';
+    html += '<tr style="border-bottom:1px solid var(--border)">' + td(t.paciente && t.paciente.nombre ? t.paciente.nombre : '-', 'font-weight:500') + td(t.paciente && t.paciente.codigo ? t.paciente.codigo : '-', 'font-family:monospace;color:var(--text2)') + '<td style="padding:8px 10px"><span class="badge badge-egress">' + esc(t.origen && t.origen.nombre ? t.origen.nombre : '-') + '</span></td><td style="padding:8px 10px"><span class="badge badge-area">' + esc(t.destino && t.destino.nombre ? t.destino.nombre : '-') + '</span></td>' + td(t.motivo || '-', 'color:var(--text2)') + '</tr>';
   }
-  html += '</tbody></table>';
+  html += '</tbody></table></div>';
   return html;
 }
+function th(text) { return '<th style="text-align:left;padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase">' + esc(text) + '</th>'; }
+function td(text, style) { return '<td style="padding:8px 10px' + (style ? ';' + style : '') + '">' + esc(text) + '</td>'; }
+function formatDateTime(d) { return two(d.getDate()) + '/' + two(d.getMonth() + 1) + '/' + d.getFullYear() + ', ' + two(d.getHours()) + ':' + two(d.getMinutes()); }
+function two(n) { return n < 10 ? '0' + n : String(n); }
 function daysBetween(start, end) { var a = new Date(start + 'T00:00:00'); var b = new Date(end + 'T00:00:00'); var d = Math.floor((b.getTime() - a.getTime()) / 86400000); return d >= 0 ? d + 'd' : '-'; }
 
 function downloadSummaryPdf() {
   if (!lastSummaryReady || !lastSummaryData) {
-    loadSummary(function() { createSummaryPdf(); });
+    loadSummary(function() { downloadOriginalSummaryPdf(); });
     return;
   }
-  createSummaryPdf();
+  downloadOriginalSummaryPdf();
 }
 
-function cleanPdfText(text) {
-  var s = String(text === null || text === undefined ? '' : text);
-  var from = 'áàäâÁÀÄÂéèëêÉÈËÊíìïîÍÌÏÎóòöôÓÒÖÔúùüûÚÙÜÛñÑçÇ';
-  var to =   'aaaaAAAAeeeeEEEEiiiiIIIIooooOOOOuuuuUUUUnNcC';
-  for (var i = 0; i < from.length; i++) s = s.split(from.charAt(i)).join(to.charAt(i));
-  s = s.replace(/[\r\n\t]/g, ' ');
-  return s.replace(/[^\x20-\x7E]/g, '');
-}
-
-function pdfEscape(text) {
-  return cleanPdfText(text).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
-}
-
-function createSummaryPdf() {
-  if (!lastSummaryData) { alert('Genera el resumen primero.'); return; }
-  var fecha = lastSummaryData.fecha;
+function downloadOriginalSummaryPdf() {
+  var fecha = byId('summary-date').value || todayISO();
   var parts = fecha.split('-');
-  var fileName = 'Internamento ' + Number(parts[2]) + '-' + Number(parts[1]) + '-' + parts[0] + '.pdf';
-  var pages = [];
-  var commands = [];
-  var y = 800;
-
-  function newPage() {
-    if (commands.length) pages.push(commands.join('\n'));
-    commands = [];
-    y = 800;
+  var nombre = 'Internamento ' + Number(parts[2]) + '-' + Number(parts[1]) + '-' + parts[0] + '.pdf';
+  var el = byId('summary-content');
+  if (!window.html2pdf) {
+    setBox('summary-msg', 'No se pudo cargar el generador de PDF. Revisa la conexion e intenta de nuevo.', 'err');
+    return;
   }
-  function line(x, size, text, bold) {
-    if (y < 42) newPage();
-    commands.push('BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + x + ' ' + y + ' Td (' + pdfEscape(text) + ') Tj ET');
-    y -= size + 5;
-  }
-  function rule() {
-    if (y < 42) newPage();
-    commands.push('0.1 w 36 ' + y + ' m 559 ' + y + ' l S');
-    y -= 14;
-  }
-  function wrapLine(prefix, text) {
-    var full = prefix + cleanPdfText(text);
-    while (full.length > 92) {
-      line(48, 9, full.slice(0, 92), false);
-      full = '  ' + full.slice(92);
-    }
-    line(48, 9, full, false);
-  }
-  function section(title, count) {
-    y -= 4;
-    line(36, 12, title + ' (' + count + ')', true);
-  }
-  function patientRows(rows, type) {
-    if (!rows.length) { line(48, 9, 'Sin registros.', false); return; }
-    for (var i = 0; i < rows.length; i++) {
-      var p = rows[i];
-      if (type === 'egresos') wrapLine('', p.nombre + ' | ' + p.codigo + ' | ' + p.diagnostico + ' | ' + p.empresa + ' | ' + (p.motivo_egreso || p.notas || '-'));
-      else if (type === 'internados') wrapLine('', p.nombre + ' | ' + p.codigo + ' | ' + p.diagnostico + ' | ' + areaName(p) + ' | ' + fmt(p.fecha_ingreso) + ' | ' + daysBetween(p.fecha_ingreso, fecha));
-      else wrapLine('', p.nombre + ' | ' + p.codigo + ' | ' + p.diagnostico + ' | ' + p.empresa + ' | ' + areaName(p));
-    }
-  }
-  function transferRows(rows) {
-    if (!rows.length) { line(48, 9, 'Sin traslados este dia.', false); return; }
-    for (var i = 0; i < rows.length; i++) {
-      var t = rows[i];
-      wrapLine('', (t.paciente && t.paciente.nombre ? t.paciente.nombre : '-') + ' | ' + (t.paciente && t.paciente.codigo ? t.paciente.codigo : '-') + ' | ' + (t.origen && t.origen.nombre ? t.origen.nombre : '-') + ' -> ' + (t.destino && t.destino.nombre ? t.destino.nombre : '-') + ' | ' + (t.motivo || '-'));
-    }
-  }
-
-  line(36, 16, 'Clinica Morales MG, Lda', true);
-  line(36, 14, 'Resumen de Internamento', true);
-  line(36, 11, fmt(fecha), false);
-  rule();
-  section('Ingresos', lastSummaryData.ingresos.length);
-  patientRows(lastSummaryData.ingresos, 'ingresos');
-  section('Egresos', lastSummaryData.egresos.length);
-  patientRows(lastSummaryData.egresos, 'egresos');
-  section('Traslados', lastSummaryData.traslados.length);
-  transferRows(lastSummaryData.traslados);
-  section('Internados actuales', lastSummaryData.internados.length);
-  patientRows(lastSummaryData.internados, 'internados');
-  y -= 8;
-  rule();
-  line(36, 8, 'Sistema de Internamento - Generado el ' + fmt(todayISO()), false);
-  pages.push(commands.join('\n'));
-  savePdf(fileName, pages);
-}
-
-function savePdf(fileName, pageStreams) {
-  var objects = [];
-  var pageRefs = [];
-  function addObject(body) { objects.push(body); return objects.length; }
-  addObject('<< /Type /Catalog /Pages 2 0 R >>');
-  addObject('');
-  addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
-  addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
-  for (var i = 0; i < pageStreams.length; i++) {
-    var stream = pageStreams[i];
-    var contentId = addObject('<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream');
-    var pageId = addObject('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + contentId + ' 0 R >>');
-    pageRefs.push(pageId + ' 0 R');
-  }
-  objects[1] = '<< /Type /Pages /Kids [' + pageRefs.join(' ') + '] /Count ' + pageRefs.length + ' >>';
-  var pdf = '%PDF-1.4\n';
-  var offsets = [0];
-  for (i = 0; i < objects.length; i++) {
-    offsets.push(pdf.length);
-    pdf += (i + 1) + ' 0 obj\n' + objects[i] + '\nendobj\n';
-  }
-  var xref = pdf.length;
-  pdf += 'xref\n0 ' + (objects.length + 1) + '\n0000000000 65535 f \n';
-  for (i = 1; i < offsets.length; i++) pdf += pad10(offsets[i]) + ' 00000 n \n';
-  pdf += 'trailer\n<< /Size ' + (objects.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF';
-  downloadBlob(fileName, pdf, 'application/pdf');
-}
-
-function pad10(n) {
-  var s = String(n);
-  while (s.length < 10) s = '0' + s;
-  return s;
+  el.style.width = '660px';
+  el.style.maxWidth = '660px';
+  el.style.overflow = 'hidden';
+  el.style.backgroundColor = 'white';
+  el.style.padding = '0';
+  setBox('summary-msg', 'Descargando PDF...', 'info');
+  window.html2pdf().set({
+    margin: [12, 12, 12, 12],
+    filename: nombre,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['avoid-all', 'css'] }
+  }).from(el).save().then(function() {
+    el.style.width = '';
+    el.style.maxWidth = '';
+    el.style.overflow = '';
+    el.style.backgroundColor = '';
+    el.style.padding = '';
+    setBox('summary-msg', '', 'info');
+  });
 }
 
 function exportPatientsCsv() {
