@@ -1672,21 +1672,28 @@ async function loadResumen() {
     sb.from('traslados').select('motivo,paciente:paciente_id(nombre,codigo), origen:area_origen_id(nombre), destino:area_destino_id(nombre)').gte('fecha_traslado', fecha+'T00:00:00').lte('fecha_traslado', fecha+'T23:59:59').order('fecha_traslado')
   ]);
 
-  const mkTable = (cols, rows, empty) => rows?.data?.length
-    ? `<table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr>${cols.map(c=>`<th style="text-align:left;padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase">${c}</th>`).join('')}</tr></thead>
+  const colGroup = type => {
+    if (type === 'internados') return '<colgroup><col style="width:24%"><col style="width:12%"><col style="width:28%"><col style="width:17%"><col style="width:13%"><col style="width:6%"></colgroup>';
+    if (type === 'egresos') return '<colgroup><col style="width:27%"><col style="width:13%"><col style="width:28%"><col style="width:15%"><col style="width:17%"></colgroup>';
+    if (type === 'traslados') return '<colgroup><col style="width:27%"><col style="width:13%"><col style="width:19%"><col style="width:19%"><col style="width:22%"></colgroup>';
+    return '<colgroup><col style="width:27%"><col style="width:13%"><col style="width:30%"><col style="width:15%"><col style="width:15%"></colgroup>';
+  };
+  const mkTable = (cols, rows, empty, type) => rows?.data?.length
+    ? `<table style="width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed">
+        ${colGroup(type)}
+        <thead><tr>${cols.map((c,i)=>`<th style="text-align:${type==='internados'&&i===5?'right':'left'};padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10.5px;font-weight:700;color:#77736b;text-transform:uppercase">${c}</th>`).join('')}</tr></thead>
         <tbody>${rows.data.map(r=>r.__row).join('')}</tbody>
        </table>`
     : `<p style="color:var(--text3);font-size:13px;padding:1rem 0">${empty}</p>`;
 
-  const ingresosRows = { data: (ingresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:500">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:var(--text2)">${p.codigo}</td><td style="padding:8px 10px">${p.diagnostico}</td><td style="padding:8px 10px">${p.empresa}</td><td style="padding:8px 10px"><span class="badge badge-area">${p.areas?.nombre||'—'}</span></td></tr>` })) };
-  const egresosRows = { data: (egresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:500">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:var(--text2)">${p.codigo}</td><td style="padding:8px 10px">${p.diagnostico}</td><td style="padding:8px 10px">${p.empresa}</td><td style="padding:8px 10px">${p.motivo_egreso||'—'}</td></tr>` })) };
-  const trasladosRows = { data: (traslados.data||[]).map(t => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:500">${t.paciente?.nombre||'—'}</td><td style="padding:8px 10px;font-family:monospace;color:var(--text2)">${t.paciente?.codigo||'—'}</td><td style="padding:8px 10px"><span class="badge badge-egress">${t.origen?.nombre||'—'}</span></td><td style="padding:8px 10px"><span class="badge badge-area">${t.destino?.nombre||'—'}</span></td><td style="padding:8px 10px;color:var(--text2)">${t.motivo||'—'}</td></tr>` })) };
+  const ingresosRows = { data: (ingresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#858079">${p.codigo}</td><td style="padding:8px 10px;color:#4b4943">${p.diagnostico}</td><td style="padding:8px 10px;color:#77736b">${p.empresa}</td><td style="padding:8px 10px"><span class="badge badge-area">${p.areas?.nombre||'—'}</span></td></tr>` })) };
+  const egresosRows = { data: (egresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#858079">${p.codigo}</td><td style="padding:8px 10px;color:#4b4943">${p.diagnostico}</td><td style="padding:8px 10px;color:#77736b">${p.empresa}</td><td style="padding:8px 10px">${p.motivo_egreso||'—'}</td></tr>` })) };
+  const trasladosRows = { data: (traslados.data||[]).map(t => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${t.paciente?.nombre||'—'}</td><td style="padding:8px 10px;font-family:monospace;color:#858079">${t.paciente?.codigo||'—'}</td><td style="padding:8px 10px"><span class="badge badge-egress">${t.origen?.nombre||'—'}</span></td><td style="padding:8px 10px"><span class="badge badge-area">${t.destino?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#77736b">${t.motivo||'—'}</td></tr>` })) };
 
   const internados = allPacientes.filter(p => p.fecha_ingreso <= fecha && (!p.fecha_egreso || p.fecha_egreso > fecha));
   const internadosRows = { data: internados.sort((a,b)=>a.fecha_ingreso?.localeCompare(b.fecha_ingreso)).map(p => {
     const dias = Math.floor((new Date(fecha) - new Date(p.fecha_ingreso)) / 86400000);
-    return { __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:500">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:var(--text2)">${p.codigo}</td><td style="padding:8px 10px">${p.diagnostico}</td><td style="padding:8px 10px"><span class="badge badge-area">${p.areas?.nombre||'—'}</span></td><td style="padding:8px 10px;color:var(--text2)">${fmt(p.fecha_ingreso)}</td><td style="padding:8px 10px;font-family:monospace;font-size:12px">${dias >= 0 ? dias+'d' : '—'}</td></tr>` };
+    return { __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#858079">${p.codigo}</td><td style="padding:8px 10px;color:#4b4943">${p.diagnostico}</td><td style="padding:7px 8px"><span class="badge badge-area" style="max-width:100%;white-space:normal;line-height:1.15;text-align:left">${p.areas?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#77736b;white-space:nowrap">${fmt(p.fecha_ingreso)}</td><td style="padding:8px 10px;font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap">${dias >= 0 ? dias+'d' : '—'}</td></tr>` };
   }) };
   const ni = ingresos.data?.length||0, ne = egresos.data?.length||0, nt = traslados.data?.length||0, nint = internados.length;
   document.getElementById('resumen-content').innerHTML = `
@@ -1703,7 +1710,7 @@ async function loadResumen() {
         <span style="font-weight:600">Ingresos</span><span class="badge badge-active">${ni}</span>
       </div>
       <div class="resumen-section-title" style="display:none">Ingresos <span class="count">${ni}</span></div>
-      ${mkTable(['Paciente','Código','Diagnóstico','Empresa','Área'], ingresosRows, 'Sin ingresos este día')}
+      ${mkTable(['Paciente','Código','Diagnóstico','Empresa','Área'], ingresosRows, 'Sin ingresos este día', 'ingresos')}
     </div>
 
     <div class="resumen-section table-wrap" style="margin-bottom:1.25rem">
@@ -1711,7 +1718,7 @@ async function loadResumen() {
         <span style="font-weight:600">Egresos</span><span class="badge badge-egress">${ne}</span>
       </div>
       <div class="resumen-section-title egresos" style="display:none">Egresos <span class="count">${ne}</span></div>
-      ${mkTable(['Paciente','Código','Diagnóstico','Empresa','Motivo egreso'], egresosRows, 'Sin egresos este día')}
+      ${mkTable(['Paciente','Código','Diagnóstico','Empresa','Motivo egreso'], egresosRows, 'Sin egresos este día', 'egresos')}
     </div>
 
     <div class="resumen-section table-wrap" style="margin-bottom:1.25rem">
@@ -1719,7 +1726,7 @@ async function loadResumen() {
         <span style="font-weight:600">Traslados</span><span class="badge badge-transfer">${nt}</span>
       </div>
       <div class="resumen-section-title traslados" style="display:none">Traslados <span class="count">${nt}</span></div>
-      ${mkTable(['Paciente','Código','Área origen','Área destino','Motivo'], trasladosRows, 'Sin traslados este día')}
+      ${mkTable(['Paciente','Código','Área origen','Área destino','Motivo'], trasladosRows, 'Sin traslados este día', 'traslados')}
     </div>
 
     <div class="resumen-section table-wrap">
@@ -1727,7 +1734,7 @@ async function loadResumen() {
         <span style="font-weight:600">Internados actuales</span><span class="badge badge-active">${nint}</span>
       </div>
       <div class="resumen-section-title" style="display:none">Internados actuales <span class="count">${nint}</span></div>
-      ${mkTable(['Paciente','Código','Diagnóstico','Área','F. Ingreso','Días'], internadosRows, 'Sin pacientes internados')}
+      ${mkTable(['Paciente','Código','Diagnóstico','Área','F. Ingreso','Días'], internadosRows, 'Sin pacientes internados', 'internados')}
     </div>
 
     <div class="resumen-print-footer">
