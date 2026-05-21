@@ -1,0 +1,604 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Internamento Tablet</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f2ee;
+    color: #1a1916;
+    font-size: 15px;
+  }
+  button, input, select, textarea { font-family: Arial, Helvetica, sans-serif; }
+  .screen { min-height: 100vh; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 14px; }
+  .card {
+    background: #fff;
+    border: 1px solid #e2dfd8;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .login-card { max-width: 420px; margin: 28px auto 0; }
+  .logo { display: block; max-width: 190px; height: auto; margin: 0 auto 12px; }
+  h1 { font-size: 22px; margin: 0 0 5px; }
+  h2 { font-size: 18px; margin: 0 0 10px; }
+  h3 { font-size: 16px; margin: 0 0 8px; }
+  p { color: #6b6860; line-height: 1.4; margin: 0 0 10px; }
+  label { display: block; font-size: 13px; font-weight: bold; margin: 10px 0 5px; }
+  input, select, textarea {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #ccc9c0;
+    border-radius: 6px;
+    background: #fff;
+    color: #1a1916;
+    font-size: 16px;
+  }
+  textarea { min-height: 72px; }
+  .btn {
+    display: inline-block;
+    min-height: 44px;
+    padding: 11px 14px;
+    border: 0;
+    border-radius: 6px;
+    background: #1f6b43;
+    color: #fff;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .btn-full { width: 100%; }
+  .btn-light { background: #fff; color: #1a1916; border: 1px solid #ccc9c0; }
+  .btn-danger { background: #fdf0ee; color: #8a2f26; border: 1px solid #f0c0bb; }
+  .btn-small { min-height: 38px; padding: 8px 10px; font-size: 14px; }
+  .btn:disabled { opacity: 0.65; }
+  .topbar {
+    background: #fff;
+    border-bottom: 1px solid #e2dfd8;
+    padding: 10px 14px;
+  }
+  .topbar-inner {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  .brand { overflow: hidden; }
+  .brand img { width: 130px; height: auto; float: left; margin-right: 10px; }
+  .brand-title { font-size: 18px; font-weight: bold; padding-top: 8px; }
+  .brand-sub { color: #6b6860; font-size: 13px; }
+  .tabs {
+    clear: both;
+    padding-top: 10px;
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+  .tab {
+    display: table-cell;
+    padding: 10px 5px;
+    border: 1px solid #ccc9c0;
+    background: #fff;
+    color: #1a1916;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .tab.active { background: #1f6b43; color: #fff; border-color: #1f6b43; }
+  .tab:first-child { border-radius: 6px 0 0 6px; }
+  .tab:last-child { border-radius: 0 6px 6px 0; }
+  .row { margin-left: -5px; margin-right: -5px; }
+  .row:after { content: ""; display: table; clear: both; }
+  .col { float: left; width: 50%; padding: 0 5px; }
+  .msg {
+    margin-top: 12px;
+    padding: 11px;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+  }
+  .ok { background: #e9f5ee; border: 1px solid #b5d8c4; color: #1f6b43; }
+  .err { background: #fdf0ee; border: 1px solid #f0c0bb; color: #8a2f26; }
+  .info { background: #f9f8f5; border: 1px solid #e2dfd8; color: #4b4943; }
+  .patient {
+    background: #fff;
+    border: 1px solid #e2dfd8;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .patient-head { overflow: hidden; margin-bottom: 6px; }
+  .patient-name { font-weight: bold; font-size: 17px; float: left; max-width: 68%; }
+  .code { float: right; font-family: monospace; color: #6b6860; }
+  .meta { color: #4b4943; font-size: 14px; line-height: 1.45; }
+  .badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    background: #faf4ee;
+    color: #7a4d1a;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  .empty { padding: 18px; text-align: center; color: #6b6860; }
+  .actions { margin-top: 10px; }
+  .actions .btn { margin-right: 6px; margin-bottom: 6px; }
+  .section-title {
+    border-bottom: 1px solid #e2dfd8;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  th, td {
+    border-bottom: 1px solid #e2dfd8;
+    text-align: left;
+    padding: 7px 6px;
+    vertical-align: top;
+  }
+  th { background: #f9f8f5; color: #6b6860; font-size: 11px; text-transform: uppercase; }
+  .print-header, .print-footer { display: none; }
+  .hidden { display: none; }
+
+  @media (max-width: 520px) {
+    .wrap { padding: 10px; }
+    .col { float: none; width: 100%; }
+    .patient-name { float: none; max-width: 100%; }
+    .code { float: none; display: block; margin-top: 3px; }
+    .brand img { width: 112px; }
+    .brand-title { font-size: 16px; }
+  }
+
+  @media print {
+    body { background: #fff; color: #111; }
+    .topbar, .no-print, #auth-screen { display: none !important; }
+    .wrap { max-width: none; padding: 0; }
+    .card { border: 0; padding: 0; margin: 0; }
+    .print-header {
+      display: block;
+      border-bottom: 2px solid #1f6b43;
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+    .print-header img { width: 150px; height: auto; float: left; }
+    .print-title { text-align: right; padding-top: 8px; }
+    .print-header:after { content: ""; display: table; clear: both; }
+    .print-footer {
+      display: block;
+      border-top: 1px solid #ccc;
+      margin-top: 16px;
+      padding-top: 8px;
+      font-size: 11px;
+      color: #555;
+    }
+    table { page-break-inside: auto; font-size: 11px; }
+    tr { page-break-inside: avoid; }
+    th, td { padding: 5px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="auth-screen" class="screen">
+  <div class="wrap">
+    <div class="card login-card">
+      <img class="logo" src="logo.png" alt="Clinica Morales">
+      <h1>Internamento</h1>
+      <p>Version tablet para equipos antiguos.</p>
+      <label for="login-user">Usuario</label>
+      <input id="login-user" type="text" autocomplete="username" placeholder="Ej: ignacio">
+      <label for="login-pass">Contrasena</label>
+      <input id="login-pass" type="password" autocomplete="current-password">
+      <button id="login-btn" class="btn btn-full" onclick="login()">Entrar</button>
+      <div id="auth-msg" class="msg info">Listo para iniciar sesion.</div>
+    </div>
+  </div>
+</div>
+
+<div id="app-screen" class="screen hidden">
+  <div class="topbar no-print">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img src="logo.png" alt="Clinica Morales">
+        <div class="brand-title">Internamento</div>
+        <div class="brand-sub" id="user-label">Tablet</div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" id="tab-pacientes" onclick="showTab('pacientes')">Internados</button>
+        <button class="tab" id="tab-resumen" onclick="showTab('resumen')">Resumen</button>
+        <button class="tab" onclick="logout()">Salir</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div id="page-pacientes">
+      <div class="card no-print">
+        <h1>Pacientes internados</h1>
+        <p id="patient-count">Cargando...</p>
+        <input id="search" type="text" placeholder="Buscar por nombre o codigo" onkeyup="renderPatients()">
+        <button class="btn btn-light btn-full" style="margin-top:10px" onclick="loadAll()">Actualizar</button>
+        <div id="main-msg"></div>
+      </div>
+      <div id="patient-list"></div>
+    </div>
+
+    <div id="page-resumen" class="hidden">
+      <div class="card no-print">
+        <h1>Resumen del dia</h1>
+        <div class="row">
+          <div class="col">
+            <label for="summary-date">Fecha</label>
+            <input id="summary-date" type="date">
+          </div>
+          <div class="col">
+            <label>&nbsp;</label>
+            <button class="btn btn-full" onclick="loadSummary()">Generar</button>
+          </div>
+        </div>
+        <button class="btn btn-light btn-full" style="margin-top:10px" onclick="printSummary()">Imprimir / Guardar PDF</button>
+        <div id="summary-msg"></div>
+      </div>
+      <div id="summary-content" class="card">
+        <div class="empty">Selecciona una fecha y genera el resumen.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL = 'https://jnkcheqzmlkyksnpyncz.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impua2NoZXF6bWxreWtzbnB5bmN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMDQzMzYsImV4cCI6MjA4OTU4MDMzNn0.fsJRCk7x4rJ3tPCbobpXI0PAvRi2qNodW51R9AowH68';
+
+var token = '';
+var userId = '';
+var profile = null;
+var allPacientes = [];
+var allAreas = [];
+var lastSummaryReady = false;
+
+function byId(id) { return document.getElementById(id); }
+
+function setBox(id, text, type) {
+  var el = byId(id);
+  if (!el) return;
+  if (!text) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="msg ' + (type || 'info') + '">' + esc(text) + '</div>';
+}
+
+function esc(v) {
+  if (v === null || v === undefined) return '';
+  return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function todayISO() {
+  var d = new Date();
+  var m = String(d.getMonth() + 1);
+  var day = String(d.getDate());
+  if (m.length < 2) m = '0' + m;
+  if (day.length < 2) day = '0' + day;
+  return d.getFullYear() + '-' + m + '-' + day;
+}
+
+function fmt(dateStr) {
+  if (!dateStr) return '-';
+  var p = dateStr.split('-');
+  if (p.length !== 3) return dateStr;
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+function request(method, url, headers, body, timeoutMs, callback) {
+  var done = false;
+  var xhr = new XMLHttpRequest();
+  var timer = setTimeout(function() {
+    if (done) return;
+    done = true;
+    try { xhr.abort(); } catch (e) {}
+    callback(new Error('Tiempo agotado. No se pudo conectar.'));
+  }, timeoutMs || 20000);
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4 || done) return;
+    done = true;
+    clearTimeout(timer);
+    var text = xhr.responseText || '';
+    var data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (e) {}
+    if (xhr.status >= 200 && xhr.status < 300) {
+      callback(null, data, xhr.status);
+    } else {
+      var msg = 'Error HTTP ' + xhr.status;
+      if (data && data.msg) msg = data.msg;
+      else if (data && data.message) msg = data.message;
+      else if (text) msg = text;
+      callback(new Error(msg), data, xhr.status);
+    }
+  };
+
+  try {
+    xhr.open(method, url, true);
+    for (var k in headers) {
+      if (headers.hasOwnProperty(k)) xhr.setRequestHeader(k, headers[k]);
+    }
+    xhr.send(body ? JSON.stringify(body) : null);
+  } catch (e) {
+    if (!done) {
+      done = true;
+      clearTimeout(timer);
+      callback(e);
+    }
+  }
+}
+
+function authHeaders() {
+  return {
+    apikey: SUPABASE_KEY,
+    Authorization: 'Bearer ' + token
+  };
+}
+
+function login() {
+  var usuario = byId('login-user').value.replace(/^\s+|\s+$/g, '');
+  var pass = byId('login-pass').value;
+  var email = usuario.indexOf('@') >= 0 ? usuario : usuario + '@clinica.internal';
+  if (!usuario || !pass) {
+    setBox('auth-msg', 'Completa usuario y contrasena.', 'err');
+    return;
+  }
+  byId('login-btn').disabled = true;
+  setBox('auth-msg', 'Verificando...', 'info');
+  request('POST', SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+    apikey: SUPABASE_KEY,
+    'Content-Type': 'application/json'
+  }, { email: email, password: pass }, 20000, function(err, data) {
+    if (err) {
+      byId('login-btn').disabled = false;
+      setBox('auth-msg', 'No se pudo iniciar sesion.\n' + err.message, 'err');
+      return;
+    }
+    token = data.access_token;
+    userId = data.user && data.user.id ? data.user.id : '';
+    try {
+      localStorage.setItem('tablet_token', token);
+      localStorage.setItem('tablet_user', userId);
+    } catch (e) {}
+    loadProfile();
+  });
+}
+
+function loadProfile() {
+  setBox('auth-msg', 'Leyendo perfil...', 'info');
+  request('GET', SUPABASE_URL + '/rest/v1/staff_profiles?select=nombre,rol&id=eq.' + encodeURIComponent(userId), authHeaders(), null, 20000, function(err, rows) {
+    byId('login-btn').disabled = false;
+    if (err) {
+      setBox('auth-msg', 'Login correcto, pero no se pudo leer perfil.\n' + err.message, 'err');
+      return;
+    }
+    if (!rows || !rows.length) {
+      setBox('auth-msg', 'Este usuario no tiene perfil de personal.', 'err');
+      return;
+    }
+    profile = rows[0];
+    byId('user-label').innerHTML = esc(profile.nombre + ' - ' + profile.rol);
+    byId('auth-screen').className = 'screen hidden';
+    byId('app-screen').className = 'screen';
+    byId('summary-date').value = todayISO();
+    loadAll();
+  });
+}
+
+function logout() {
+  token = '';
+  userId = '';
+  profile = null;
+  try {
+    localStorage.removeItem('tablet_token');
+    localStorage.removeItem('tablet_user');
+  } catch (e) {}
+  byId('app-screen').className = 'screen hidden';
+  byId('auth-screen').className = 'screen';
+}
+
+function restoreSession() {
+  try {
+    token = localStorage.getItem('tablet_token') || '';
+    userId = localStorage.getItem('tablet_user') || '';
+  } catch (e) {}
+  if (token && userId) loadProfile();
+}
+
+function showTab(name) {
+  byId('page-pacientes').className = name === 'pacientes' ? '' : 'hidden';
+  byId('page-resumen').className = name === 'resumen' ? '' : 'hidden';
+  byId('tab-pacientes').className = name === 'pacientes' ? 'tab active' : 'tab';
+  byId('tab-resumen').className = name === 'resumen' ? 'tab active' : 'tab';
+  if (name === 'resumen' && !lastSummaryReady) loadSummary();
+}
+
+function loadAll() {
+  setBox('main-msg', 'Cargando datos...', 'info');
+  loadAreas(function() {
+    loadPacientes(function() {
+      setBox('main-msg', '', 'info');
+      renderPatients();
+    });
+  });
+}
+
+function loadAreas(callback) {
+  request('GET', SUPABASE_URL + '/rest/v1/areas?select=id,nombre&order=nombre', authHeaders(), null, 20000, function(err, rows) {
+    if (err) {
+      setBox('main-msg', 'No se pudieron cargar areas.\n' + err.message, 'err');
+      return;
+    }
+    allAreas = rows || [];
+    if (callback) callback();
+  });
+}
+
+function loadPacientes(callback) {
+  var select = 'id,nombre,codigo,diagnostico,empresa,fecha_ingreso,fecha_egreso,area_id,motivo_egreso,notas,areas(nombre)';
+  request('GET', SUPABASE_URL + '/rest/v1/pacientes?select=' + encodeURIComponent(select) + '&order=fecha_ingreso.desc&limit=1000', authHeaders(), null, 25000, function(err, rows) {
+    if (err) {
+      setBox('main-msg', 'No se pudieron cargar pacientes.\n' + err.message, 'err');
+      return;
+    }
+    allPacientes = rows || [];
+    if (callback) callback();
+  });
+}
+
+function renderPatients() {
+  var q = byId('search').value.toLowerCase();
+  var list = [];
+  var i;
+  for (i = 0; i < allPacientes.length; i++) {
+    var p = allPacientes[i];
+    if (p.fecha_egreso) continue;
+    var hay = (p.nombre || '').toLowerCase() + ' ' + (p.codigo || '').toLowerCase() + ' ' + (p.diagnostico || '').toLowerCase();
+    if (q && hay.indexOf(q) < 0) continue;
+    list.push(p);
+  }
+  byId('patient-count').innerHTML = list.length + ' internado(s)';
+  if (!list.length) {
+    byId('patient-list').innerHTML = '<div class="card empty">No hay pacientes internados para mostrar.</div>';
+    return;
+  }
+  var html = '';
+  for (i = 0; i < list.length; i++) html += patientCard(list[i]);
+  byId('patient-list').innerHTML = html;
+}
+
+function patientCard(p) {
+  var area = p.areas && p.areas.nombre ? p.areas.nombre : 'Sin area';
+  return '' +
+    '<div class="patient">' +
+      '<div class="patient-head">' +
+        '<div class="patient-name">' + esc(p.nombre) + '</div>' +
+        '<div class="code">' + esc(p.codigo) + '</div>' +
+      '</div>' +
+      '<div class="meta">' +
+        '<b>Diagnostico:</b> ' + esc(p.diagnostico) + '<br>' +
+        '<b>Empresa:</b> ' + esc(p.empresa) + '<br>' +
+        '<b>Area:</b> <span class="badge">' + esc(area) + '</span><br>' +
+        '<b>Ingreso:</b> ' + fmt(p.fecha_ingreso) +
+      '</div>' +
+    '</div>';
+}
+
+function loadSummary() {
+  lastSummaryReady = false;
+  var fecha = byId('summary-date').value || todayISO();
+  byId('summary-date').value = fecha;
+  setBox('summary-msg', 'Generando resumen...', 'info');
+  loadPacientes(function() {
+    loadTraslados(fecha, function(traslados) {
+      renderSummary(fecha, traslados || []);
+      setBox('summary-msg', '', 'info');
+      lastSummaryReady = true;
+    });
+  });
+}
+
+function loadTraslados(fecha, callback) {
+  var start = encodeURIComponent(fecha + 'T00:00:00');
+  var end = encodeURIComponent(fecha + 'T23:59:59');
+  var select = 'motivo,fecha_traslado,paciente:paciente_id(nombre,codigo),origen:area_origen_id(nombre),destino:area_destino_id(nombre)';
+  var url = SUPABASE_URL + '/rest/v1/traslados?select=' + encodeURIComponent(select) + '&fecha_traslado=gte.' + start + '&fecha_traslado=lte.' + end + '&order=fecha_traslado';
+  request('GET', url, authHeaders(), null, 20000, function(err, rows) {
+    if (err) {
+      setBox('summary-msg', 'No se pudieron cargar traslados.\n' + err.message, 'err');
+      callback([]);
+      return;
+    }
+    callback(rows || []);
+  });
+}
+
+function renderSummary(fecha, traslados) {
+  var ingresos = [];
+  var egresos = [];
+  var internados = [];
+  var i;
+  for (i = 0; i < allPacientes.length; i++) {
+    var p = allPacientes[i];
+    if (p.fecha_ingreso === fecha) ingresos.push(p);
+    if (p.fecha_egreso === fecha) egresos.push(p);
+    if (p.fecha_ingreso <= fecha && (!p.fecha_egreso || p.fecha_egreso > fecha)) internados.push(p);
+  }
+  var html = '' +
+    '<div class="print-header">' +
+      '<img src="logo.png" alt="Clinica Morales">' +
+      '<div class="print-title"><h2>Resumen de Internamento</h2><p>' + fmt(fecha) + '</p></div>' +
+    '</div>' +
+    '<div class="section-title"><h2>Resumen de Internamento</h2><p>' + fmt(fecha) + '</p></div>' +
+    tablePatients('Ingresos', ingresos, ['Paciente','Codigo','Diagnostico','Empresa','Area'], 'Sin ingresos este dia') +
+    tablePatients('Egresos', egresos, ['Paciente','Codigo','Diagnostico','Empresa','Motivo'], 'Sin egresos este dia') +
+    tableTraslados('Traslados', traslados) +
+    tablePatients('Internados actuales', internados, ['Paciente','Codigo','Diagnostico','Area','Ingreso'], 'Sin pacientes internados') +
+    '<div class="print-footer">Clinica Morales MG, Lda - Sistema de Internamento - Generado el ' + fmt(todayISO()) + '</div>';
+  byId('summary-content').innerHTML = html;
+}
+
+function tablePatients(title, rows, cols, emptyText) {
+  var html = '<h3>' + esc(title) + ' (' + rows.length + ')</h3>';
+  if (!rows.length) return html + '<p>' + esc(emptyText) + '</p>';
+  html += '<table><thead><tr>';
+  var i;
+  for (i = 0; i < cols.length; i++) html += '<th>' + esc(cols[i]) + '</th>';
+  html += '</tr></thead><tbody>';
+  for (i = 0; i < rows.length; i++) {
+    var p = rows[i];
+    var area = p.areas && p.areas.nombre ? p.areas.nombre : '-';
+    html += '<tr>' +
+      '<td>' + esc(p.nombre) + '</td>' +
+      '<td>' + esc(p.codigo) + '</td>' +
+      '<td>' + esc(p.diagnostico) + '</td>';
+    if (title === 'Egresos') {
+      html += '<td>' + esc(p.empresa) + '</td><td>' + esc(p.motivo_egreso || p.notas || '-') + '</td>';
+    } else if (title === 'Internados actuales') {
+      html += '<td>' + esc(area) + '</td><td>' + fmt(p.fecha_ingreso) + '</td>';
+    } else {
+      html += '<td>' + esc(p.empresa) + '</td><td>' + esc(area) + '</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  return html;
+}
+
+function tableTraslados(title, rows) {
+  var html = '<h3>' + esc(title) + ' (' + rows.length + ')</h3>';
+  if (!rows.length) return html + '<p>Sin traslados este dia</p>';
+  html += '<table><thead><tr><th>Paciente</th><th>Codigo</th><th>Origen</th><th>Destino</th><th>Motivo</th></tr></thead><tbody>';
+  for (var i = 0; i < rows.length; i++) {
+    var t = rows[i];
+    html += '<tr>' +
+      '<td>' + esc(t.paciente && t.paciente.nombre ? t.paciente.nombre : '-') + '</td>' +
+      '<td>' + esc(t.paciente && t.paciente.codigo ? t.paciente.codigo : '-') + '</td>' +
+      '<td>' + esc(t.origen && t.origen.nombre ? t.origen.nombre : '-') + '</td>' +
+      '<td>' + esc(t.destino && t.destino.nombre ? t.destino.nombre : '-') + '</td>' +
+      '<td>' + esc(t.motivo || '-') + '</td>' +
+    '</tr>';
+  }
+  html += '</tbody></table>';
+  return html;
+}
+
+function printSummary() {
+  if (!lastSummaryReady) loadSummary();
+  setTimeout(function() { window.print(); }, 300);
+}
+
+restoreSession();
+</script>
+</body>
+</html>
