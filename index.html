@@ -968,7 +968,7 @@ let staffMap = {};
 async function loadPacientes() {
   const { data: staffData } = await sb.from('staff_profiles').select('id,nombre');
   staffMap = Object.fromEntries((staffData||[]).map(s=>[s.id,s.nombre]));
-  const { data } = await sb.from('pacientes').select('*, areas(nombre)').order('fecha_ingreso', { ascending: false });
+  const { data } = await sb.from('pacientes').select('*, areas(nombre)').order('fecha_ingreso', { ascending: false }).order('hora_ingreso', { ascending: false, nullsFirst: false });
   allPacientes = data || [];
   currentPage = 1;
   const activos = allPacientes.filter(p=>!p.fecha_egreso).length;
@@ -1011,7 +1011,7 @@ function renderTable(rows) {
         <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p.diagnostico}">${p.diagnostico}</td>
         <td>${p.empresa}</td>
         <td><span class="badge badge-area">${areaNombre}</span></td>
-        <td>${fmt(p.fecha_ingreso)}</td>
+        <td>${fmtIngreso(p)}</td>
         <td>${p.fecha_egreso ? fmt(p.fecha_egreso) : '—'}</td>
         <td><span class="badge ${activo?'badge-active':'badge-egress'}">${activo?'Internado':'Egresado'}</span></td>
         <td>
@@ -1122,7 +1122,7 @@ async function exportExcelFull(pacientes, suffix) {
     'Diagnóstico': p.diagnostico,
     'Empresa / Seguro': p.empresa,
     'Área': p.areas?.nombre || '',
-    'F. Ingreso': fmt(p.fecha_ingreso),
+    'F. Ingreso': fmtIngreso(p),
     'F. Egreso': p.fecha_egreso ? fmt(p.fecha_egreso) : '',
     'Estado': p.fecha_egreso ? 'Egresado' : 'Internado',
     'Notas': p.notas || ''
@@ -1163,7 +1163,7 @@ async function loadDashboard() {
 
   const recent = [...allPacientes].sort((a,b) => new Date(b.fecha_ingreso) - new Date(a.fecha_ingreso)).slice(0, 8);
   document.getElementById('dash-recent').innerHTML = `<thead><tr><th>Paciente</th><th>Área</th><th>Ingreso</th></tr></thead><tbody>${
-    recent.map(p=>`<tr><td style="font-weight:500">${p.nombre}</td><td><span class="badge badge-area" style="font-size:11px">${p.areas?.nombre||'—'}</span></td><td style="color:var(--text2)">${fmt(p.fecha_ingreso)}</td></tr>`).join('')
+    recent.map(p=>`<tr><td style="font-weight:500">${p.nombre}</td><td><span class="badge badge-area" style="font-size:11px">${p.areas?.nombre||'—'}</span></td><td style="color:var(--text2)">${fmtIngreso(p)}</td></tr>`).join('')
   }</tbody>`;
 
   const areaCount = {};
@@ -1541,7 +1541,7 @@ async function openDetalle(id) {
       <div class="stat-card"><div class="stat-label">Estado</div><div><span class="badge ${p.fecha_egreso?'badge-egress':'badge-active'}" style="font-size:14px;padding:5px 12px">${p.fecha_egreso?'Egresado':'Internado'}</span></div></div>
     </div>
     <table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem">
-      ${[['Paciente',p.nombre],['Diagnóstico',p.diagnostico],['Empresa',p.empresa],['Área actual',p.areas?.nombre||'—'],['Fecha ingreso',fmt(p.fecha_ingreso)],['Fecha egreso',p.fecha_egreso?fmt(p.fecha_egreso):'Aún internado'],['Notas',p.notas||'—']].map(([k,v])=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0;font-size:12px;color:var(--text2);font-weight:500;width:130px">${k}</td><td style="padding:8px 0;font-size:13px">${v}</td></tr>`).join('')}
+      ${[['Paciente',p.nombre],['Diagnóstico',p.diagnostico],['Empresa',p.empresa],['Área actual',p.areas?.nombre||'—'],['Fecha ingreso',fmtIngreso(p)],['Fecha egreso',p.fecha_egreso?fmt(p.fecha_egreso):'Aún internado'],['Notas',p.notas||'—']].map(([k,v])=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0;font-size:12px;color:var(--text2);font-weight:500;width:130px">${k}</td><td style="padding:8px 0;font-size:13px">${v}</td></tr>`).join('')}
     </table>
     <div style="font-weight:600;margin-bottom:0.75rem">Historial de traslados</div>
     ${traslados?.length ? `<div class="timeline">${traslados.map(t=>`<div class="timeline-item"><div class="timeline-date">${new Date(t.fecha_traslado).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div><div class="timeline-text">${t.origen?.nombre||'Sin área'} → <strong>${t.destino?.nombre||'—'}</strong>${t.motivo?` · <span style="color:var(--text2)">${t.motivo}</span>`:''}</div></div>`).join('')}</div>` : '<p style="color:var(--text3);font-size:13px">Sin traslados registrados.</p>'}
