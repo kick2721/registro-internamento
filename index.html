@@ -802,6 +802,7 @@
       </div>
       <div class="form-row">
         <div class="form-group"><label>Fecha de ingreso</label><input type="date" id="p-ingreso"></div>
+        <div class="form-group"><label>Hora de ingreso</label><input type="time" id="p-hora-ingreso"></div>
         <div class="form-group" id="egreso-field-wrap"><label>Fecha de egreso</label><input type="date" id="p-egreso"></div>
       </div>
       <div class="form-group"><label>Notas</label><textarea id="p-notas" rows="2" placeholder="Observaciones adicionales..."></textarea></div>
@@ -1077,6 +1078,12 @@ function fmt(dateStr) {
   if (!dateStr) return '—';
   const [y,m,d] = dateStr.split('-');
   return `${d}/${m}/${y}`;
+}
+
+function fmtIngreso(p) {
+  const fecha = fmt(p?.fecha_ingreso);
+  const hora = p?.hora_ingreso ? String(p.hora_ingreso).slice(0,5) : '';
+  return hora ? `${fecha} ${hora}` : fecha;
 }
 
 function filterTable() {
@@ -1387,6 +1394,7 @@ function openModalNuevo() {
   document.getElementById('seguro-nombre-wrap').style.display = 'none';
   document.getElementById('p-area').value = '';
   document.getElementById('p-ingreso').value = new Date().toISOString().split('T')[0];
+  document.getElementById('p-hora-ingreso').value = '';
   document.getElementById('p-egreso').value = '';
   document.getElementById('egreso-field-wrap').style.display = 'none';
   document.getElementById('modal-msg').innerHTML = '';
@@ -1408,6 +1416,7 @@ function openModalEditar(id) {
   document.getElementById('p-empresa').value = esParticular ? '' : p.empresa;
   document.getElementById('p-area').value = p.area_id || '';
   document.getElementById('p-ingreso').value = p.fecha_ingreso;
+  document.getElementById('p-hora-ingreso').value = p.hora_ingreso ? String(p.hora_ingreso).slice(0,5) : '';
   document.getElementById('p-egreso').value = p.fecha_egreso || '';
   document.getElementById('p-notas').value = p.notas || '';
   document.getElementById('modal-msg').innerHTML = '';
@@ -1427,11 +1436,15 @@ async function savePaciente() {
     empresa: document.getElementById('p-empresa-tipo').value === 'Particular' ? 'Particular' : (document.getElementById('p-empresa').value.trim() || 'Asegurado'),
     area_id: selectedArea || currentPaciente?.area_id || null,
     fecha_ingreso: document.getElementById('p-ingreso').value,
+    hora_ingreso: document.getElementById('p-hora-ingreso').value || null,
     fecha_egreso: selectedEgreso || null,
     notas: document.getElementById('p-notas').value.trim() || null,
   };
   if (!payload.nombre||!payload.codigo||!payload.diagnostico||!payload.empresa||!payload.fecha_ingreso) {
     msgEl.innerHTML = '<div class="msg msg-error">Completa los campos obligatorios.</div>'; return;
+  }
+  if (!id && !payload.hora_ingreso) {
+    msgEl.innerHTML = '<div class="msg msg-error">Agrega la hora de ingreso.</div>'; return;
   }
   if (!payload.fecha_egreso && !payload.area_id) {
     msgEl.innerHTML = '<div class="msg msg-error">Selecciona un Ã¡rea para pacientes internados.</div>'; return;
@@ -1619,7 +1632,7 @@ async function exportarResumenExcel() {
   wsTra['!cols'] = [30,12,18,18,30].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb, wsTra, 'Traslados');
 
-  const intData = internados.map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Área':p.areas?.nombre||'—','F. Ingreso':fmt(p.fecha_ingreso)}));
+  const intData = internados.map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Área':p.areas?.nombre||'—','F. Ingreso':fmtIngreso(p)}));
   const wsInt = XLSX.utils.json_to_sheet(intData.length ? intData : empty(`Sin pacientes internados el ${fechaLabel}`));
   wsInt['!cols'] = [30,12,35,15,12].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb, wsInt, 'Internados');
@@ -1693,7 +1706,7 @@ async function loadResumen() {
   const internados = allPacientes.filter(p => p.fecha_ingreso <= fecha && (!p.fecha_egreso || p.fecha_egreso > fecha));
   const internadosRows = { data: internados.sort((a,b)=>a.fecha_ingreso?.localeCompare(b.fecha_ingreso)).map(p => {
     const dias = Math.floor((new Date(fecha) - new Date(p.fecha_ingreso)) / 86400000);
-    return { __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#858079">${p.codigo}</td><td style="padding:8px 10px;color:#4b4943">${p.diagnostico}</td><td style="padding:7px 8px"><span class="badge badge-area" style="max-width:100%;white-space:normal;line-height:1.15;text-align:left">${p.areas?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#77736b;white-space:nowrap">${fmt(p.fecha_ingreso)}</td><td style="padding:8px 10px;font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap">${dias >= 0 ? dias+'d' : '—'}</td></tr>` };
+    return { __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#858079">${p.codigo}</td><td style="padding:8px 10px;color:#4b4943">${p.diagnostico}</td><td style="padding:7px 8px"><span class="badge badge-area" style="max-width:100%;white-space:normal;line-height:1.15;text-align:left">${p.areas?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#77736b;white-space:nowrap">${fmtIngreso(p)}</td><td style="padding:8px 10px;font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap">${dias >= 0 ? dias+'d' : '—'}</td></tr>` };
   }) };
   const ni = ingresos.data?.length||0, ne = egresos.data?.length||0, nt = traslados.data?.length||0, nint = internados.length;
   document.getElementById('resumen-content').innerHTML = `

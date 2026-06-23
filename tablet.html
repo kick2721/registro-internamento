@@ -241,7 +241,7 @@
       <div class="row"><div class="col"><label>Nombre completo</label><input id="p-nombre" type="text"></div><div class="col"><label>Codigo</label><input id="p-codigo" type="text"></div></div>
       <label>Diagnostico</label><input id="p-diagnostico" type="text">
       <div class="row"><div class="col"><label>Cobertura</label><select id="p-empresa-tipo" onchange="toggleSeguro()"><option value="Particular">Particular</option><option value="asegurado">Asegurado</option></select></div><div class="col" id="seguro-wrap"><label>Nombre del seguro</label><input id="p-empresa" type="text" placeholder="Ej: ENSA"></div></div>
-      <div class="row"><div class="col"><label>Area</label><select id="p-area"></select></div><div class="col"><label>Fecha de ingreso</label><input id="p-ingreso" type="date"></div></div>
+      <div class="row"><div class="col"><label>Area</label><select id="p-area"></select></div><div class="col"><label>Fecha de ingreso</label><input id="p-ingreso" type="date"></div><div class="col"><label>Hora de ingreso</label><input id="p-hora-ingreso" type="time"></div></div>
       <div id="p-egreso-wrap"><label>Fecha de egreso</label><input id="p-egreso" type="date"></div>
       <label>Notas</label><textarea id="p-notas"></textarea>
       <div id="patient-msg"></div>
@@ -345,6 +345,7 @@ function removeClass(el, c) { el.className = trim((' ' + el.className + ' ').rep
 function setBox(id, text, type) { var el = byId(id); if (!el) return; if (!text) { el.innerHTML = ''; return; } el.innerHTML = '<div class="msg ' + (type || 'info') + '">' + esc(text) + '</div>'; }
 function todayISO() { var d = new Date(); var m = String(d.getMonth() + 1); var day = String(d.getDate()); if (m.length < 2) m = '0' + m; if (day.length < 2) day = '0' + day; return d.getFullYear() + '-' + m + '-' + day; }
 function fmt(dateStr) { if (!dateStr) return '-'; var p = String(dateStr).split('-'); if (p.length !== 3) return dateStr; return p[2] + '/' + p[1] + '/' + p[0]; }
+function fmtIngreso(p) { var fecha = fmt(p && p.fecha_ingreso ? p.fecha_ingreso : ''); var hora = p && p.hora_ingreso ? String(p.hora_ingreso).slice(0, 5) : ''; return hora ? fecha + ' ' + hora : fecha; }
 function findPatient(id) { for (var i = 0; i < allPacientes.length; i++) if (allPacientes[i].id === id) return allPacientes[i]; return null; }
 function findArea(id) { for (var i = 0; i < allAreas.length; i++) if (allAreas[i].id === id) return allAreas[i]; return null; }
 function areaName(p) { return p && p.areas && p.areas.nombre ? p.areas.nombre : 'Sin area'; }
@@ -505,7 +506,7 @@ function loadAreas(callback) {
 }
 
 function loadPacientes(callback) {
-  var select = 'id,nombre,codigo,diagnostico,empresa,fecha_ingreso,fecha_egreso,area_id,motivo_egreso,notas,registrado_por,created_at,updated_at,areas(nombre)';
+  var select = 'id,nombre,codigo,diagnostico,empresa,fecha_ingreso,hora_ingreso,fecha_egreso,area_id,motivo_egreso,notas,registrado_por,created_at,updated_at,areas(nombre)';
   rest('pacientes?select=' + encodeURIComponent(select) + '&order=fecha_ingreso.desc&limit=1500', function(err, rows) {
     if (err) { setBox('main-msg', 'No se pudieron cargar pacientes.\n' + err.message, 'err'); return; }
     allPacientes = rows || [];
@@ -642,6 +643,7 @@ function openPatientModal(id) {
   byId('p-empresa').value = particular ? '' : p.empresa || '';
   byId('p-area').value = isEdit ? p.area_id || '' : '';
   byId('p-ingreso').value = isEdit ? p.fecha_ingreso || todayISO() : todayISO();
+  byId('p-hora-ingreso').value = isEdit && p.hora_ingreso ? String(p.hora_ingreso).slice(0, 5) : '';
   byId('p-egreso').value = isEdit ? p.fecha_egreso || '' : '';
   byId('p-egreso-wrap').className = isEdit && p.fecha_egreso ? '' : 'hidden';
   byId('p-notas').value = isEdit ? p.notas || '' : '';
@@ -660,10 +662,12 @@ function savePatient() {
     empresa: byId('p-empresa-tipo').value === 'Particular' ? 'Particular' : (trim(byId('p-empresa').value) || 'Asegurado'),
     area_id: byId('p-area').value || (current ? current.area_id : null) || null,
     fecha_ingreso: byId('p-ingreso').value,
+    hora_ingreso: byId('p-hora-ingreso').value || null,
     fecha_egreso: byId('p-egreso').value || null,
     notas: trim(byId('p-notas').value) || null
   };
   if (!payload.nombre || !payload.codigo || !payload.diagnostico || !payload.empresa || !payload.fecha_ingreso) { setBox('patient-msg', 'Completa los campos obligatorios.', 'err'); return; }
+  if (!id && !payload.hora_ingreso) { setBox('patient-msg', 'Agrega la hora de ingreso.', 'err'); return; }
   if (!payload.fecha_egreso && !payload.area_id) { setBox('patient-msg', 'Selecciona un area para pacientes internados.', 'err'); return; }
   validateCode(id, payload.codigo, function(ok) {
     if (!ok) return;
@@ -929,7 +933,7 @@ function tablePatients(title, rows, type) {
     var p = rows[i];
     html += '<tr style="border-bottom:1px solid var(--border)">' + td(p.nombre, 'font-weight:700;color:#111') + td(p.codigo, 'font-family:monospace;color:#858079') + td(p.diagnostico, 'color:#4b4943');
     if (type === 'egresos') html += td(p.empresa, '') + td(p.motivo_egreso || p.notas || '-', '');
-    else if (type === 'internados') html += areaCell(areaName(p)) + td(fmt(p.fecha_ingreso), 'color:#77736b;white-space:nowrap') + td(daysBetween(p.fecha_ingreso, lastSummaryData.fecha), 'font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap');
+    else if (type === 'internados') html += areaCell(areaName(p)) + td(fmtIngreso(p), 'color:#77736b;white-space:nowrap') + td(daysBetween(p.fecha_ingreso, lastSummaryData.fecha), 'font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap');
     else html += td(p.empresa, '') + '<td style="padding:8px 10px"><span class="badge badge-area">' + esc(areaName(p)) + '</span></td>';
     html += '</tr>';
   }
@@ -1013,7 +1017,7 @@ function exportSummaryCsv() {
   for (i = 0; i < lastSummaryData.ingresos.length; i++) rows.push(['Ingresos', lastSummaryData.ingresos[i].codigo, lastSummaryData.ingresos[i].nombre, lastSummaryData.ingresos[i].diagnostico, lastSummaryData.ingresos[i].empresa, areaName(lastSummaryData.ingresos[i]), fmt(lastSummaryData.ingresos[i].fecha_ingreso)]);
   for (i = 0; i < lastSummaryData.egresos.length; i++) rows.push(['Egresos', lastSummaryData.egresos[i].codigo, lastSummaryData.egresos[i].nombre, lastSummaryData.egresos[i].diagnostico, lastSummaryData.egresos[i].empresa, lastSummaryData.egresos[i].motivo_egreso || '', fmt(lastSummaryData.egresos[i].fecha_egreso)]);
   for (i = 0; i < lastSummaryData.traslados.length; i++) rows.push(['Traslados', lastSummaryData.traslados[i].paciente && lastSummaryData.traslados[i].paciente.codigo ? lastSummaryData.traslados[i].paciente.codigo : '', lastSummaryData.traslados[i].paciente && lastSummaryData.traslados[i].paciente.nombre ? lastSummaryData.traslados[i].paciente.nombre : '', '', lastSummaryData.traslados[i].origen && lastSummaryData.traslados[i].origen.nombre ? lastSummaryData.traslados[i].origen.nombre : '', lastSummaryData.traslados[i].destino && lastSummaryData.traslados[i].destino.nombre ? lastSummaryData.traslados[i].destino.nombre : '', lastSummaryData.traslados[i].motivo || '']);
-  for (i = 0; i < lastSummaryData.internados.length; i++) rows.push(['Internados actuales', lastSummaryData.internados[i].codigo, lastSummaryData.internados[i].nombre, lastSummaryData.internados[i].diagnostico, '', areaName(lastSummaryData.internados[i]), fmt(lastSummaryData.internados[i].fecha_ingreso)]);
+  for (i = 0; i < lastSummaryData.internados.length; i++) rows.push(['Internados actuales', lastSummaryData.internados[i].codigo, lastSummaryData.internados[i].nombre, lastSummaryData.internados[i].diagnostico, '', areaName(lastSummaryData.internados[i]), fmtIngreso(lastSummaryData.internados[i])]);
   downloadCsv('Resumen_' + lastSummaryData.fecha + '.csv', rows);
 }
 function csvCell(v) { return '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"'; }
