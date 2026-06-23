@@ -375,6 +375,39 @@
   .timeline-item::before { content: ''; position: absolute; left: -17px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
   .timeline-date { font-size: 11px; color: var(--text3); margin-bottom: 2px; }
   .timeline-text { font-size: 13px; }
+
+  /* High contrast for older eyes */
+  body,
+  p,
+  label,
+  input,
+  select,
+  textarea,
+  table,
+  th,
+  td,
+  .page-subtitle,
+  .stat-label,
+  .stat-sub,
+  .nav-section,
+  .nav-item,
+  .user-role,
+  .code,
+  .badge,
+  .timeline-date,
+  .timeline-text,
+  .empty-row td,
+  #resumen-content,
+  #resumen-content * {
+    color: #000 !important;
+  }
+  th,
+  .form-group label,
+  .stat-label,
+  .nav-section,
+  .badge {
+    font-weight: 700 !important;
+  }
 </style>
 </head>
 <body>
