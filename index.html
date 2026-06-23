@@ -19,8 +19,8 @@
     --border: #e2dfd8;
     --border2: #ccc9c0;
     --text: #1a1916;
-    --text2: #6b6860;
-    --text3: #9b9890;
+    --text2: #34322e;
+    --text3: #4d4a43;
     --accent: #1a5c3a;
     --accent-light: #e8f4ed;
     --accent-mid: #2d7a50;
@@ -354,6 +354,18 @@
     .badge, .table-wrap { background: none !important; border: none !important; box-shadow: none !important; padding: 0 !important; border-radius: 0 !important; }
   }
   .resumen-print-header, .resumen-print-footer { display: none; }
+  #resumen-content,
+  #resumen-content table,
+  #resumen-content td {
+    color: var(--text) !important;
+  }
+  #resumen-content th,
+  #resumen-content .resumen-print-header-right p,
+  #resumen-content .resumen-print-footer,
+  #resumen-content .empty-msg,
+  #resumen-content p {
+    color: var(--text2) !important;
+  }
 
   /* TIMELINE */
   .timeline { position: relative; padding-left: 20px; }
