@@ -19,8 +19,8 @@
     --border: #e2dfd8;
     --border2: #ccc9c0;
     --text: #1a1916;
-    --text2: #34322e;
-    --text3: #4d4a43;
+    --text2: #1a1916;
+    --text3: #1a1916;
     --accent: #1a5c3a;
     --accent-light: #e8f4ed;
     --accent-mid: #2d7a50;
@@ -200,6 +200,7 @@
   .badge-egress { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
   .badge-transfer { background: var(--info-light); color: var(--info); }
   .badge-area { background: var(--warn-light); color: var(--warn); }
+  .badge-active, .badge-egress, .badge-transfer, .badge-area { color: var(--text) !important; }
 
   /* ACTIONS ROW */
   .row-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
@@ -330,25 +331,25 @@
     .resumen-print-header img { height: 48px; }
     .resumen-print-header-right { text-align: right; }
     .resumen-print-header-right h2 { font-size: 16px; font-weight: 700; color: #1a1916; margin: 0; }
-    .resumen-print-header-right p { font-size: 12px; color: #6b6860; margin: 2px 0 0; }
+    .resumen-print-header-right p { font-size: 12px; color: #1a1916; margin: 2px 0 0; }
 
     .resumen-section { margin-bottom: 24px; page-break-inside: avoid; }
     .resumen-section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #1a5c3a; border-bottom: 1px solid #e2dfd8; padding-bottom: 6px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
     .resumen-section-title .count { background: #e8f4ed; color: #1a5c3a; border-radius: 20px; padding: 1px 8px; font-size: 12px; }
-    .resumen-section-title.egresos { color: #6b6860; }
-    .resumen-section-title.egresos .count { background: #f4f2ee; color: #6b6860; }
+    .resumen-section-title.egresos { color: #1a1916; }
+    .resumen-section-title.egresos .count { background: #f4f2ee; color: #1a1916; }
     .resumen-section-title.traslados { color: #1a4d7a; }
     .resumen-section-title.traslados .count { background: #eef4fb; color: #1a4d7a; }
 
     .resumen-section table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .resumen-section thead th { background: #f9f8f5 !important; padding: 7px 10px; text-align: left; font-size: 10px; font-weight: 700; color: #6b6860; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2dfd8; }
+    .resumen-section thead th { background: #f9f8f5 !important; padding: 7px 10px; text-align: left; font-size: 10px; font-weight: 700; color: #1a1916; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2dfd8; }
     .resumen-section tbody td { padding: 7px 10px; border-bottom: 1px solid #f0ede8; color: #1a1916; }
     .resumen-section tbody tr { page-break-inside: avoid; }
     .resumen-section tbody tr:last-child td { border-bottom: none; }
     .resumen-section thead { display: table-header-group; }
-    .resumen-section .empty-msg { font-size: 12px; color: #9b9890; font-style: italic; padding: 8px 0; }
+    .resumen-section .empty-msg { font-size: 12px; color: #1a1916; font-style: italic; padding: 8px 0; }
 
-    .resumen-print-footer { margin-top: 32px; border-top: 1px solid #e2dfd8; padding-top: 10px; font-size: 10px; color: #9b9890; display: flex !important; justify-content: space-between; }
+    .resumen-print-footer { margin-top: 32px; border-top: 1px solid #e2dfd8; padding-top: 10px; font-size: 10px; color: #1a1916; display: flex !important; justify-content: space-between; }
 
     /* Hide web-style elements */
     .badge, .table-wrap { background: none !important; border: none !important; box-shadow: none !important; padding: 0 !important; border-radius: 0 !important; }
@@ -1706,19 +1707,19 @@ async function loadResumen() {
   const mkTable = (cols, rows, empty, type) => rows?.data?.length
     ? `<table style="width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed">
         ${colGroup(type)}
-        <thead><tr>${cols.map((c,i)=>`<th style="text-align:${type==='internados'&&i===5?'right':'left'};padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10.5px;font-weight:700;color:#77736b;text-transform:uppercase">${c}</th>`).join('')}</tr></thead>
+        <thead><tr>${cols.map((c,i)=>`<th style="text-align:${type==='internados'&&i===5?'right':'left'};padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10.5px;font-weight:700;color:#1a1916;text-transform:uppercase">${c}</th>`).join('')}</tr></thead>
         <tbody>${rows.data.map(r=>r.__row).join('')}</tbody>
        </table>`
     : `<p style="color:var(--text3);font-size:13px;padding:1rem 0">${empty}</p>`;
 
-  const ingresosRows = { data: (ingresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#858079">${p.codigo}</td><td style="padding:8px 10px;color:#4b4943">${p.diagnostico}</td><td style="padding:8px 10px;color:#77736b">${p.empresa}</td><td style="padding:8px 10px"><span class="badge badge-area">${p.areas?.nombre||'—'}</span></td></tr>` })) };
-  const egresosRows = { data: (egresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#858079">${p.codigo}</td><td style="padding:8px 10px;color:#4b4943">${p.diagnostico}</td><td style="padding:8px 10px;color:#77736b">${p.empresa}</td><td style="padding:8px 10px">${p.motivo_egreso||'—'}</td></tr>` })) };
-  const trasladosRows = { data: (traslados.data||[]).map(t => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${t.paciente?.nombre||'—'}</td><td style="padding:8px 10px;font-family:monospace;color:#858079">${t.paciente?.codigo||'—'}</td><td style="padding:8px 10px"><span class="badge badge-egress">${t.origen?.nombre||'—'}</span></td><td style="padding:8px 10px"><span class="badge badge-area">${t.destino?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#77736b">${t.motivo||'—'}</td></tr>` })) };
+  const ingresosRows = { data: (ingresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:8px 10px;color:#1a1916">${p.empresa}</td><td style="padding:8px 10px"><span class="badge badge-area">${p.areas?.nombre||'—'}</span></td></tr>` })) };
+  const egresosRows = { data: (egresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:8px 10px;color:#1a1916">${p.empresa}</td><td style="padding:8px 10px">${p.motivo_egreso||'—'}</td></tr>` })) };
+  const trasladosRows = { data: (traslados.data||[]).map(t => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${t.paciente?.nombre||'—'}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${t.paciente?.codigo||'—'}</td><td style="padding:8px 10px"><span class="badge badge-egress">${t.origen?.nombre||'—'}</span></td><td style="padding:8px 10px"><span class="badge badge-area">${t.destino?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#1a1916">${t.motivo||'—'}</td></tr>` })) };
 
   const internados = allPacientes.filter(p => p.fecha_ingreso <= fecha && (!p.fecha_egreso || p.fecha_egreso > fecha));
   const internadosRows = { data: internados.sort((a,b)=>a.fecha_ingreso?.localeCompare(b.fecha_ingreso)).map(p => {
     const dias = Math.floor((new Date(fecha) - new Date(p.fecha_ingreso)) / 86400000);
-    return { __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#858079">${p.codigo}</td><td style="padding:8px 10px;color:#4b4943">${p.diagnostico}</td><td style="padding:7px 8px"><span class="badge badge-area" style="max-width:100%;white-space:normal;line-height:1.15;text-align:left">${p.areas?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#77736b;white-space:nowrap">${fmtIngreso(p)}</td><td style="padding:8px 10px;font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap">${dias >= 0 ? dias+'d' : '—'}</td></tr>` };
+    return { __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:7px 8px"><span class="badge badge-area" style="max-width:100%;white-space:normal;line-height:1.15;text-align:left">${p.areas?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#1a1916;white-space:nowrap">${fmtIngreso(p)}</td><td style="padding:8px 10px;font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap">${dias >= 0 ? dias+'d' : '—'}</td></tr>` };
   }) };
   const ni = ingresos.data?.length||0, ne = egresos.data?.length||0, nt = traslados.data?.length||0, nint = internados.length;
   document.getElementById('resumen-content').innerHTML = `
@@ -1726,7 +1727,7 @@ async function loadResumen() {
       <img src="logo.png" alt="Logo" style="height:48px;width:auto;max-width:160px;object-fit:contain">
       <div class="resumen-print-header-right" style="text-align:right">
         <h2 style="font-size:16px;font-weight:700;color:#1a1916;margin:0">Resumen de Internamento</h2>
-        <p style="font-size:12px;color:#6b6860;margin:2px 0 0">${fechaLabel}</p>
+        <p style="font-size:12px;color:#1a1916;margin:2px 0 0">${fechaLabel}</p>
       </div>
     </div>
 

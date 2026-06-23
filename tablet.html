@@ -7,7 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   * { box-sizing: border-box; }
-  :root { --surface2: #f9f8f5; --border: #e2dfd8; --text2: #34322e; --text3: #4d4a43; }
+  :root { --surface2: #f9f8f5; --border: #e2dfd8; --text2: #1a1916; --text3: #1a1916; }
   body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #f4f2ee; color: #1a1916; font-size: 15px; }
   button, input, select, textarea { font-family: Arial, Helvetica, sans-serif; }
   h1 { font-size: 22px; margin: 0 0 5px; }
@@ -49,7 +49,7 @@
   .msg { margin-top: 12px; padding: 11px; border-radius: 6px; font-size: 14px; line-height: 1.4; white-space: pre-wrap; }
   .ok { background: #e9f5ee; border: 1px solid #b5d8c4; color: #1f6b43; }
   .err { background: #fdf0ee; border: 1px solid #f0c0bb; color: #8a2f26; }
-  .info { background: #f9f8f5; border: 1px solid #e2dfd8; color: #4b4943; }
+  .info { background: #f9f8f5; border: 1px solid #e2dfd8; color: #1a1916; }
   .stat { float: left; width: 25%; padding: 0 5px; margin-bottom: 10px; }
   .stat-box { background: #fff; border: 1px solid #e2dfd8; border-left: 4px solid #1f6b43; border-radius: 8px; padding: 12px; }
   .stat-label { color: var(--text2); font-size: 12px; font-weight: bold; }
@@ -59,14 +59,14 @@
   .patient-name { font-weight: bold; font-size: 17px; float: left; max-width: 68%; }
   .code { float: right; font-family: monospace; color: var(--text2); }
   .inline-code { display: block; margin-top: 3px; font-family: monospace; color: var(--text2); }
-  .meta { color: #2d2b27; font-size: 14px; line-height: 1.45; }
-  .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; background: #faf4ee; color: #7a4d1a; font-size: 12px; font-weight: bold; }
-  .badge-ok { background: #e9f5ee; color: #1f6b43; }
+  .meta { color: #1a1916; font-size: 14px; line-height: 1.45; }
+  .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; background: #faf4ee; color: #1a1916; font-size: 12px; font-weight: bold; }
+  .badge-ok { background: #e9f5ee; color: #1a1916; }
   .badge-off { background: #f4f2ee; color: var(--text2); }
-  .badge-active { background: #e8f4ed; color: #1a5c3a; }
+  .badge-active { background: #e8f4ed; color: #1a1916; }
   .badge-egress { background: #f4f2ee; color: var(--text2); }
-  .badge-transfer { background: #eef4fb; color: #1a4d7a; }
-  .badge-area { background: #fef9ec; color: #b7770d; }
+  .badge-transfer { background: #eef4fb; color: #1a1916; }
+  .badge-area { background: #fef9ec; color: #1a1916; }
   .empty { padding: 18px; text-align: center; color: var(--text2); }
   .table-wrap { background: #fff; border: 1px solid #e2dfd8; border-radius: 8px; overflow: hidden; }
   .resumen-print-header, .resumen-print-footer { display: none; }
@@ -918,12 +918,12 @@ function renderSummary(fecha, traslados) {
   lastSummaryData = { fecha: fecha, ingresos: ingresos, egresos: egresos, traslados: traslados, internados: internados };
   var html = '<div class="resumen-print-header" style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #1a5c3a;padding-bottom:12px;margin-bottom:24px">';
   html += '<img src="logo.png" alt="Logo" style="height:48px;width:auto;max-width:160px;object-fit:contain">';
-  html += '<div class="resumen-print-header-right" style="text-align:right"><h2 style="font-size:16px;font-weight:700;color:#1a1916;margin:0">Resumen de Internamento</h2><p style="font-size:12px;color:#6b6860;margin:2px 0 0">' + fechaLabel + '</p></div></div>';
+  html += '<div class="resumen-print-header-right" style="text-align:right"><h2 style="font-size:16px;font-weight:700;color:#1a1916;margin:0">Resumen de Internamento</h2><p style="font-size:12px;color:#1a1916;margin:2px 0 0">' + fechaLabel + '</p></div></div>';
   html += tablePatients('Ingresos', ingresos, 'ingresos');
   html += tablePatients('Egresos', egresos, 'egresos');
   html += tableTransfers('Traslados', traslados);
   html += tablePatients('Internados actuales', internados, 'internados');
-  html += '<div class="resumen-print-footer" style="margin-top:32px;border-top:1px solid #e2dfd8;padding-top:10px;font-size:10px;color:#9b9890;display:flex;justify-content:space-between">';
+  html += '<div class="resumen-print-footer" style="margin-top:32px;border-top:1px solid #e2dfd8;padding-top:10px;font-size:10px;color:#1a1916;display:flex;justify-content:space-between">';
   html += '<span>Clinica Morales MG, Lda - Sistema de Internamento</span><span>Generado el ' + formatDateTime(new Date()) + '</span></div>';
   byId('summary-content').innerHTML = html;
 }
@@ -942,9 +942,9 @@ function tablePatients(title, rows, type) {
   html += '</tr></thead><tbody>';
   for (var i = 0; i < rows.length; i++) {
     var p = rows[i];
-    html += '<tr style="border-bottom:1px solid var(--border)">' + td(p.nombre, 'font-weight:700;color:#111') + td(p.codigo, 'font-family:monospace;color:#858079') + td(p.diagnostico, 'color:#4b4943');
+    html += '<tr style="border-bottom:1px solid var(--border)">' + td(p.nombre, 'font-weight:700;color:#111') + td(p.codigo, 'font-family:monospace;color:#1a1916') + td(p.diagnostico, 'color:#1a1916');
     if (type === 'egresos') html += td(p.empresa, '') + td(p.motivo_egreso || p.notas || '-', '');
-    else if (type === 'internados') html += areaCell(areaName(p)) + td(fmtIngreso(p), 'color:#77736b;white-space:nowrap') + td(daysBetween(p.fecha_ingreso, lastSummaryData.fecha), 'font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap');
+    else if (type === 'internados') html += areaCell(areaName(p)) + td(fmtIngreso(p), 'color:#1a1916;white-space:nowrap') + td(daysBetween(p.fecha_ingreso, lastSummaryData.fecha), 'font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap');
     else html += td(p.empresa, '') + '<td style="padding:8px 10px"><span class="badge badge-area">' + esc(areaName(p)) + '</span></td>';
     html += '</tr>';
   }
@@ -959,7 +959,7 @@ function tableTransfers(title, rows) {
   html += '<table style="width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed"><colgroup><col style="width:27%"><col style="width:13%"><col style="width:19%"><col style="width:19%"><col style="width:22%"></colgroup><thead><tr>' + th('Paciente') + th('Codigo') + th('Area origen') + th('Area destino') + th('Motivo') + '</tr></thead><tbody>';
   for (var i = 0; i < rows.length; i++) {
     var t = rows[i];
-    html += '<tr style="border-bottom:1px solid var(--border)">' + td(t.paciente && t.paciente.nombre ? t.paciente.nombre : '-', 'font-weight:700;color:#111') + td(t.paciente && t.paciente.codigo ? t.paciente.codigo : '-', 'font-family:monospace;color:#858079') + '<td style="padding:8px 10px"><span class="badge badge-egress">' + esc(t.origen && t.origen.nombre ? t.origen.nombre : '-') + '</span></td><td style="padding:8px 10px"><span class="badge badge-area">' + esc(t.destino && t.destino.nombre ? t.destino.nombre : '-') + '</span></td>' + td(t.motivo || '-', 'color:#77736b') + '</tr>';
+    html += '<tr style="border-bottom:1px solid var(--border)">' + td(t.paciente && t.paciente.nombre ? t.paciente.nombre : '-', 'font-weight:700;color:#111') + td(t.paciente && t.paciente.codigo ? t.paciente.codigo : '-', 'font-family:monospace;color:#1a1916') + '<td style="padding:8px 10px"><span class="badge badge-egress">' + esc(t.origen && t.origen.nombre ? t.origen.nombre : '-') + '</span></td><td style="padding:8px 10px"><span class="badge badge-area">' + esc(t.destino && t.destino.nombre ? t.destino.nombre : '-') + '</span></td>' + td(t.motivo || '-', 'color:#1a1916') + '</tr>';
   }
   html += '</tbody></table></div>';
   return html;
@@ -969,7 +969,7 @@ function colGroup(type) {
   if (type === 'egresos') return '<colgroup><col style="width:27%"><col style="width:13%"><col style="width:28%"><col style="width:15%"><col style="width:17%"></colgroup>';
   return '<colgroup><col style="width:27%"><col style="width:13%"><col style="width:30%"><col style="width:15%"><col style="width:15%"></colgroup>';
 }
-function th(text, style) { return '<th style="text-align:left;padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10.5px;font-weight:700;color:#77736b;text-transform:uppercase' + (style ? ';' + style : '') + '">' + esc(text) + '</th>'; }
+function th(text, style) { return '<th style="text-align:left;padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10.5px;font-weight:700;color:#1a1916;text-transform:uppercase' + (style ? ';' + style : '') + '">' + esc(text) + '</th>'; }
 function td(text, style) { return '<td style="padding:8px 10px' + (style ? ';' + style : '') + '">' + esc(text) + '</td>'; }
 function areaCell(text) { return '<td style="padding:7px 8px"><span class="badge badge-area" style="max-width:100%;white-space:normal;line-height:1.15;text-align:left">' + esc(text) + '</span></td>'; }
 function formatDateTime(d) { return two(d.getDate()) + '/' + two(d.getMonth() + 1) + '/' + d.getFullYear() + ', ' + two(d.getHours()) + ':' + two(d.getMinutes()); }
