@@ -1080,7 +1080,7 @@ function tablePatients(title, rows, type) {
       var diff = Math.ceil((new Date(p.alta_estimada) - new Date(lastSummaryData.fecha + 'T12:00:00')) / 86400000);
       return diff <= 1 ? '<span class="badge" style="background:#fde8e0;color:#a33;font-size:10px">' + fmt(p.alta_estimada) + '</span>' : fmt(p.alta_estimada);
     })() : '-';
-    html += '<tr style="border-bottom:1px solid var(--border)">' + td(p.nombre + privBadge, 'font-weight:700;color:#111') + td(p.codigo, 'font-family:monospace;color:#1a1916') + td(p.diagnostico, 'color:#1a1916');
+    html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">' + esc(p.nombre) + privBadge + '</td>' + td(p.codigo, 'font-family:monospace;color:#1a1916') + td(p.diagnostico, 'color:#1a1916');
     if (type === 'egresos') html += td(p.empresa, '') + td(p.motivo_egreso || p.notas || '-', '');
     else if (type === 'internados') html += areaCell(areaName(p)) + td(fmtIngreso(p), 'color:#1a1916;white-space:nowrap') + td(daysBetween(p.fecha_ingreso, lastSummaryData.fecha), 'font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap') + td(altaHtml, 'color:#1a1916;white-space:nowrap;font-size:12px');
     else html += td(p.empresa, '') + '<td style="padding:8px 10px"><span class="badge badge-area">' + esc(areaName(p)) + '</span></td>';
