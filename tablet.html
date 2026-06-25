@@ -1070,7 +1070,7 @@ function tablePatients(title, rows, type) {
   html += '<table style="width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed">' + colGroup(type) + '<thead><tr>';
   html += th('Paciente') + th('Codigo') + th('Diagnostico');
   if (type === 'egresos') html += th('Empresa') + th('Motivo egreso');
-  else if (type === 'internados') html += th('Area') + th('F. Ingreso') + th('Dias', 'text-align:right') + th('Alta');
+  else if (type === 'internados') html += th('Area') + th('F. Ingreso') + th('Dias', 'text-align:right') + th('Alta est.');
   else html += th('Empresa') + th('Area');
   html += '</tr></thead><tbody>';
   for (var i = 0; i < rows.length; i++) {
