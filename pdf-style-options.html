@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opciones PDF Resumen</title>
+<style>
+  body { margin: 0; background: #2b2b2b; font-family: "DM Sans", Arial, sans-serif; color: #1a1916; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px; }
+  .intro { color: #f4f2ee; margin-bottom: 18px; }
+  .intro h1 { margin: 0 0 6px; font-size: 22px; }
+  .intro p { margin: 0; color: #d0ccc2; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: start; }
+  .option-title { color: #fff; font-weight: 700; margin: 0 0 8px; }
+  .page { background: #fff; width: 100%; aspect-ratio: 0.707; padding: 28px 30px; box-sizing: border-box; overflow: hidden; box-shadow: 0 14px 40px rgba(0,0,0,.35); }
+  .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1a5c3a; padding-bottom: 10px; margin-bottom: 20px; }
+  .logo { font-weight: 800; color: #1a5c3a; font-size: 18px; line-height: 1; }
+  .right { text-align: right; }
+  .right h2 { margin: 0; font-size: 13px; }
+  .right p { margin: 3px 0 0; color: #6b6860; font-size: 10px; }
+  .section { border: 1px solid #e2dfd8; border-radius: 7px; overflow: hidden; margin-bottom: 16px; }
+  .section-head { display: flex; align-items: center; gap: 8px; padding: 11px 13px; border-bottom: 1px solid #e2dfd8; font-size: 12px; font-weight: 700; }
+  .count { border-radius: 20px; padding: 2px 7px; font-size: 10px; background: #e8f4ed; color: #1a5c3a; }
+  table { width: 100%; border-collapse: collapse; font-size: 9.5px; }
+  th { background: #f9f8f5; color: #6b6860; font-size: 8px; text-transform: uppercase; text-align: left; padding: 7px 8px; border-bottom: 1px solid #e2dfd8; }
+  td { padding: 8px; border-bottom: 1px solid #f0ede8; vertical-align: top; }
+  .pill { display: inline-block; border-radius: 14px; padding: 3px 7px; background: #faf4ee; color: #8a641b; font-size: 8px; }
+  .muted { color: #77736b; }
+  .code { color: #6f6a60; font-family: "DM Mono", Consolas, monospace; }
+  .strong { color: #151515; font-weight: 700; }
+  .diag { color: #34312c; }
+  .footer { margin-top: 16px; padding-top: 8px; border-top: 1px solid #e2dfd8; display: flex; justify-content: space-between; color: #9b9890; font-size: 8px; }
+
+  .opt-b .page { padding-left: 38px; padding-right: 38px; }
+  .opt-b .section { border-radius: 4px; }
+  .opt-b td:first-child { font-weight: 700; color: #111; }
+  .opt-b .code { color: #858079; }
+  .opt-b .diag { color: #4b4943; }
+  .opt-b .muted { color: #77736b; }
+  .opt-b tr:nth-child(even) td { background: #fcfbf8; }
+
+  .opt-c .page { padding-left: 36px; padding-right: 36px; }
+  .opt-c .section { border: 0; border-top: 1px solid #d8d4ca; border-radius: 0; }
+  .opt-c .section-head { padding-left: 0; padding-right: 0; background: #fff; }
+  .opt-c th { background: #fff; border-bottom: 1px solid #d8d4ca; color: #77736b; }
+  .opt-c td { padding-top: 9px; padding-bottom: 9px; }
+  .opt-c .strong { font-weight: 600; }
+  .opt-c .pill { background: #f7f2e9; }
+
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .page { max-width: 720px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>Opciones para mejorar el PDF sin cambiar la logica</h1>
+    <p>Son maquetas visuales: mismo documento, distinta jerarquia de texto y centrado.</p>
+  </div>
+  <div class="grid">
+    <div>
+      <div class="option-title">A. Ajuste minimo</div>
+      <div class="page">
+        <div class="header"><div class="logo">Clinica<br>Morales</div><div class="right"><h2>Resumen de Internamento</h2><p>21 de mayo de 2026</p></div></div>
+        <div class="section"><div class="section-head">Ingresos <span class="count">1</span></div><table><thead><tr><th>Paciente</th><th>Codigo</th><th>Diagnostico</th><th>Empresa</th><th>Area</th></tr></thead><tbody><tr><td class="strong">Isabel Manuel Mota Liz</td><td class="code">1570</td><td class="diag">Shock Mixto y Disenteria.</td><td>Particular</td><td><span class="pill">UTI</span></td></tr></tbody></table></div>
+        <div class="section"><div class="section-head">Egresos <span class="count">1</span></div><table><thead><tr><th>Paciente</th><th>Codigo</th><th>Diagnostico</th><th>Empresa</th><th>Motivo egreso</th></tr></thead><tbody><tr><td class="strong">Isabel Maria Cafuala</td><td class="code">153236</td><td class="diag">SPO Cesareada</td><td>METCARE</td><td>Alta medica</td></tr></tbody></table></div>
+        <div class="section"><div class="section-head">Internados actuales <span class="count">7</span></div><table><thead><tr><th>Paciente</th><th>Codigo</th><th>Diagnostico</th><th>Area</th><th>F. Ingreso</th><th>Dias</th></tr></thead><tbody><tr><td class="strong">Ines Patricia Almeida Vasconcelos</td><td class="code">153513</td><td class="diag">Litiasis vesicular</td><td><span class="pill">Cirugia</span></td><td class="muted">08/05/2026</td><td class="strong">13d</td></tr><tr><td class="strong">Riolazino Valentim</td><td class="code">157449</td><td class="diag">Malaria</td><td><span class="pill">Medicina interna</span></td><td class="muted">17/05/2026</td><td class="strong">4d</td></tr></tbody></table></div>
+        <div class="footer"><span>Clinica Morales MG, Lda</span><span>Generado el 21/05/2026, 12:58</span></div>
+      </div>
+    </div>
+    <div class="opt-b">
+      <div class="option-title">B. Mas legible</div>
+      <div class="page">
+        <div class="header"><div class="logo">Clinica<br>Morales</div><div class="right"><h2>Resumen de Internamento</h2><p>21 de mayo de 2026</p></div></div>
+        <div class="section"><div class="section-head">Ingresos <span class="count">1</span></div><table><thead><tr><th>Paciente</th><th>Codigo</th><th>Diagnostico</th><th>Empresa</th><th>Area</th></tr></thead><tbody><tr><td>Isabel Manuel Mota Liz</td><td class="code">1570</td><td class="diag">Shock Mixto y Disenteria.</td><td class="muted">Particular</td><td><span class="pill">UTI</span></td></tr></tbody></table></div>
+        <div class="section"><div class="section-head">Egresos <span class="count">1</span></div><table><thead><tr><th>Paciente</th><th>Codigo</th><th>Diagnostico</th><th>Empresa</th><th>Motivo egreso</th></tr></thead><tbody><tr><td>Isabel Maria Cafuala</td><td class="code">153236</td><td class="diag">SPO Cesareada</td><td class="muted">METCARE</td><td>Alta medica</td></tr></tbody></table></div>
+        <div class="section"><div class="section-head">Internados actuales <span class="count">7</span></div><table><thead><tr><th>Paciente</th><th>Codigo</th><th>Diagnostico</th><th>Area</th><th>F. Ingreso</th><th>Dias</th></tr></thead><tbody><tr><td>Ines Patricia Almeida Vasconcelos</td><td class="code">153513</td><td class="diag">Litiasis vesicular</td><td><span class="pill">Cirugia</span></td><td class="muted">08/05/2026</td><td class="strong">13d</td></tr><tr><td>Riolazino Valentim</td><td class="code">157449</td><td class="diag">Malaria</td><td><span class="pill">Medicina interna</span></td><td class="muted">17/05/2026</td><td class="strong">4d</td></tr></tbody></table></div>
+        <div class="footer"><span>Clinica Morales MG, Lda</span><span>Generado el 21/05/2026, 12:58</span></div>
+      </div>
+    </div>
+    <div class="opt-c">
+      <div class="option-title">C. Mas limpio</div>
+      <div class="page">
+        <div class="header"><div class="logo">Clinica<br>Morales</div><div class="right"><h2>Resumen de Internamento</h2><p>21 de mayo de 2026</p></div></div>
+        <div class="section"><div class="section-head">Ingresos <span class="count">1</span></div><table><thead><tr><th>Paciente</th><th>Codigo</th><th>Diagnostico</th><th>Empresa</th><th>Area</th></tr></thead><tbody><tr><td class="strong">Isabel Manuel Mota Liz</td><td class="code">1570</td><td class="diag">Shock Mixto y Disenteria.</td><td class="muted">Particular</td><td><span class="pill">UTI</span></td></tr></tbody></table></div>
+        <div class="section"><div class="section-head">Egresos <span class="count">1</span></div><table><thead><tr><th>Paciente</th><th>Codigo</th><th>Diagnostico</th><th>Empresa</th><th>Motivo egreso</th></tr></thead><tbody><tr><td class="strong">Isabel Maria Cafuala</td><td class="code">153236</td><td class="diag">SPO Cesareada</td><td class="muted">METCARE</td><td>Alta medica</td></tr></tbody></table></div>
+        <div class="section"><div class="section-head">Internados actuales <span class="count">7</span></div><table><thead><tr><th>Paciente</th><th>Codigo</th><th>Diagnostico</th><th>Area</th><th>F. Ingreso</th><th>Dias</th></tr></thead><tbody><tr><td class="strong">Ines Patricia Almeida Vasconcelos</td><td class="code">153513</td><td class="diag">Litiasis vesicular</td><td><span class="pill">Cirugia</span></td><td class="muted">08/05/2026</td><td class="strong">13d</td></tr><tr><td class="strong">Riolazino Valentim</td><td class="code">157449</td><td class="diag">Malaria</td><td><span class="pill">Medicina interna</span></td><td class="muted">17/05/2026</td><td class="strong">4d</td></tr></tbody></table></div>
+        <div class="footer"><span>Clinica Morales MG, Lda</span><span>Generado el 21/05/2026, 12:58</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

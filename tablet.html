@@ -67,6 +67,7 @@
   .badge-egress { background: #f4f2ee; color: var(--text2); }
   .badge-transfer { background: #eef4fb; color: #1a1916; }
   .badge-area { background: #fef9ec; color: #1a1916; }
+.badge-private { background: #e8e0f4; color: #1a1916; }
   .empty { padding: 18px; text-align: center; color: var(--text2); }
   .table-wrap { background: #fff; border: 1px solid #e2dfd8; border-radius: 8px; overflow: hidden; }
   .resumen-print-header, .resumen-print-footer { display: none; }
@@ -293,6 +294,7 @@
       <div class="row"><div class="col"><label>Cobertura</label><select id="p-empresa-tipo" onchange="toggleSeguro()"><option value="Particular">Particular</option><option value="asegurado">Asegurado</option></select></div><div class="col" id="seguro-wrap"><label>Nombre del seguro</label><input id="p-empresa" type="text" placeholder="Ej: ENSA"></div></div>
       <div class="row"><div class="col"><label>Area</label><select id="p-area"></select></div><div class="col"><label>Fecha de ingreso</label><input id="p-ingreso" type="date"></div><div class="col"><label>Hora de ingreso</label><input id="p-hora-ingreso" type="time"></div></div>
       <div id="p-egreso-wrap"><label>Fecha de egreso</label><input id="p-egreso" type="date"></div>
+      <label style="margin-top:6px"><input id="p-privada" type="checkbox" style="width:18px;height:18px;vertical-align:middle;margin-right:6px">Habitacion privada</label>
       <label>Notas</label><textarea id="p-notas"></textarea>
       <div id="patient-msg"></div>
     </div>
@@ -667,7 +669,8 @@ function renderPatients() {
 function patientCard(p) {
   var active = !p.fecha_egreso;
   var html = '<div class="patient"><div class="patient-head"><div class="patient-name">' + esc(p.nombre) + '</div><div class="code">' + esc(p.codigo) + '</div></div>';
-  html += '<div class="meta"><b>Diagnostico:</b> ' + esc(p.diagnostico) + '<br><b>Empresa:</b> ' + esc(p.empresa) + '<br><b>Area:</b> <span class="badge">' + esc(areaName(p)) + '</span><br><b>Ingreso:</b> ' + fmtIngreso(p) + '<br><b>Estado:</b> <span class="badge ' + (active ? 'badge-ok' : 'badge-off') + '">' + (active ? 'Internado' : 'Egresado ' + fmt(p.fecha_egreso)) + '</span></div>';
+  var privBadge = p.habitacion_privada ? ' <span class="badge badge-private">Privada</span>' : '';
+  html += '<div class="meta"><b>Diagnostico:</b> ' + esc(p.diagnostico) + '<br><b>Empresa:</b> ' + esc(p.empresa) + privBadge + '<br><b>Area:</b> <span class="badge">' + esc(areaName(p)) + '</span><br><b>Ingreso:</b> ' + fmtIngreso(p) + '<br><b>Estado:</b> <span class="badge ' + (active ? 'badge-ok' : 'badge-off') + '">' + (active ? 'Internado' : 'Egresado ' + fmt(p.fecha_egreso)) + '</span></div>';
   html += '<div class="actions"><button class="btn btn-light btn-small" onclick="openDetail(\'' + p.id + '\')">Ver</button>';
   if (can('editar_paciente')) html += '<button class="btn btn-light btn-small" onclick="openPatientModal(\'' + p.id + '\')">Editar</button>';
   if (active && can('traslado')) html += '<button class="btn btn-light btn-small" onclick="openTransferModal(\'' + p.id + '\')">Trasladar</button>';
@@ -696,6 +699,7 @@ function openPatientModal(id) {
   byId('p-hora-ingreso').value = isEdit && p.hora_ingreso ? String(p.hora_ingreso).slice(0, 5) : '';
   byId('p-egreso').value = isEdit ? p.fecha_egreso || '' : '';
   byId('p-egreso-wrap').className = isEdit && p.fecha_egreso ? '' : 'hidden';
+  byId('p-privada').checked = isEdit ? !!p.habitacion_privada : false;
   byId('p-notas').value = isEdit ? p.notas || '' : '';
   setBox('patient-msg', '', 'info');
   toggleSeguro();
@@ -711,6 +715,7 @@ function savePatient() {
     diagnostico: trim(byId('p-diagnostico').value),
     empresa: byId('p-empresa-tipo').value === 'Particular' ? 'Particular' : (trim(byId('p-empresa').value) || 'Asegurado'),
     area_id: byId('p-area').value || (current ? current.area_id : null) || null,
+    habitacion_privada: byId('p-privada').checked,
     fecha_ingreso: byId('p-ingreso').value,
     hora_ingreso: byId('p-hora-ingreso').value || null,
     fecha_egreso: byId('p-egreso').value || null,
@@ -981,7 +986,8 @@ function tablePatients(title, rows, type) {
   html += '</tr></thead><tbody>';
   for (var i = 0; i < rows.length; i++) {
     var p = rows[i];
-    html += '<tr style="border-bottom:1px solid var(--border)">' + td(p.nombre, 'font-weight:700;color:#111') + td(p.codigo, 'font-family:monospace;color:#1a1916') + td(p.diagnostico, 'color:#1a1916');
+    var privBadge = p.habitacion_privada ? ' <span class="badge badge-private" style="font-size:10px">Privada</span>' : '';
+    html += '<tr style="border-bottom:1px solid var(--border)">' + td(p.nombre + privBadge, 'font-weight:700;color:#111') + td(p.codigo, 'font-family:monospace;color:#1a1916') + td(p.diagnostico, 'color:#1a1916');
     if (type === 'egresos') html += td(p.empresa, '') + td(p.motivo_egreso || p.notas || '-', '');
     else if (type === 'internados') html += areaCell(areaName(p)) + td(fmtIngreso(p), 'color:#1a1916;white-space:nowrap') + td(daysBetween(p.fecha_ingreso, lastSummaryData.fecha), 'font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap');
     else html += td(p.empresa, '') + '<td style="padding:8px 10px"><span class="badge badge-area">' + esc(areaName(p)) + '</span></td>';
@@ -1056,18 +1062,18 @@ function downloadOriginalSummaryPdf() {
 }
 
 function exportPatientsCsv() {
-  var rows = [['Codigo','Paciente','Diagnostico','Empresa','Area','Fecha ingreso','Fecha egreso','Estado','Notas']];
-  for (var i = 0; i < allPacientes.length; i++) rows.push([allPacientes[i].codigo, allPacientes[i].nombre, allPacientes[i].diagnostico, allPacientes[i].empresa, areaName(allPacientes[i]), fmtIngreso(allPacientes[i]), allPacientes[i].fecha_egreso ? fmt(allPacientes[i].fecha_egreso) : '', allPacientes[i].fecha_egreso ? 'Egresado' : 'Internado', allPacientes[i].notas || '']);
+  var rows = [['Codigo','Paciente','Diagnostico','Empresa','Habitacion','Area','Fecha ingreso','Fecha egreso','Estado','Notas']];
+  for (var i = 0; i < allPacientes.length; i++) rows.push([allPacientes[i].codigo, allPacientes[i].nombre, allPacientes[i].diagnostico, allPacientes[i].empresa, allPacientes[i].habitacion_privada ? 'Privada' : 'Compartida', areaName(allPacientes[i]), fmtIngreso(allPacientes[i]), allPacientes[i].fecha_egreso ? fmt(allPacientes[i].fecha_egreso) : '', allPacientes[i].fecha_egreso ? 'Egresado' : 'Internado', allPacientes[i].notas || '']);
   downloadCsv('Registro_Internados.csv', rows);
 }
 function exportSummaryCsv() {
   if (!lastSummaryData) { alert('Genera el resumen primero.'); return; }
-  var rows = [['Seccion','Codigo','Paciente','Diagnostico','Empresa/Origen','Area/Destino','Fecha/Motivo']];
+  var rows = [['Seccion','Codigo','Paciente','Diagnostico','Habitacion','Empresa/Origen','Area/Destino','Fecha/Motivo']];
   var i;
-  for (i = 0; i < lastSummaryData.ingresos.length; i++) rows.push(['Ingresos', lastSummaryData.ingresos[i].codigo, lastSummaryData.ingresos[i].nombre, lastSummaryData.ingresos[i].diagnostico, lastSummaryData.ingresos[i].empresa, areaName(lastSummaryData.ingresos[i]), fmt(lastSummaryData.ingresos[i].fecha_ingreso)]);
-  for (i = 0; i < lastSummaryData.egresos.length; i++) rows.push(['Egresos', lastSummaryData.egresos[i].codigo, lastSummaryData.egresos[i].nombre, lastSummaryData.egresos[i].diagnostico, lastSummaryData.egresos[i].empresa, lastSummaryData.egresos[i].motivo_egreso || '', fmt(lastSummaryData.egresos[i].fecha_egreso)]);
-  for (i = 0; i < lastSummaryData.traslados.length; i++) rows.push(['Traslados', lastSummaryData.traslados[i].paciente && lastSummaryData.traslados[i].paciente.codigo ? lastSummaryData.traslados[i].paciente.codigo : '', lastSummaryData.traslados[i].paciente && lastSummaryData.traslados[i].paciente.nombre ? lastSummaryData.traslados[i].paciente.nombre : '', '', lastSummaryData.traslados[i].origen && lastSummaryData.traslados[i].origen.nombre ? lastSummaryData.traslados[i].origen.nombre : '', lastSummaryData.traslados[i].destino && lastSummaryData.traslados[i].destino.nombre ? lastSummaryData.traslados[i].destino.nombre : '', lastSummaryData.traslados[i].motivo || '']);
-  for (i = 0; i < lastSummaryData.internados.length; i++) rows.push(['Internados actuales', lastSummaryData.internados[i].codigo, lastSummaryData.internados[i].nombre, lastSummaryData.internados[i].diagnostico, '', areaName(lastSummaryData.internados[i]), fmtIngreso(lastSummaryData.internados[i])]);
+  for (i = 0; i < lastSummaryData.ingresos.length; i++) rows.push(['Ingresos', lastSummaryData.ingresos[i].codigo, lastSummaryData.ingresos[i].nombre, lastSummaryData.ingresos[i].diagnostico, lastSummaryData.ingresos[i].habitacion_privada ? 'Privada' : '', lastSummaryData.ingresos[i].empresa, areaName(lastSummaryData.ingresos[i]), fmt(lastSummaryData.ingresos[i].fecha_ingreso)]);
+  for (i = 0; i < lastSummaryData.egresos.length; i++) rows.push(['Egresos', lastSummaryData.egresos[i].codigo, lastSummaryData.egresos[i].nombre, lastSummaryData.egresos[i].diagnostico, lastSummaryData.egresos[i].habitacion_privada ? 'Privada' : '', lastSummaryData.egresos[i].empresa, lastSummaryData.egresos[i].motivo_egreso || '', fmt(lastSummaryData.egresos[i].fecha_egreso)]);
+  for (i = 0; i < lastSummaryData.traslados.length; i++) rows.push(['Traslados', lastSummaryData.traslados[i].paciente && lastSummaryData.traslados[i].paciente.codigo ? lastSummaryData.traslados[i].paciente.codigo : '', lastSummaryData.traslados[i].paciente && lastSummaryData.traslados[i].paciente.nombre ? lastSummaryData.traslados[i].paciente.nombre : '', '', '', lastSummaryData.traslados[i].origen && lastSummaryData.traslados[i].origen.nombre ? lastSummaryData.traslados[i].origen.nombre : '', lastSummaryData.traslados[i].destino && lastSummaryData.traslados[i].destino.nombre ? lastSummaryData.traslados[i].destino.nombre : '', lastSummaryData.traslados[i].motivo || '']);
+  for (i = 0; i < lastSummaryData.internados.length; i++) rows.push(['Internados actuales', lastSummaryData.internados[i].codigo, lastSummaryData.internados[i].nombre, lastSummaryData.internados[i].diagnostico, lastSummaryData.internados[i].habitacion_privada ? 'Privada' : '', areaName(lastSummaryData.internados[i]), fmtIngreso(lastSummaryData.internados[i]), '']);
   downloadCsv('Resumen_' + lastSummaryData.fecha + '.csv', rows);
 }
 function csvCell(v) { return '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"'; }

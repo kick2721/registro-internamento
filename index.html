@@ -200,7 +200,8 @@
   .badge-egress { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
   .badge-transfer { background: var(--info-light); color: var(--info); }
   .badge-area { background: var(--warn-light); color: var(--warn); }
-  .badge-active, .badge-egress, .badge-transfer, .badge-area { color: var(--text) !important; }
+  .badge-private { background: #e8e0f4; color: #5a3d7a; }
+  .badge-active, .badge-egress, .badge-transfer, .badge-area, .badge-private { color: var(--text) !important; }
 
   /* ACTIONS ROW */
   .row-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
@@ -853,6 +854,12 @@
         <div class="form-group"><label>Área</label>
           <select id="p-area"></select>
         </div>
+        <div class="form-group" style="display:flex;align-items:center;padding-top:22px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="p-privada" style="width:18px;height:18px;accent-color:var(--accent);margin:0">
+            <span style="font-size:13px;font-weight:500">Habitación privada</span>
+          </label>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Fecha de ingreso</label><input type="date" id="p-ingreso"></div>
@@ -1063,7 +1070,7 @@ function renderTable(rows) {
         <td class="code">${p.codigo}</td>
         <td style="font-weight:500">${p.nombre}</td>
         <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p.diagnostico}">${p.diagnostico}</td>
-        <td>${p.empresa}</td>
+        <td>${p.habitacion_privada ? '<span class="badge badge-private">Privada</span> ' : ''}${p.empresa}</td>
         <td><span class="badge badge-area">${areaNombre}</span></td>
         <td>${fmtIngreso(p)}</td>
         <td>${p.fecha_egreso ? fmt(p.fecha_egreso) : '—'}</td>
@@ -1176,6 +1183,7 @@ async function exportExcelFull(pacientes, suffix) {
     'Diagnóstico': p.diagnostico,
     'Empresa / Seguro': p.empresa,
     'Área': p.areas?.nombre || '',
+    'Habitación': p.habitacion_privada ? 'Privada' : 'Compartida',
     'F. Ingreso': fmtIngreso(p),
     'F. Egreso': p.fecha_egreso ? fmt(p.fecha_egreso) : '',
     'Estado': p.fecha_egreso ? 'Egresado' : 'Internado',
@@ -1192,7 +1200,7 @@ async function exportExcelFull(pacientes, suffix) {
   }));
 
   const ws1 = XLSX.utils.json_to_sheet(rowsPacientes);
-  ws1['!cols'] = [8,30,35,20,15,12,12,12,30].map(w=>({wch:w}));
+  ws1['!cols'] = [8,30,35,20,15,12,12,12,12,30].map(w=>({wch:w}));
   const ws2 = XLSX.utils.json_to_sheet(rowsTraslados);
   ws2['!cols'] = [18,10,30,18,18,30].map(w=>({wch:w}));
 
@@ -1444,6 +1452,7 @@ function openModalNuevo() {
   document.getElementById('modal-title').textContent = 'Nuevo paciente';
   document.getElementById('edit-id').value = '';
   ['p-nombre','p-codigo','p-diagnostico','p-empresa','p-notas'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('p-privada').checked = false;
   document.getElementById('p-empresa-tipo').value = 'Particular';
   document.getElementById('seguro-nombre-wrap').style.display = 'none';
   document.getElementById('p-area').value = '';
@@ -1472,6 +1481,7 @@ function openModalEditar(id) {
   document.getElementById('p-ingreso').value = p.fecha_ingreso;
   document.getElementById('p-hora-ingreso').value = p.hora_ingreso ? String(p.hora_ingreso).slice(0,5) : '';
   document.getElementById('p-egreso').value = p.fecha_egreso || '';
+  document.getElementById('p-privada').checked = !!p.habitacion_privada;
   document.getElementById('p-notas').value = p.notas || '';
   document.getElementById('modal-msg').innerHTML = '';
   openModal('modal-paciente');
@@ -1489,6 +1499,7 @@ async function savePaciente() {
     diagnostico: document.getElementById('p-diagnostico').value.trim(),
     empresa: document.getElementById('p-empresa-tipo').value === 'Particular' ? 'Particular' : (document.getElementById('p-empresa').value.trim() || 'Asegurado'),
     area_id: selectedArea || currentPaciente?.area_id || null,
+    habitacion_privada: document.getElementById('p-privada').checked,
     fecha_ingreso: document.getElementById('p-ingreso').value,
     hora_ingreso: document.getElementById('p-hora-ingreso').value || null,
     fecha_egreso: selectedEgreso || null,
@@ -1671,14 +1682,15 @@ async function exportarResumenExcel() {
 
   const empty = msg => [{'': msg}];
 
-  const ingData = (ingresos.data||[]).map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Empresa':p.empresa,'Área':p.areas?.nombre||'—'}));
+  const habCell = p => p.habitacion_privada ? 'Privada' : '';
+  const ingData = (ingresos.data||[]).map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Empresa':p.empresa,'Habitación':habCell(p),'Área':p.areas?.nombre||'—'}));
   const wsIng = XLSX.utils.json_to_sheet(ingData.length ? ingData : empty(`Sin ingresos el ${fechaLabel}`));
-  wsIng['!cols'] = [30,12,35,20,15].map(w=>({wch:w}));
+  wsIng['!cols'] = [30,12,35,20,10,15].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb, wsIng, 'Ingresos');
 
-  const egrData = (egresos.data||[]).map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Empresa':p.empresa,'Motivo egreso':p.motivo_egreso||'—'}));
+  const egrData = (egresos.data||[]).map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Empresa':p.empresa,'Habitación':habCell(p),'Motivo egreso':p.motivo_egreso||'—'}));
   const wsEgr = XLSX.utils.json_to_sheet(egrData.length ? egrData : empty(`Sin egresos el ${fechaLabel}`));
-  wsEgr['!cols'] = [30,12,35,20,20].map(w=>({wch:w}));
+  wsEgr['!cols'] = [30,12,35,20,10,20].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb, wsEgr, 'Egresos');
 
   const traData = (traslados.data||[]).map(t=>({'Paciente':t.paciente?.nombre||'—','Código':t.paciente?.codigo||'—','Área origen':t.origen?.nombre||'—','Área destino':t.destino?.nombre||'—','Motivo':t.motivo||'—'}));
@@ -1686,9 +1698,9 @@ async function exportarResumenExcel() {
   wsTra['!cols'] = [30,12,18,18,30].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb, wsTra, 'Traslados');
 
-  const intData = internados.map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Área':p.areas?.nombre||'—','F. Ingreso':fmtIngreso(p)}));
+  const intData = internados.map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Habitación':habCell(p),'Área':p.areas?.nombre||'—','F. Ingreso':fmtIngreso(p)}));
   const wsInt = XLSX.utils.json_to_sheet(intData.length ? intData : empty(`Sin pacientes internados el ${fechaLabel}`));
-  wsInt['!cols'] = [30,12,35,15,12].map(w=>({wch:w}));
+  wsInt['!cols'] = [30,12,35,10,15,12].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb, wsInt, 'Internados');
 
   XLSX.writeFile(wb, `Resumen_${+d}-${+m}-${y}.xlsx`);
@@ -1753,14 +1765,15 @@ async function loadResumen() {
        </table>`
     : `<p style="color:var(--text3);font-size:13px;padding:1rem 0">${empty}</p>`;
 
-  const ingresosRows = { data: (ingresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:8px 10px;color:#1a1916">${p.empresa}</td><td style="padding:8px 10px"><span class="badge badge-area">${p.areas?.nombre||'—'}</span></td></tr>` })) };
-  const egresosRows = { data: (egresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:8px 10px;color:#1a1916">${p.empresa}</td><td style="padding:8px 10px">${p.motivo_egreso||'—'}</td></tr>` })) };
+  const privBadge = p => p.habitacion_privada ? ' <span class="badge badge-private" style="font-size:10px">Privada</span>' : '';
+  const ingresosRows = { data: (ingresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}${privBadge(p)}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:8px 10px;color:#1a1916">${p.empresa}</td><td style="padding:8px 10px"><span class="badge badge-area">${p.areas?.nombre||'—'}</span></td></tr>` })) };
+  const egresosRows = { data: (egresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}${privBadge(p)}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:8px 10px;color:#1a1916">${p.empresa}</td><td style="padding:8px 10px">${p.motivo_egreso||'—'}</td></tr>` })) };
   const trasladosRows = { data: (traslados.data||[]).map(t => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${t.paciente?.nombre||'—'}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${t.paciente?.codigo||'—'}</td><td style="padding:8px 10px"><span class="badge badge-egress">${t.origen?.nombre||'—'}</span></td><td style="padding:8px 10px"><span class="badge badge-area">${t.destino?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#1a1916">${t.motivo||'—'}</td></tr>` })) };
 
   const internados = allPacientes.filter(p => p.fecha_ingreso <= fecha && (!p.fecha_egreso || p.fecha_egreso > fecha));
   const internadosRows = { data: internados.sort((a,b)=>a.fecha_ingreso?.localeCompare(b.fecha_ingreso)).map(p => {
     const dias = Math.floor((new Date(fecha) - new Date(p.fecha_ingreso)) / 86400000);
-    return { __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:7px 8px"><span class="badge badge-area" style="max-width:100%;white-space:normal;line-height:1.15;text-align:left">${p.areas?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#1a1916;white-space:nowrap">${fmtIngreso(p)}</td><td style="padding:8px 10px;font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap">${dias >= 0 ? dias+'d' : '—'}</td></tr>` };
+    return { __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}${privBadge(p)}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:7px 8px"><span class="badge badge-area" style="max-width:100%;white-space:normal;line-height:1.15;text-align:left">${p.areas?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#1a1916;white-space:nowrap">${fmtIngreso(p)}</td><td style="padding:8px 10px;font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap">${dias >= 0 ? dias+'d' : '—'}</td></tr>` };
   }) };
   const ni = ingresos.data?.length||0, ne = egresos.data?.length||0, nt = traslados.data?.length||0, nint = internados.length;
   document.getElementById('resumen-content').innerHTML = `
