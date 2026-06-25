@@ -669,7 +669,7 @@ function renderPatients() {
 function patientCard(p) {
   var active = !p.fecha_egreso;
   var html = '<div class="patient"><div class="patient-head"><div class="patient-name">' + esc(p.nombre) + '</div><div class="code">' + esc(p.codigo) + '</div></div>';
-  var privBadge = p.habitacion_privada ? ' <span class="badge badge-private">Privada</span>' : '';
+  var privBadge = p.habitacion_privada ? ' <span class="badge badge-private">Hab. Privada</span>' : '';
   html += '<div class="meta"><b>Diagnostico:</b> ' + esc(p.diagnostico) + '<br><b>Empresa:</b> ' + esc(p.empresa) + privBadge + '<br><b>Area:</b> <span class="badge">' + esc(areaName(p)) + '</span><br><b>Ingreso:</b> ' + fmtIngreso(p) + '<br><b>Estado:</b> <span class="badge ' + (active ? 'badge-ok' : 'badge-off') + '">' + (active ? 'Internado' : 'Egresado ' + fmt(p.fecha_egreso)) + '</span></div>';
   html += '<div class="actions"><button class="btn btn-light btn-small" onclick="openDetail(\'' + p.id + '\')">Ver</button>';
   if (can('editar_paciente')) html += '<button class="btn btn-light btn-small" onclick="openPatientModal(\'' + p.id + '\')">Editar</button>';
@@ -986,7 +986,7 @@ function tablePatients(title, rows, type) {
   html += '</tr></thead><tbody>';
   for (var i = 0; i < rows.length; i++) {
     var p = rows[i];
-    var privBadge = p.habitacion_privada ? ' <span class="badge badge-private" style="font-size:10px">Privada</span>' : '';
+    var privBadge = p.habitacion_privada ? ' <span class="badge badge-private" style="font-size:10px">Hab. Privada</span>' : '';
     html += '<tr style="border-bottom:1px solid var(--border)">' + td(p.nombre + privBadge, 'font-weight:700;color:#111') + td(p.codigo, 'font-family:monospace;color:#1a1916') + td(p.diagnostico, 'color:#1a1916');
     if (type === 'egresos') html += td(p.empresa, '') + td(p.motivo_egreso || p.notas || '-', '');
     else if (type === 'internados') html += areaCell(areaName(p)) + td(fmtIngreso(p), 'color:#1a1916;white-space:nowrap') + td(daysBetween(p.fecha_ingreso, lastSummaryData.fecha), 'font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap');
@@ -1063,17 +1063,17 @@ function downloadOriginalSummaryPdf() {
 
 function exportPatientsCsv() {
   var rows = [['Codigo','Paciente','Diagnostico','Empresa','Habitacion','Area','Fecha ingreso','Fecha egreso','Estado','Notas']];
-  for (var i = 0; i < allPacientes.length; i++) rows.push([allPacientes[i].codigo, allPacientes[i].nombre, allPacientes[i].diagnostico, allPacientes[i].empresa, allPacientes[i].habitacion_privada ? 'Privada' : 'Compartida', areaName(allPacientes[i]), fmtIngreso(allPacientes[i]), allPacientes[i].fecha_egreso ? fmt(allPacientes[i].fecha_egreso) : '', allPacientes[i].fecha_egreso ? 'Egresado' : 'Internado', allPacientes[i].notas || '']);
+  for (var i = 0; i < allPacientes.length; i++) rows.push([allPacientes[i].codigo, allPacientes[i].nombre, allPacientes[i].diagnostico, allPacientes[i].empresa, allPacientes[i].habitacion_privada ? 'Hab. Privada' : 'Compartida', areaName(allPacientes[i]), fmtIngreso(allPacientes[i]), allPacientes[i].fecha_egreso ? fmt(allPacientes[i].fecha_egreso) : '', allPacientes[i].fecha_egreso ? 'Egresado' : 'Internado', allPacientes[i].notas || '']);
   downloadCsv('Registro_Internados.csv', rows);
 }
 function exportSummaryCsv() {
   if (!lastSummaryData) { alert('Genera el resumen primero.'); return; }
   var rows = [['Seccion','Codigo','Paciente','Diagnostico','Habitacion','Empresa/Origen','Area/Destino','Fecha/Motivo']];
   var i;
-  for (i = 0; i < lastSummaryData.ingresos.length; i++) rows.push(['Ingresos', lastSummaryData.ingresos[i].codigo, lastSummaryData.ingresos[i].nombre, lastSummaryData.ingresos[i].diagnostico, lastSummaryData.ingresos[i].habitacion_privada ? 'Privada' : '', lastSummaryData.ingresos[i].empresa, areaName(lastSummaryData.ingresos[i]), fmt(lastSummaryData.ingresos[i].fecha_ingreso)]);
-  for (i = 0; i < lastSummaryData.egresos.length; i++) rows.push(['Egresos', lastSummaryData.egresos[i].codigo, lastSummaryData.egresos[i].nombre, lastSummaryData.egresos[i].diagnostico, lastSummaryData.egresos[i].habitacion_privada ? 'Privada' : '', lastSummaryData.egresos[i].empresa, lastSummaryData.egresos[i].motivo_egreso || '', fmt(lastSummaryData.egresos[i].fecha_egreso)]);
+  for (i = 0; i < lastSummaryData.ingresos.length; i++) rows.push(['Ingresos', lastSummaryData.ingresos[i].codigo, lastSummaryData.ingresos[i].nombre, lastSummaryData.ingresos[i].diagnostico, lastSummaryData.ingresos[i].habitacion_privada ? 'Hab. Privada' : '', lastSummaryData.ingresos[i].empresa, areaName(lastSummaryData.ingresos[i]), fmt(lastSummaryData.ingresos[i].fecha_ingreso)]);
+  for (i = 0; i < lastSummaryData.egresos.length; i++) rows.push(['Egresos', lastSummaryData.egresos[i].codigo, lastSummaryData.egresos[i].nombre, lastSummaryData.egresos[i].diagnostico, lastSummaryData.egresos[i].habitacion_privada ? 'Hab. Privada' : '', lastSummaryData.egresos[i].empresa, lastSummaryData.egresos[i].motivo_egreso || '', fmt(lastSummaryData.egresos[i].fecha_egreso)]);
   for (i = 0; i < lastSummaryData.traslados.length; i++) rows.push(['Traslados', lastSummaryData.traslados[i].paciente && lastSummaryData.traslados[i].paciente.codigo ? lastSummaryData.traslados[i].paciente.codigo : '', lastSummaryData.traslados[i].paciente && lastSummaryData.traslados[i].paciente.nombre ? lastSummaryData.traslados[i].paciente.nombre : '', '', '', lastSummaryData.traslados[i].origen && lastSummaryData.traslados[i].origen.nombre ? lastSummaryData.traslados[i].origen.nombre : '', lastSummaryData.traslados[i].destino && lastSummaryData.traslados[i].destino.nombre ? lastSummaryData.traslados[i].destino.nombre : '', lastSummaryData.traslados[i].motivo || '']);
-  for (i = 0; i < lastSummaryData.internados.length; i++) rows.push(['Internados actuales', lastSummaryData.internados[i].codigo, lastSummaryData.internados[i].nombre, lastSummaryData.internados[i].diagnostico, lastSummaryData.internados[i].habitacion_privada ? 'Privada' : '', areaName(lastSummaryData.internados[i]), fmtIngreso(lastSummaryData.internados[i]), '']);
+  for (i = 0; i < lastSummaryData.internados.length; i++) rows.push(['Internados actuales', lastSummaryData.internados[i].codigo, lastSummaryData.internados[i].nombre, lastSummaryData.internados[i].diagnostico, lastSummaryData.internados[i].habitacion_privada ? 'Hab. Privada' : '', areaName(lastSummaryData.internados[i]), fmtIngreso(lastSummaryData.internados[i]), '']);
   downloadCsv('Resumen_' + lastSummaryData.fecha + '.csv', rows);
 }
 function csvCell(v) { return '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"'; }

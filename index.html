@@ -1070,7 +1070,7 @@ function renderTable(rows) {
         <td class="code">${p.codigo}</td>
         <td style="font-weight:500">${p.nombre}</td>
         <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p.diagnostico}">${p.diagnostico}</td>
-        <td>${p.habitacion_privada ? '<span class="badge badge-private">Privada</span> ' : ''}${p.empresa}</td>
+        <td>${p.habitacion_privada ? '<span class="badge badge-private">Hab. Privada</span> ' : ''}${p.empresa}</td>
         <td><span class="badge badge-area">${areaNombre}</span></td>
         <td>${fmtIngreso(p)}</td>
         <td>${p.fecha_egreso ? fmt(p.fecha_egreso) : '—'}</td>
@@ -1183,7 +1183,7 @@ async function exportExcelFull(pacientes, suffix) {
     'Diagnóstico': p.diagnostico,
     'Empresa / Seguro': p.empresa,
     'Área': p.areas?.nombre || '',
-    'Habitación': p.habitacion_privada ? 'Privada' : 'Compartida',
+    'Habitación': p.habitacion_privada ? 'Hab. Privada' : 'Compartida',
     'F. Ingreso': fmtIngreso(p),
     'F. Egreso': p.fecha_egreso ? fmt(p.fecha_egreso) : '',
     'Estado': p.fecha_egreso ? 'Egresado' : 'Internado',
@@ -1682,7 +1682,7 @@ async function exportarResumenExcel() {
 
   const empty = msg => [{'': msg}];
 
-  const habCell = p => p.habitacion_privada ? 'Privada' : '';
+  const habCell = p => p.habitacion_privada ? 'Hab. Privada' : '';
   const ingData = (ingresos.data||[]).map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Empresa':p.empresa,'Habitación':habCell(p),'Área':p.areas?.nombre||'—'}));
   const wsIng = XLSX.utils.json_to_sheet(ingData.length ? ingData : empty(`Sin ingresos el ${fechaLabel}`));
   wsIng['!cols'] = [30,12,35,20,10,15].map(w=>({wch:w}));
@@ -1765,7 +1765,7 @@ async function loadResumen() {
        </table>`
     : `<p style="color:var(--text3);font-size:13px;padding:1rem 0">${empty}</p>`;
 
-  const privBadge = p => p.habitacion_privada ? ' <span class="badge badge-private" style="font-size:10px">Privada</span>' : '';
+  const privBadge = p => p.habitacion_privada ? ' <span class="badge badge-private" style="font-size:10px">Hab. Privada</span>' : '';
   const ingresosRows = { data: (ingresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}${privBadge(p)}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:8px 10px;color:#1a1916">${p.empresa}</td><td style="padding:8px 10px"><span class="badge badge-area">${p.areas?.nombre||'—'}</span></td></tr>` })) };
   const egresosRows = { data: (egresos.data||[]).map(p => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}${privBadge(p)}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:8px 10px;color:#1a1916">${p.empresa}</td><td style="padding:8px 10px">${p.motivo_egreso||'—'}</td></tr>` })) };
   const trasladosRows = { data: (traslados.data||[]).map(t => ({ __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${t.paciente?.nombre||'—'}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${t.paciente?.codigo||'—'}</td><td style="padding:8px 10px"><span class="badge badge-egress">${t.origen?.nombre||'—'}</span></td><td style="padding:8px 10px"><span class="badge badge-area">${t.destino?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#1a1916">${t.motivo||'—'}</td></tr>` })) };
