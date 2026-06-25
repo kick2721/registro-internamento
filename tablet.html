@@ -668,9 +668,9 @@ function renderPatients() {
 
 function patientCard(p) {
   var active = !p.fecha_egreso;
-  var html = '<div class="patient"><div class="patient-head"><div class="patient-name">' + esc(p.nombre) + '</div><div class="code">' + esc(p.codigo) + '</div></div>';
   var privBadge = p.habitacion_privada ? ' <span class="badge badge-private">Hab. Privada</span>' : '';
-  html += '<div class="meta"><b>Diagnostico:</b> ' + esc(p.diagnostico) + '<br><b>Empresa:</b> ' + esc(p.empresa) + privBadge + '<br><b>Area:</b> <span class="badge">' + esc(areaName(p)) + '</span><br><b>Ingreso:</b> ' + fmtIngreso(p) + '<br><b>Estado:</b> <span class="badge ' + (active ? 'badge-ok' : 'badge-off') + '">' + (active ? 'Internado' : 'Egresado ' + fmt(p.fecha_egreso)) + '</span></div>';
+  var html = '<div class="patient"><div class="patient-head"><div class="patient-name">' + esc(p.nombre) + privBadge + '</div><div class="code">' + esc(p.codigo) + '</div></div>';
+  html += '<div class="meta"><b>Diagnostico:</b> ' + esc(p.diagnostico) + '<br><b>Empresa:</b> ' + esc(p.empresa) + '<br><b>Area:</b> <span class="badge">' + esc(areaName(p)) + '</span><br><b>Ingreso:</b> ' + fmtIngreso(p) + '<br><b>Estado:</b> <span class="badge ' + (active ? 'badge-ok' : 'badge-off') + '">' + (active ? 'Internado' : 'Egresado ' + fmt(p.fecha_egreso)) + '</span></div>';
   html += '<div class="actions"><button class="btn btn-light btn-small" onclick="openDetail(\'' + p.id + '\')">Ver</button>';
   if (can('editar_paciente')) html += '<button class="btn btn-light btn-small" onclick="openPatientModal(\'' + p.id + '\')">Editar</button>';
   if (active && can('traslado')) html += '<button class="btn btn-light btn-small" onclick="openTransferModal(\'' + p.id + '\')">Trasladar</button>';

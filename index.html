@@ -1068,9 +1068,9 @@ function renderTable(rows) {
       const areaNombre = p.areas?.nombre || '—';
       return `<tr>
         <td class="code">${p.codigo}</td>
-        <td style="font-weight:500">${p.nombre}</td>
+        <td style="font-weight:500">${p.nombre}${p.habitacion_privada ? ' <span class="badge badge-private">Hab. Privada</span>' : ''}</td>
         <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p.diagnostico}">${p.diagnostico}</td>
-        <td>${p.habitacion_privada ? '<span class="badge badge-private">Hab. Privada</span> ' : ''}${p.empresa}</td>
+        <td>${p.empresa}</td>
         <td><span class="badge badge-area">${areaNombre}</span></td>
         <td>${fmtIngreso(p)}</td>
         <td>${p.fecha_egreso ? fmt(p.fecha_egreso) : '—'}</td>
