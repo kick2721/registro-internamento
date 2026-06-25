@@ -623,7 +623,11 @@ function renderDashboard() {
   countTransfersToday(function(n) { byId('st-traslados').innerHTML = n; });
   var html = '<table><thead><tr><th>Paciente</th><th>Area</th><th>Ingreso</th></tr></thead><tbody>';
   var limit = allPacientes.length < 8 ? allPacientes.length : 8;
-  for (i = 0; i < limit; i++) html += '<tr><td>' + esc(allPacientes[i].nombre) + '</td><td><span class="badge">' + esc(areaName(allPacientes[i])) + '</span></td><td>' + fmtIngreso(allPacientes[i]) + '</td></tr>';
+  for (i = 0; i < limit; i++) {
+    var p = allPacientes[i];
+    var pb = p.habitacion_privada ? ' <span class="badge badge-private" style="font-size:10px">Hab. Privada</span>' : '';
+    html += '<tr><td>' + esc(p.nombre) + pb + '</td><td><span class="badge">' + esc(areaName(p)) + '</span></td><td>' + fmtIngreso(p) + '</td></tr>';
+  }
   html += '</tbody></table>';
   byId('recent-list').innerHTML = limit ? html : '<div class="empty">Sin pacientes registrados.</div>';
   var areaHtml = '<table><thead><tr><th>Area</th><th>Internados</th></tr></thead><tbody>';

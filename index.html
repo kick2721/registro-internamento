@@ -1225,7 +1225,7 @@ async function loadDashboard() {
 
   const recent = [...allPacientes].sort((a,b) => new Date(b.fecha_ingreso) - new Date(a.fecha_ingreso)).slice(0, 8);
   document.getElementById('dash-recent').innerHTML = `<thead><tr><th>Paciente</th><th>Área</th><th>Ingreso</th></tr></thead><tbody>${
-    recent.map(p=>`<tr><td style="font-weight:500">${p.nombre}</td><td><span class="badge badge-area" style="font-size:11px">${p.areas?.nombre||'—'}</span></td><td style="color:var(--text2)">${fmtIngreso(p)}</td></tr>`).join('')
+    recent.map(p=>`<tr><td style="font-weight:500">${p.nombre}${p.habitacion_privada ? ' <span class="badge badge-private" style="font-size:10px">Hab. Privada</span>' : ''}</td><td><span class="badge badge-area" style="font-size:11px">${p.areas?.nombre||'—'}</span></td><td style="color:var(--text2)">${fmtIngreso(p)}</td></tr>`).join('')
   }</tbody>`;
 
   const areaCount = {};
