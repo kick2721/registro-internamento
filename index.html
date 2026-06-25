@@ -528,6 +528,10 @@
           <table id="dash-areas-table"><tbody><tr class="empty-row"><td>Cargando...</td></tr></tbody></table>
         </div>
       </div>
+      <div class="table-wrap" id="dash-proximas-altas" style="margin-top:1rem">
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);font-weight:600;font-size:14px;">Próximas altas</div>
+        <table id="dash-proximas-altas-table"><tbody><tr class="empty-row"><td>Cargando...</td></tr></tbody></table>
+      </div>
     </div>
 
     <!-- PACIENTES -->
@@ -899,6 +903,34 @@
   </div>
 </div>
 
+<!-- MODAL: ESTIMAR ALTA -->
+<div class="modal-overlay" id="modal-estimar-alta">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div class="modal-title">Estimar fecha de alta</div>
+      <button class="modal-close" onclick="closeModal('modal-estimar-alta')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="estimar-alta-id">
+      <div class="form-group">
+        <label>Paciente</label>
+        <input type="text" id="estimar-alta-nombre" disabled style="background:var(--surface2);color:var(--text2)">
+      </div>
+      <div class="form-group">
+        <label>Fecha probable de alta</label>
+        <input type="date" id="estimar-alta-fecha">
+      </div>
+      <p style="font-size:12px;color:var(--text2);margin-top:4px">El paciente aparecerá en "Próximas altas" del Dashboard cuando falten ≤3 días.</p>
+      <div id="estimar-alta-msg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="btn-quitar-estimacion" onclick="clearEstimarAlta()" style="display:none">❌ Quitar estimación</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-estimar-alta')">Cancelar</button>
+      <button class="btn btn-primary" style="width:auto" onclick="saveEstimarAlta()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: DETALLE PACIENTE -->
 <div class="modal-overlay" id="modal-detalle">
   <div class="modal" style="max-width:640px">
@@ -993,11 +1025,11 @@ async function initApp(user) {
 
 // ─── PERMISSIONS ──────────────────────────────────────────
 const ROLE_DEFAULTS = {
-  admin:          { nuevo_paciente:true, editar_paciente:true, traslado:true, egreso:true, ver_personal:true, crear_usuarios:true, gestionar_areas:true },
-  director:       { nuevo_paciente:false, editar_paciente:false, traslado:false, egreso:false, ver_personal:true, crear_usuarios:false, gestionar_areas:false },
-  medico:         { nuevo_paciente:false, editar_paciente:false, traslado:false, egreso:false, ver_personal:false, crear_usuarios:false, gestionar_areas:false },
-  enfermero:      { nuevo_paciente:false, editar_paciente:false, traslado:false, egreso:false, ver_personal:false, crear_usuarios:false, gestionar_areas:false },
-  recepcionista:  { nuevo_paciente:false, editar_paciente:false, traslado:false, egreso:false, ver_personal:false, crear_usuarios:false, gestionar_areas:false },
+  admin:          { nuevo_paciente:true, editar_paciente:true, traslado:true, egreso:true, estimar_alta:true, ver_personal:true, crear_usuarios:true, gestionar_areas:true },
+  director:       { nuevo_paciente:false, editar_paciente:false, traslado:false, egreso:false, estimar_alta:true, ver_personal:true, crear_usuarios:false, gestionar_areas:false },
+  medico:         { nuevo_paciente:false, editar_paciente:false, traslado:false, egreso:false, estimar_alta:true, ver_personal:false, crear_usuarios:false, gestionar_areas:false },
+  enfermero:      { nuevo_paciente:false, editar_paciente:false, traslado:false, egreso:false, estimar_alta:false, ver_personal:false, crear_usuarios:false, gestionar_areas:false },
+  recepcionista:  { nuevo_paciente:false, editar_paciente:false, traslado:false, egreso:false, estimar_alta:false, ver_personal:false, crear_usuarios:false, gestionar_areas:false },
 };
 
 let currentPermisos = {};
@@ -1080,6 +1112,7 @@ function renderTable(rows) {
             <button class="btn btn-outline btn-sm" onclick="openDetalle('${p.id}')">Ver</button>
             ${can('editar_paciente') ? `<button class="btn btn-outline btn-sm" onclick="openModalEditar('${p.id}')">Editar</button>` : ''}
             ${activo && can('traslado') ? `<button class="btn btn-outline btn-sm" onclick="openModalTraslado('${p.id}')">Trasladar</button>` : ''}
+            ${activo && can('estimar_alta') ? `<button class="btn btn-outline btn-sm" onclick="openModalEstimarAlta('${p.id}')">Estimar alta</button>` : ''}
             ${activo && can('egreso') ? `<button class="btn btn-danger btn-sm" onclick="darEgreso('${p.id}','${p.nombre}')">Egreso</button>` : ''}
           </div>
         </td>
@@ -1127,6 +1160,44 @@ async function saveEgreso() {
   await loadPacientes();
   loadDashboard();
   renderAreasPage();
+}
+
+// ─── ESTIMAR ALTA ─────────────────────────────────────────
+function openModalEstimarAlta(id) {
+  const p = allPacientes.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('estimar-alta-id').value = p.id;
+  document.getElementById('estimar-alta-nombre').value = p.nombre;
+  document.getElementById('estimar-alta-fecha').value = p.alta_estimada || '';
+  document.getElementById('estimar-alta-msg').innerHTML = '';
+  const btnQuitar = document.getElementById('btn-quitar-estimacion');
+  btnQuitar.style.display = p.alta_estimada ? '' : 'none';
+  openModal('modal-estimar-alta');
+}
+
+async function saveEstimarAlta() {
+  const msgEl = document.getElementById('estimar-alta-msg');
+  const id = document.getElementById('estimar-alta-id').value;
+  const fecha = document.getElementById('estimar-alta-fecha').value;
+  if (!fecha) { msgEl.innerHTML = '<div class="msg msg-error">Selecciona una fecha.</div>'; return; }
+  msgEl.innerHTML = '<div class="msg">Guardando...</div>';
+  const { error } = await sb.from('pacientes').update({ alta_estimada: fecha }).eq('id', id);
+  if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
+  closeModal('modal-estimar-alta');
+  await loadPacientes();
+  loadDashboard();
+}
+
+async function clearEstimarAlta() {
+  if (!confirm('¿Quitar la estimación de alta para este paciente?')) return;
+  const msgEl = document.getElementById('estimar-alta-msg');
+  const id = document.getElementById('estimar-alta-id').value;
+  msgEl.innerHTML = '<div class="msg">Quitando estimación...</div>';
+  const { error } = await sb.from('pacientes').update({ alta_estimada: null }).eq('id', id);
+  if (error) { msgEl.innerHTML = `<div class="msg msg-error">${error.message}</div>`; return; }
+  closeModal('modal-estimar-alta');
+  await loadPacientes();
+  loadDashboard();
 }
 
 function changePage(dir) {
@@ -1186,6 +1257,7 @@ async function exportExcelFull(pacientes, suffix) {
     'Habitación': p.habitacion_privada ? 'Hab. Privada' : 'Compartida',
     'F. Ingreso': fmtIngreso(p),
     'F. Egreso': p.fecha_egreso ? fmt(p.fecha_egreso) : '',
+    'Alta estimada': p.alta_estimada ? fmt(p.alta_estimada) : '',
     'Estado': p.fecha_egreso ? 'Egresado' : 'Internado',
     'Notas': p.notas || ''
   }));
@@ -1235,6 +1307,23 @@ async function loadDashboard() {
   document.getElementById('dash-areas-table').innerHTML = `<tbody>${
     sorted.map(([n,c])=>`<tr><td style="font-weight:500;font-size:13px">${n}</td><td><div class="area-bar-wrap"><div class="area-bar" style="width:${Math.round((c/max)*80)}px"></div><span style="font-weight:600;font-family:'DM Mono',monospace;font-size:13px">${c}</span></div></td></tr>`).join('')
   }</tbody>`;
+
+  // Próximas altas (≤3 días)
+  const hoy = new Date();
+  const en3dias = new Date(hoy.getTime() + 3 * 86400000).toISOString().split('T')[0];
+  const proximas = activos.filter(p => p.alta_estimada && p.alta_estimada >= today && p.alta_estimada <= en3dias)
+    .sort((a,b) => a.alta_estimada.localeCompare(b.alta_estimada));
+  const altaBadge = d => {
+    if (!d) return '—';
+    const diff = Math.ceil((new Date(d) - hoy) / 86400000);
+    if (diff <= 1) return `<span class="badge" style="background:#fde8e0;color:#a33">${fmt(d)}</span>`;
+    return fmt(d);
+  };
+  document.getElementById('dash-proximas-altas-table').innerHTML = proximas.length
+    ? `<thead><tr><th>Paciente</th><th>Área</th><th>F. Ingreso</th><th>Alta estimada</th></tr></thead><tbody>${
+        proximas.map(p => `<tr><td style="font-weight:500">${p.nombre}${p.habitacion_privada ? ' <span class="badge badge-private" style="font-size:10px">Hab. Privada</span>' : ''}</td><td><span class="badge badge-area" style="font-size:11px">${p.areas?.nombre||'—'}</span></td><td style="color:var(--text2)">${fmtIngreso(p)}</td><td>${altaBadge(p.alta_estimada)}</td></tr>`).join('')
+      }</tbody>`
+    : '<tbody><tr class="empty-row"><td>Sin próximas altas estimadas</td></tr></tbody>';
 }
 
 // ─── AREAS ───────────────────────────────────────────────
@@ -1606,7 +1695,7 @@ async function openDetalle(id) {
       <div class="stat-card"><div class="stat-label">Estado</div><div><span class="badge ${p.fecha_egreso?'badge-egress':'badge-active'}" style="font-size:14px;padding:5px 12px">${p.fecha_egreso?'Egresado':'Internado'}</span></div></div>
     </div>
     <table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem">
-      ${[['Paciente',p.nombre],['Diagnóstico',p.diagnostico],['Empresa',p.empresa],['Área actual',p.areas?.nombre||'—'],['Fecha ingreso',fmtIngreso(p)],['Fecha egreso',p.fecha_egreso?fmt(p.fecha_egreso):'Aún internado'],['Notas',p.notas||'—']].map(([k,v])=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0;font-size:12px;color:var(--text2);font-weight:500;width:130px">${k}</td><td style="padding:8px 0;font-size:13px">${v}</td></tr>`).join('')}
+      ${[['Paciente',p.nombre],['Diagnóstico',p.diagnostico],['Empresa',p.empresa],['Área actual',p.areas?.nombre||'—'],['Fecha ingreso',fmtIngreso(p)],['Fecha egreso',p.fecha_egreso?fmt(p.fecha_egreso):'Aún internado'],['Alta estimada',p.alta_estimada?fmt(p.alta_estimada):'—'],['Notas',p.notas||'—']].map(([k,v])=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0;font-size:12px;color:var(--text2);font-weight:500;width:130px">${k}</td><td style="padding:8px 0;font-size:13px">${v}</td></tr>`).join('')}
     </table>
     <div style="font-weight:600;margin-bottom:0.75rem">Historial de traslados</div>
     ${traslados?.length ? `<div class="timeline">${traslados.map(t=>`<div class="timeline-item"><div class="timeline-date">${new Date(t.fecha_traslado).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div><div class="timeline-text">${t.origen?.nombre||'Sin área'} → <strong>${t.destino?.nombre||'—'}</strong>${t.motivo?` · <span style="color:var(--text2)">${t.motivo}</span>`:''}</div></div>`).join('')}</div>` : '<p style="color:var(--text3);font-size:13px">Sin traslados registrados.</p>'}
@@ -1698,9 +1787,9 @@ async function exportarResumenExcel() {
   wsTra['!cols'] = [30,12,18,18,30].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb, wsTra, 'Traslados');
 
-  const intData = internados.map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Habitación':habCell(p),'Área':p.areas?.nombre||'—','F. Ingreso':fmtIngreso(p)}));
+  const intData = internados.map(p=>({'Paciente':p.nombre,'Código':p.codigo,'Diagnóstico':p.diagnostico,'Habitación':habCell(p),'Área':p.areas?.nombre||'—','F. Ingreso':fmtIngreso(p),'Alta estimada':p.alta_estimada?fmt(p.alta_estimada):''}));
   const wsInt = XLSX.utils.json_to_sheet(intData.length ? intData : empty(`Sin pacientes internados el ${fechaLabel}`));
-  wsInt['!cols'] = [30,12,35,10,15,12].map(w=>({wch:w}));
+  wsInt['!cols'] = [30,12,35,10,15,12,12].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb, wsInt, 'Internados');
 
   XLSX.writeFile(wb, `Resumen_${+d}-${+m}-${y}.xlsx`);
@@ -1752,7 +1841,7 @@ async function loadResumen() {
   ]);
 
   const colGroup = type => {
-    if (type === 'internados') return '<colgroup><col style="width:24%"><col style="width:12%"><col style="width:28%"><col style="width:17%"><col style="width:13%"><col style="width:6%"></colgroup>';
+    if (type === 'internados') return '<colgroup><col style="width:22%"><col style="width:11%"><col style="width:23%"><col style="width:14%"><col style="width:13%"><col style="width:6%"><col style="width:11%"></colgroup>';
     if (type === 'egresos') return '<colgroup><col style="width:27%"><col style="width:13%"><col style="width:28%"><col style="width:15%"><col style="width:17%"></colgroup>';
     if (type === 'traslados') return '<colgroup><col style="width:27%"><col style="width:13%"><col style="width:19%"><col style="width:19%"><col style="width:22%"></colgroup>';
     return '<colgroup><col style="width:27%"><col style="width:13%"><col style="width:30%"><col style="width:15%"><col style="width:15%"></colgroup>';
@@ -1773,7 +1862,12 @@ async function loadResumen() {
   const internados = allPacientes.filter(p => p.fecha_ingreso <= fecha && (!p.fecha_egreso || p.fecha_egreso > fecha));
   const internadosRows = { data: internados.sort((a,b)=>a.fecha_ingreso?.localeCompare(b.fecha_ingreso)).map(p => {
     const dias = Math.floor((new Date(fecha) - new Date(p.fecha_ingreso)) / 86400000);
-    return { __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}${privBadge(p)}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:7px 8px"><span class="badge badge-area" style="max-width:100%;white-space:normal;line-height:1.15;text-align:left">${p.areas?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#1a1916;white-space:nowrap">${fmtIngreso(p)}</td><td style="padding:8px 10px;font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap">${dias >= 0 ? dias+'d' : '—'}</td></tr>` };
+    const altaHtml = p.alta_estimada ? (() => {
+      const diff = Math.ceil((new Date(p.alta_estimada) - new Date(fecha)) / 86400000);
+      if (diff <= 1) return `<span class="badge" style="background:#fde8e0;color:#a33;font-size:10px">${fmt(p.alta_estimada)}</span>`;
+      return fmt(p.alta_estimada);
+    })() : '—';
+    return { __row: `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:700;color:#111">${p.nombre}${privBadge(p)}</td><td style="padding:8px 10px;font-family:monospace;color:#1a1916">${p.codigo}</td><td style="padding:8px 10px;color:#1a1916">${p.diagnostico}</td><td style="padding:7px 8px"><span class="badge badge-area" style="max-width:100%;white-space:normal;line-height:1.15;text-align:left">${p.areas?.nombre||'—'}</span></td><td style="padding:8px 10px;color:#1a1916;white-space:nowrap">${fmtIngreso(p)}</td><td style="padding:8px 10px;font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap">${dias >= 0 ? dias+'d' : '—'}</td><td style="padding:8px 10px;color:#1a1916;white-space:nowrap;font-size:12px">${altaHtml}</td></tr>` };
   }) };
   const ni = ingresos.data?.length||0, ne = egresos.data?.length||0, nt = traslados.data?.length||0, nint = internados.length;
   document.getElementById('resumen-content').innerHTML = `
@@ -1814,7 +1908,7 @@ async function loadResumen() {
         <span style="font-weight:600">Internados actuales</span><span class="badge badge-active">${nint}</span>
       </div>
       <div class="resumen-section-title" style="display:none">Internados actuales <span class="count">${nint}</span></div>
-      ${mkTable(['Paciente','Código','Diagnóstico','Área','F. Ingreso','Días'], internadosRows, 'Sin pacientes internados', 'internados')}
+      ${mkTable(['Paciente','Código','Diagnóstico','Área','F. Ingreso','Días','Alta'], internadosRows, 'Sin pacientes internados', 'internados')}
     </div>
 
     <div class="resumen-print-footer">

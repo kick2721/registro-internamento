@@ -221,6 +221,10 @@
         <h2>Ocupacion por area</h2>
         <div id="area-counts" class="empty">Cargando...</div>
       </div>
+      <div class="card">
+        <h2>Proximas altas</h2>
+        <div id="proximas-altas" class="empty">Cargando...</div>
+      </div>
     </div>
 
     <div id="page-pacientes" class="hidden">
@@ -333,6 +337,26 @@
   </div>
 </div>
 
+<div id="modal-estimar-alta" class="modal-bg">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><div class="modal-title">Estimar fecha de alta</div><button class="modal-close" onclick="closeModal('modal-estimar-alta')">X</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="ea-id">
+      <label>Paciente</label>
+      <input id="ea-nombre" type="text" disabled>
+      <label>Fecha probable de alta</label>
+      <input id="ea-fecha" type="date">
+      <p style="font-size:13px;color:#1a1916;margin-top:6px">El paciente aparecera en "Proximas altas" del Dashboard cuando falten &le;3 dias.</p>
+      <div id="ea-msg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-light" id="btn-ea-quitar" onclick="clearEstimarAlta()" style="display:none">Quitar estimacion</button>
+      <button class="btn btn-light" onclick="closeModal('modal-estimar-alta')">Cancelar</button>
+      <button class="btn" onclick="saveEstimarAlta()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-detail" class="modal-bg">
   <div class="modal">
     <div class="modal-head"><div class="modal-title">Ficha del paciente</div><button class="modal-close" onclick="closeModal('modal-detail')">X</button></div>
@@ -381,11 +405,11 @@ var lastSummaryReady = false;
 var lastSummaryData = null;
 var currentTab = 'dashboard';
 var ROLE_DEFAULTS = {
-  admin: { nuevo_paciente: true, editar_paciente: true, traslado: true, egreso: true, ver_personal: true, crear_usuarios: true, gestionar_areas: true },
-  director: { nuevo_paciente: false, editar_paciente: false, traslado: false, egreso: false, ver_personal: true, crear_usuarios: false, gestionar_areas: false },
-  medico: { nuevo_paciente: false, editar_paciente: false, traslado: false, egreso: false, ver_personal: false, crear_usuarios: false, gestionar_areas: false },
-  enfermero: { nuevo_paciente: false, editar_paciente: false, traslado: false, egreso: false, ver_personal: false, crear_usuarios: false, gestionar_areas: false },
-  recepcionista: { nuevo_paciente: false, editar_paciente: false, traslado: false, egreso: false, ver_personal: false, crear_usuarios: false, gestionar_areas: false }
+  admin: { nuevo_paciente: true, editar_paciente: true, traslado: true, egreso: true, estimar_alta: true, ver_personal: true, crear_usuarios: true, gestionar_areas: true },
+  director: { nuevo_paciente: false, editar_paciente: false, traslado: false, egreso: false, estimar_alta: true, ver_personal: true, crear_usuarios: false, gestionar_areas: false },
+  medico: { nuevo_paciente: false, editar_paciente: false, traslado: false, egreso: false, estimar_alta: true, ver_personal: false, crear_usuarios: false, gestionar_areas: false },
+  enfermero: { nuevo_paciente: false, editar_paciente: false, traslado: false, egreso: false, estimar_alta: false, ver_personal: false, crear_usuarios: false, gestionar_areas: false },
+  recepcionista: { nuevo_paciente: false, editar_paciente: false, traslado: false, egreso: false, estimar_alta: false, ver_personal: false, crear_usuarios: false, gestionar_areas: false }
 };
 
 function byId(id) { return document.getElementById(id); }
@@ -558,7 +582,7 @@ function loadAreas(callback) {
 }
 
 function loadPacientes(callback) {
-  var select = 'id,nombre,codigo,diagnostico,empresa,fecha_ingreso,hora_ingreso,fecha_egreso,area_id,motivo_egreso,notas,registrado_por,created_at,updated_at,areas(nombre)';
+  var select = 'id,nombre,codigo,diagnostico,empresa,fecha_ingreso,hora_ingreso,fecha_egreso,area_id,motivo_egreso,notas,registrado_por,created_at,updated_at,habitacion_privada,alta_estimada,areas(nombre)';
   rest('pacientes?select=' + encodeURIComponent(select) + '&order=fecha_ingreso.desc,hora_ingreso.desc.nullslast&limit=1500', function(err, rows) {
     if (err) { setBox('main-msg', 'No se pudieron cargar pacientes.\n' + err.message, 'err'); return; }
     allPacientes = rows || [];
@@ -635,6 +659,32 @@ function renderDashboard() {
   for (var k in areaCounts) if (areaCounts.hasOwnProperty(k)) { any = true; areaHtml += '<tr><td>' + esc(k) + '</td><td><b>' + areaCounts[k] + '</b></td></tr>'; }
   areaHtml += '</tbody></table>';
   byId('area-counts').innerHTML = any ? areaHtml : '<div class="empty">Sin pacientes internados.</div>';
+
+  // Proximas altas (≤3 días)
+  var hoy = new Date();
+  var hoyStr = todayISO();
+  var en3dias = new Date(hoy.getTime() + 3 * 86400000);
+  var en3diasStr = en3dias.getFullYear() + '-' + String(en3dias.getMonth()+1).padStart(2,'0') + '-' + String(en3dias.getDate()).padStart(2,'0');
+  var prox = [];
+  for (var i = 0; i < activos.length; i++) {
+    var p = activos[i];
+    if (p.alta_estimada && p.alta_estimada >= hoyStr && p.alta_estimada <= en3diasStr) prox.push(p);
+  }
+  prox.sort(function(a,b) { return (a.alta_estimada||'').localeCompare(b.alta_estimada||''); });
+  if (prox.length) {
+    var ph = '<table><thead><tr><th>Paciente</th><th>Area</th><th>F. Ingreso</th><th>Alta estimada</th></tr></thead><tbody>';
+    for (i = 0; i < prox.length; i++) {
+      var p = prox[i];
+      var diff = Math.ceil((new Date(p.alta_estimada) - hoy) / 86400000);
+      var altaTxt = diff <= 1 ? '<span class="badge" style="background:#fde8e0;color:#a33">' + fmt(p.alta_estimada) + '</span>' : fmt(p.alta_estimada);
+      var pb = p.habitacion_privada ? ' <span class="badge badge-private" style="font-size:10px">Hab. Privada</span>' : '';
+      ph += '<tr><td>' + esc(p.nombre) + pb + '</td><td><span class="badge badge-area">' + esc(areaName(p)) + '</span></td><td>' + fmtIngreso(p) + '</td><td>' + altaTxt + '</td></tr>';
+    }
+    ph += '</tbody></table>';
+    byId('proximas-altas').innerHTML = ph;
+  } else {
+    byId('proximas-altas').innerHTML = '<div class="empty">Sin proximas altas estimadas.</div>';
+  }
 }
 
 function countTransfersToday(callback) {
@@ -678,6 +728,7 @@ function patientCard(p) {
   html += '<div class="actions"><button class="btn btn-light btn-small" onclick="openDetail(\'' + p.id + '\')">Ver</button>';
   if (can('editar_paciente')) html += '<button class="btn btn-light btn-small" onclick="openPatientModal(\'' + p.id + '\')">Editar</button>';
   if (active && can('traslado')) html += '<button class="btn btn-light btn-small" onclick="openTransferModal(\'' + p.id + '\')">Trasladar</button>';
+  if (active && can('estimar_alta')) html += '<button class="btn btn-light btn-small" onclick="openEstimarAltaModal(\'' + p.id + '\')">Estimar alta</button>';
   if (active && can('egreso')) html += '<button class="btn btn-danger btn-small" onclick="openDischargeModal(\'' + p.id + '\')">Egreso</button>';
   html += '</div></div>';
   return html;
@@ -793,6 +844,39 @@ function saveDischarge() {
   });
 }
 
+// ─── ESTIMAR ALTA ─────────────────────────────────────────
+function openEstimarAltaModal(id) {
+  var p = findPatient(id);
+  if (!p) return;
+  byId('ea-id').value = p.id;
+  byId('ea-nombre').value = p.nombre;
+  byId('ea-fecha').value = p.alta_estimada || '';
+  byId('ea-msg').innerHTML = '';
+  byId('btn-ea-quitar').style.display = p.alta_estimada ? '' : 'none';
+  openModal('modal-estimar-alta');
+}
+function saveEstimarAlta() {
+  var id = byId('ea-id').value;
+  var fecha = byId('ea-fecha').value;
+  if (!fecha) { setBox('ea-msg', 'Selecciona una fecha.', 'err'); return; }
+  setBox('ea-msg', 'Guardando...', 'info');
+  patch('pacientes', id, { alta_estimada: fecha }, function(err) {
+    if (err) { setBox('ea-msg', err.message, 'err'); return; }
+    closeModal('modal-estimar-alta');
+    loadAll();
+  });
+}
+function clearEstimarAlta() {
+  if (!confirm('Quitar la estimacion de alta para este paciente?')) return;
+  var id = byId('ea-id').value;
+  setBox('ea-msg', 'Quitando estimacion...', 'info');
+  patch('pacientes', id, { alta_estimada: null }, function(err) {
+    if (err) { setBox('ea-msg', err.message, 'err'); return; }
+    closeModal('modal-estimar-alta');
+    loadAll();
+  });
+}
+
 function openTransferModal(id) {
   var p = findPatient(id);
   if (!p) return;
@@ -837,6 +921,7 @@ function openDetail(id) {
     html += '<tr><td><b>Area actual</b></td><td>' + esc(areaName(p)) + '</td></tr>';
     html += '<tr><td><b>Fecha ingreso</b></td><td>' + fmtIngreso(p) + '</td></tr>';
     html += '<tr><td><b>Fecha egreso</b></td><td>' + (p.fecha_egreso ? fmt(p.fecha_egreso) : 'Aun internado') + '</td></tr>';
+    html += '<tr><td><b>Alta estimada</b></td><td>' + (p.alta_estimada ? fmt(p.alta_estimada) : '-') + '</td></tr>';
     html += '<tr><td><b>Notas</b></td><td>' + esc(p.notas || '-') + '</td></tr></tbody></table>';
     html += '<h3>Historial de traslados</h3>';
     if (err) html += '<p>No se pudo cargar historial.</p>';
@@ -985,15 +1070,19 @@ function tablePatients(title, rows, type) {
   html += '<table style="width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed">' + colGroup(type) + '<thead><tr>';
   html += th('Paciente') + th('Codigo') + th('Diagnostico');
   if (type === 'egresos') html += th('Empresa') + th('Motivo egreso');
-  else if (type === 'internados') html += th('Area') + th('F. Ingreso') + th('Dias', 'text-align:right');
+  else if (type === 'internados') html += th('Area') + th('F. Ingreso') + th('Dias', 'text-align:right') + th('Alta');
   else html += th('Empresa') + th('Area');
   html += '</tr></thead><tbody>';
   for (var i = 0; i < rows.length; i++) {
     var p = rows[i];
     var privBadge = p.habitacion_privada ? ' <span class="badge badge-private" style="font-size:10px">Hab. Privada</span>' : '';
+    var altaHtml = p.alta_estimada ? (function() {
+      var diff = Math.ceil((new Date(p.alta_estimada) - new Date(lastSummaryData.fecha + 'T12:00:00')) / 86400000);
+      return diff <= 1 ? '<span class="badge" style="background:#fde8e0;color:#a33;font-size:10px">' + fmt(p.alta_estimada) + '</span>' : fmt(p.alta_estimada);
+    })() : '-';
     html += '<tr style="border-bottom:1px solid var(--border)">' + td(p.nombre + privBadge, 'font-weight:700;color:#111') + td(p.codigo, 'font-family:monospace;color:#1a1916') + td(p.diagnostico, 'color:#1a1916');
     if (type === 'egresos') html += td(p.empresa, '') + td(p.motivo_egreso || p.notas || '-', '');
-    else if (type === 'internados') html += areaCell(areaName(p)) + td(fmtIngreso(p), 'color:#1a1916;white-space:nowrap') + td(daysBetween(p.fecha_ingreso, lastSummaryData.fecha), 'font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap');
+    else if (type === 'internados') html += areaCell(areaName(p)) + td(fmtIngreso(p), 'color:#1a1916;white-space:nowrap') + td(daysBetween(p.fecha_ingreso, lastSummaryData.fecha), 'font-family:monospace;font-size:12px;text-align:right;font-weight:700;color:#1a1916;white-space:nowrap') + td(altaHtml, 'color:#1a1916;white-space:nowrap;font-size:12px');
     else html += td(p.empresa, '') + '<td style="padding:8px 10px"><span class="badge badge-area">' + esc(areaName(p)) + '</span></td>';
     html += '</tr>';
   }
@@ -1014,7 +1103,7 @@ function tableTransfers(title, rows) {
   return html;
 }
 function colGroup(type) {
-  if (type === 'internados') return '<colgroup><col style="width:24%"><col style="width:12%"><col style="width:28%"><col style="width:17%"><col style="width:13%"><col style="width:6%"></colgroup>';
+  if (type === 'internados') return '<colgroup><col style="width:22%"><col style="width:11%"><col style="width:23%"><col style="width:14%"><col style="width:13%"><col style="width:6%"><col style="width:11%"></colgroup>';
   if (type === 'egresos') return '<colgroup><col style="width:27%"><col style="width:13%"><col style="width:28%"><col style="width:15%"><col style="width:17%"></colgroup>';
   return '<colgroup><col style="width:27%"><col style="width:13%"><col style="width:30%"><col style="width:15%"><col style="width:15%"></colgroup>';
 }
@@ -1066,8 +1155,8 @@ function downloadOriginalSummaryPdf() {
 }
 
 function exportPatientsCsv() {
-  var rows = [['Codigo','Paciente','Diagnostico','Empresa','Habitacion','Area','Fecha ingreso','Fecha egreso','Estado','Notas']];
-  for (var i = 0; i < allPacientes.length; i++) rows.push([allPacientes[i].codigo, allPacientes[i].nombre, allPacientes[i].diagnostico, allPacientes[i].empresa, allPacientes[i].habitacion_privada ? 'Hab. Privada' : 'Compartida', areaName(allPacientes[i]), fmtIngreso(allPacientes[i]), allPacientes[i].fecha_egreso ? fmt(allPacientes[i].fecha_egreso) : '', allPacientes[i].fecha_egreso ? 'Egresado' : 'Internado', allPacientes[i].notas || '']);
+  var rows = [['Codigo','Paciente','Diagnostico','Empresa','Habitacion','Area','Fecha ingreso','Fecha egreso','Alta estimada','Estado','Notas']];
+  for (var i = 0; i < allPacientes.length; i++) rows.push([allPacientes[i].codigo, allPacientes[i].nombre, allPacientes[i].diagnostico, allPacientes[i].empresa, allPacientes[i].habitacion_privada ? 'Hab. Privada' : 'Compartida', areaName(allPacientes[i]), fmtIngreso(allPacientes[i]), allPacientes[i].fecha_egreso ? fmt(allPacientes[i].fecha_egreso) : '', allPacientes[i].alta_estimada ? fmt(allPacientes[i].alta_estimada) : '', allPacientes[i].fecha_egreso ? 'Egresado' : 'Internado', allPacientes[i].notas || '']);
   downloadCsv('Registro_Internados.csv', rows);
 }
 function exportSummaryCsv() {
@@ -1077,7 +1166,7 @@ function exportSummaryCsv() {
   for (i = 0; i < lastSummaryData.ingresos.length; i++) rows.push(['Ingresos', lastSummaryData.ingresos[i].codigo, lastSummaryData.ingresos[i].nombre, lastSummaryData.ingresos[i].diagnostico, lastSummaryData.ingresos[i].habitacion_privada ? 'Hab. Privada' : '', lastSummaryData.ingresos[i].empresa, areaName(lastSummaryData.ingresos[i]), fmt(lastSummaryData.ingresos[i].fecha_ingreso)]);
   for (i = 0; i < lastSummaryData.egresos.length; i++) rows.push(['Egresos', lastSummaryData.egresos[i].codigo, lastSummaryData.egresos[i].nombre, lastSummaryData.egresos[i].diagnostico, lastSummaryData.egresos[i].habitacion_privada ? 'Hab. Privada' : '', lastSummaryData.egresos[i].empresa, lastSummaryData.egresos[i].motivo_egreso || '', fmt(lastSummaryData.egresos[i].fecha_egreso)]);
   for (i = 0; i < lastSummaryData.traslados.length; i++) rows.push(['Traslados', lastSummaryData.traslados[i].paciente && lastSummaryData.traslados[i].paciente.codigo ? lastSummaryData.traslados[i].paciente.codigo : '', lastSummaryData.traslados[i].paciente && lastSummaryData.traslados[i].paciente.nombre ? lastSummaryData.traslados[i].paciente.nombre : '', '', '', lastSummaryData.traslados[i].origen && lastSummaryData.traslados[i].origen.nombre ? lastSummaryData.traslados[i].origen.nombre : '', lastSummaryData.traslados[i].destino && lastSummaryData.traslados[i].destino.nombre ? lastSummaryData.traslados[i].destino.nombre : '', lastSummaryData.traslados[i].motivo || '']);
-  for (i = 0; i < lastSummaryData.internados.length; i++) rows.push(['Internados actuales', lastSummaryData.internados[i].codigo, lastSummaryData.internados[i].nombre, lastSummaryData.internados[i].diagnostico, lastSummaryData.internados[i].habitacion_privada ? 'Hab. Privada' : '', areaName(lastSummaryData.internados[i]), fmtIngreso(lastSummaryData.internados[i]), '']);
+  for (i = 0; i < lastSummaryData.internados.length; i++) rows.push(['Internados actuales', lastSummaryData.internados[i].codigo, lastSummaryData.internados[i].nombre, lastSummaryData.internados[i].diagnostico, lastSummaryData.internados[i].habitacion_privada ? 'Hab. Privada' : '', areaName(lastSummaryData.internados[i]), fmtIngreso(lastSummaryData.internados[i]), lastSummaryData.internados[i].alta_estimada ? fmt(lastSummaryData.internados[i].alta_estimada) : '']);
   downloadCsv('Resumen_' + lastSummaryData.fecha + '.csv', rows);
 }
 function csvCell(v) { return '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"'; }
