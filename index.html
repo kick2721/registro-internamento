@@ -1041,6 +1041,10 @@ function buildPermisos(profile) {
 
 function can(permiso) { return !!currentPermisos[permiso]; }
 
+// ─── ESC HELPERS (parche quirúrgico para ' en nombres como N'Suka) ───
+function escJs(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
 function applyRolePermissions() {
   currentPermisos = buildPermisos(currentProfile);
   const btnNuevo = document.getElementById('btn-nuevo-paciente');
@@ -1100,10 +1104,10 @@ function renderTable(rows) {
       const areaNombre = p.areas?.nombre || '—';
       return `<tr>
         <td class="code">${p.codigo}</td>
-        <td style="font-weight:500">${p.nombre}${p.habitacion_privada ? ' <span class="badge badge-private">Hab. Privada</span>' : ''}</td>
-        <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p.diagnostico}">${p.diagnostico}</td>
-        <td>${p.empresa}</td>
-        <td><span class="badge badge-area">${areaNombre}</span></td>
+        <td style="font-weight:500">${escHtml(p.nombre)}${p.habitacion_privada ? ' <span class="badge badge-private">Hab. Privada</span>' : ''}</td>
+        <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(p.diagnostico)}">${escHtml(p.diagnostico)}</td>
+        <td>${escHtml(p.empresa)}</td>
+        <td><span class="badge badge-area">${escHtml(areaNombre)}</span></td>
         <td>${fmtIngreso(p)}</td>
         <td>${p.fecha_egreso ? fmt(p.fecha_egreso) : '—'}</td>
         <td><span class="badge ${activo?'badge-active':'badge-egress'}">${activo?'Internado':'Egresado'}</span></td>
@@ -1113,7 +1117,7 @@ function renderTable(rows) {
             ${can('editar_paciente') ? `<button class="btn btn-outline btn-sm" onclick="openModalEditar('${p.id}')">Editar</button>` : ''}
             ${activo && can('traslado') ? `<button class="btn btn-outline btn-sm" onclick="openModalTraslado('${p.id}')">Trasladar</button>` : ''}
             ${activo && can('estimar_alta') ? `<button class="btn btn-outline btn-sm" onclick="openModalEstimarAlta('${p.id}')">Estimar alta</button>` : ''}
-            ${activo && can('egreso') ? `<button class="btn btn-danger btn-sm" onclick="darEgreso('${p.id}','${p.nombre}')">Egreso</button>` : ''}
+            ${activo && can('egreso') ? `<button class="btn btn-danger btn-sm" onclick="darEgreso('${p.id}','${escJs(p.nombre)}')">Egreso</button>` : ''}
           </div>
         </td>
       </tr>`;
@@ -1335,11 +1339,11 @@ function renderAreasPage() {
     const count = allPacientes.filter(p => p.area_id === a.id && !p.fecha_egreso).length;
     return `<div class="table-wrap" style="padding:1.25rem">
       <div style="font-size:16px;margin-bottom:2px">🏥</div>
-      <div style="font-weight:600;font-size:15px;margin-bottom:4px">${a.nombre}</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${a.descripcion||''}</div>
+      <div style="font-weight:600;font-size:15px;margin-bottom:4px">${escHtml(a.nombre)}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${escHtml(a.descripcion||'')}</div>
       <div style="font-size:28px;font-weight:300;font-family:'DM Mono',monospace">${count}</div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:${isAdmin?'12px':'0'}">pacientes activos</div>
-      ${isAdmin ? `<button class="btn btn-danger btn-sm" style="width:100%" onclick="deleteArea('${a.id}','${a.nombre}',${count})">Eliminar</button>` : ''}
+      ${isAdmin ? `<button class="btn btn-danger btn-sm" style="width:100%" onclick="deleteArea('${a.id}','${escJs(a.nombre)}',${count})">Eliminar</button>` : ''}
     </div>`;
   }).join('');
 }
@@ -1425,11 +1429,11 @@ async function loadStaff() {
   if (!data?.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Sin personal registrado</td></tr>'; return; }
   const rolLabel = { admin: 'Administrador', director: 'Director', medico: 'Médico', enfermero: 'Enfermero/a', recepcionista: 'Recepcionista' };
   tbody.innerHTML = data.map(s => `<tr>
-    <td style="font-weight:500">${s.nombre}</td>
+    <td style="font-weight:500">${escHtml(s.nombre)}</td>
     <td><span class="badge badge-area">${rolLabel[s.rol] || s.rol}</span></td>
     <td style="color:var(--text2)">${s.activo ? 'Activo' : 'Inactivo'}</td>
     <td style="color:var(--text2)">${new Date(s.created_at).toLocaleDateString('es-ES')}</td>
-    <td>${isAdmin && s.id !== currentUser.id ? `<div class="row-actions"><button class="btn btn-outline btn-sm" onclick="openCambiarRol('${s.id}','${s.nombre}','${s.rol}')">Rol</button><button class="btn btn-outline btn-sm" onclick="openCambiarPermisos('${s.id}','${s.nombre}','${s.rol}',${JSON.stringify(s.permisos||{})})">Permisos</button><button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${s.id}','${s.nombre}')">Eliminar</button></div>` : ''}</td>
+    <td>${isAdmin && s.id !== currentUser.id ? `<div class="row-actions"><button class="btn btn-outline btn-sm" onclick="openCambiarRol('${s.id}','${escJs(s.nombre)}','${s.rol}')">Rol</button><button class="btn btn-outline btn-sm" onclick="openCambiarPermisos('${s.id}','${escJs(s.nombre)}','${s.rol}',${JSON.stringify(s.permisos||{})})">Permisos</button><button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${s.id}','${escJs(s.nombre)}')">Eliminar</button></div>` : ''}</td>
   </tr>`).join('');
 }
 
